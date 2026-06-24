@@ -1,0 +1,126 @@
+/* produkt.css — SIB Produktseite */
+
+/* ── Zurück-Link ── */
+.product-back {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+}
+
+/* ── Detail-Layout ── */
+.product-detail {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .product-detail { grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+}
+
+/* ── Galerie (links) ── */
+.product-gallery__main {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background-color: var(--color-bg-soft);
+}
+
+.product-gallery__thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.product-gallery__thumb {
+  width: 72px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background-color: var(--color-bg-soft);
+  cursor: pointer;
+  border: 1px solid var(--color-line);
+  transition: border-color var(--transition), opacity var(--transition);
+}
+
+.product-gallery__thumb:hover { opacity: 0.85; }
+.product-gallery__thumb.is-active { border-color: var(--color-ink); }
+
+/* ── Info (rechts) ── */
+.product-info__shop {
+  display: inline-block;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  margin-bottom: var(--space-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.product-info__title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: var(--text-4xl);
+  line-height: 1.15;
+  margin-bottom: var(--space-3);
+}
+
+.product-info__price {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-3);
+}
+
+.product-info__desc {
+  font-weight: 300;
+  color: var(--color-ink);
+  margin-bottom: var(--space-4);
+  white-space: pre-line;
+}
+
+.product-info hr {
+  margin: var(--space-4) 0;
+}
+
+/* ── Reservierungsformular ── */
+.reservierung__title {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 500;
+  margin-bottom: var(--space-1);
+}
+
+.reservierung__hint {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin-bottom: var(--space-3);
+}
+
+.reservierung-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.reservierung-form .form-group { gap: 0.4rem; }
+
+/* ── Status (nicht verfügbar) ── */
+.product-info__soldout {
+  display: inline-block;
+  margin-bottom: var(--space-3);
+}
+
+/* ── Nicht gefunden ── */
+.product-notfound {
+  padding: var(--space-6) 0;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.product-notfound h1 {
+  font-size: var(--text-3xl);
+  color: var(--color-ink);
+  margin-bottom: var(--space-2);
+}
