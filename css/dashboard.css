@@ -1,0 +1,185 @@
+/* dashboard.css — SIB Händler-Dashboard */
+
+/* ── Kopf: Begrüßung + Logout ── */
+.dash-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.dash-head__greeting {
+  font-size: var(--text-3xl);
+  margin-top: 0.25rem;
+}
+
+/* ── Tab-Navigation ── */
+.dash-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-bottom: 1px solid var(--color-line);
+  margin-bottom: var(--space-4);
+}
+
+.dash-tab {
+  background: none;
+  border: none;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.dash-tab:hover { color: var(--color-ink); }
+
+.dash-tab.is-active {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-ink);
+}
+
+/* ── Panels ── */
+.dash-panel { display: none; }
+.dash-panel.is-active { display: block; }
+.dash-panel[hidden] { display: none; }
+
+.dash-panel__heading { margin-bottom: var(--space-3); }
+
+.dash-panel__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+/* ── Reservierungs-Tabelle ── */
+.dash-table-wrap { overflow-x: auto; }
+
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.dash-table th,
+.dash-table td {
+  text-align: left;
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.dash-table th {
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.dash-table td.is-wrap { white-space: normal; }
+
+/* Status-Badges */
+.badge--muted {
+  background-color: transparent;
+  color: var(--color-muted);
+  border: 1px solid var(--color-line);
+}
+
+/* ── Produkte im Dashboard ── */
+.dash-produkte-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) { .dash-produkte-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) { .dash-produkte-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.dash-produkt__image {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background-color: var(--color-bg-soft);
+  margin-bottom: var(--space-1);
+}
+
+.dash-produkt__title {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  margin-bottom: 0.15rem;
+}
+
+.dash-produkt__price {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  margin-bottom: 0.15rem;
+}
+
+.dash-produkt__status {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin-bottom: var(--space-1);
+}
+
+.dash-produkt__delete {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dash-produkt__delete:hover { color: var(--color-ink); }
+
+/* ── Formulare ── */
+.dash-produkt-form,
+.dash-shop-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 40rem;
+  margin-bottom: var(--space-5);
+}
+
+.dash-produkt-form[hidden] { display: none; }
+
+.dash-produkt-form__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .dash-produkt-form__row { grid-template-columns: 1fr 1fr; }
+}
+
+.dash-produkt-form__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+textarea.form-input {
+  resize: vertical;
+  font-family: var(--font-sans);
+}
+
+/* ── Leerzustand ── */
+.dash-empty {
+  padding: var(--space-4) 0;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}

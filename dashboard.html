@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Shoppen in Braunschweig</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/dashboard.css?v=1">
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="container">
+      <div class="site-header__inner">
+        <a class="site-header__logo" href="index.html" aria-label="Shoppen in Braunschweig — Startseite">
+          <img src="https://ezruwstzpncunbjzwdfk.supabase.co/storage/v1/object/public/produkt-bilder/Group%20635898.-fotor-enhance-2026031913012.jpg" alt="Shoppen in Braunschweig"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+          <span class="site-header__logo-text" style="display:none">Shoppen in&nbsp;Braunschweig</span>
+        </a>
+
+        <form class="site-header__search" role="search" action="kategorie.html" method="get">
+          <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
+        </form>
+
+        <nav class="site-header__nav" aria-label="Hauptnavigation">
+          <a href="shop.html">Geschäfte</a>
+          <a href="kategorie.html">Produkte</a>
+        </nav>
+
+        <div class="site-header__actions">
+          <a class="btn btn--outline-light site-header__desktop-only" href="login.html">Anmelden</a>
+          <a class="btn btn--light site-header__desktop-only" href="login.html">Händler werden</a>
+          <button class="site-header__burger" type="button" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile-Menü -->
+      <div class="site-header__mobile" id="mobile-menu" hidden>
+        <form class="site-header__mobile-search" role="search" action="kategorie.html" method="get">
+          <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
+        </form>
+        <a href="kategorie.html">Produkte</a>
+        <a href="shop.html">Geschäfte</a>
+        <a href="newsletter.html">Newsletter</a>
+        <a class="btn btn--outline-light btn--full" href="login.html">Anmelden</a>
+        <a class="btn btn--light btn--full" href="login.html">Händler werden</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+
+        <!-- Ladezustand / Schutz -->
+        <div id="dashboard-loading" class="loading">Dashboard wird geladen…</div>
+
+        <!-- Dashboard-Inhalt (nach Auth sichtbar) -->
+        <div id="dashboard" hidden>
+
+          <!-- Begrüßung + Logout -->
+          <div class="dash-head">
+            <div>
+              <p class="label">Händler-Dashboard</p>
+              <h1 class="dash-head__greeting" id="dash-greeting">Willkommen</h1>
+            </div>
+            <button class="btn btn--outline" id="logout-btn" type="button">Abmelden</button>
+          </div>
+
+          <!-- Tab-Navigation -->
+          <div class="dash-tabs" role="tablist">
+            <button class="dash-tab is-active" data-tab="reservierungen" role="tab">Reservierungen</button>
+            <button class="dash-tab" data-tab="produkte" role="tab">Produkte</button>
+            <button class="dash-tab" data-tab="einstellungen" role="tab">Shop-Einstellungen</button>
+          </div>
+
+          <!-- TAB 1: Reservierungen -->
+          <div class="dash-panel is-active" data-panel="reservierungen">
+            <div id="reservierungen-content">
+              <div class="loading">Reservierungen werden geladen…</div>
+            </div>
+          </div>
+
+          <!-- TAB 2: Produkte -->
+          <div class="dash-panel" data-panel="produkte" hidden>
+            <div class="dash-panel__toolbar">
+              <h2>Deine Produkte</h2>
+              <button class="btn btn--primary" id="toggle-produkt-form" type="button">Produkt hinzufügen</button>
+            </div>
+
+            <!-- Formular: neues Produkt -->
+            <form class="dash-produkt-form" id="produkt-form" hidden>
+              <div class="form-group">
+                <label class="form-label" for="pf-titel">Titel</label>
+                <input class="form-input" type="text" id="pf-titel" name="titel" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="pf-beschreibung">Beschreibung</label>
+                <textarea class="form-input" id="pf-beschreibung" name="beschreibung" rows="3"></textarea>
+              </div>
+              <div class="dash-produkt-form__row">
+                <div class="form-group">
+                  <label class="form-label" for="pf-preis">Preis (€)</label>
+                  <input class="form-input" type="number" id="pf-preis" name="preis" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="pf-kategorie">Kategorie</label>
+                  <select class="form-select" id="pf-kategorie" name="kategorie_id">
+                    <option value="">— Bitte wählen —</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="pf-bild">Bild-URL</label>
+                <input class="form-input" type="url" id="pf-bild" name="bild_url" placeholder="https://…">
+              </div>
+              <div class="dash-produkt-form__actions">
+                <button class="btn btn--primary" type="submit">Speichern</button>
+                <button class="btn btn--outline" type="button" id="cancel-produkt-form">Abbrechen</button>
+              </div>
+              <div id="produkt-form-feedback" aria-live="polite"></div>
+            </form>
+
+            <div id="produkte-content">
+              <div class="loading">Produkte werden geladen…</div>
+            </div>
+          </div>
+
+          <!-- TAB 3: Shop-Einstellungen -->
+          <div class="dash-panel" data-panel="einstellungen" hidden>
+            <h2 class="dash-panel__heading">Shop-Einstellungen</h2>
+            <form class="dash-shop-form" id="shop-form">
+              <div class="form-group">
+                <label class="form-label" for="sf-name">Shop-Name</label>
+                <input class="form-input" type="text" id="sf-name" name="name" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sf-beschreibung">Beschreibung</label>
+                <textarea class="form-input" id="sf-beschreibung" name="beschreibung" rows="4"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sf-adresse">Adresse</label>
+                <input class="form-input" type="text" id="sf-adresse" name="adresse">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sf-oeffnungszeiten">Öffnungszeiten</label>
+                <input class="form-input" type="text" id="sf-oeffnungszeiten" name="oeffnungszeiten" placeholder="z. B. Mo–Fr 10–18 Uhr">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sf-logo">Logo-URL</label>
+                <input class="form-input" type="url" id="sf-logo" name="logo_url" placeholder="https://…">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sf-banner">Banner-URL</label>
+                <input class="form-input" type="url" id="sf-banner" name="banner_url" placeholder="https://…">
+              </div>
+              <div>
+                <button class="btn btn--primary" type="submit">Speichern</button>
+              </div>
+              <div id="shop-form-feedback" aria-live="polite"></div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__brand">
+        <span class="site-footer__logo">Shoppen in Braunschweig</span>
+        <p class="site-footer__slogan">Lokale Händler. Einzigartige Produkte.</p>
+      </div>
+
+      <div class="site-footer__grid">
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Für Käufer</p>
+          <ul>
+            <li><a href="kategorie.html">Alle Produkte</a></li>
+            <li><a href="shop.html">Geschäfte entdecken</a></li>
+            <li><a href="newsletter.html">Newsletter</a></li>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Für Verkäufer</p>
+          <ul>
+            <li><a href="login.html">Händler werden</a></li>
+            <li><a href="login.html">Anmelden</a></li>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Kontakt</p>
+          <ul>
+            <li><a href="mailto:support@shoppeninbraunschweig.de">support@shoppeninbraunschweig.de</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="site-footer__bottom">
+        <p>© 2026 Shoppen in Braunschweig</p>
+        <p><a href="datenschutz.html">Datenschutz</a> &nbsp;|&nbsp; <a href="impressum.html">Impressum</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>
