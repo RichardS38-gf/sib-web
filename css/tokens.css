@@ -1,0 +1,45 @@
+/* tokens.css — SIB */
+:root {
+  /* Farben */
+  --color-bg:       #FFFFFF;
+  --color-bg-soft:  #FAFAF8;
+  --color-ink:      #0F0F0F;
+  --color-muted:    #777777;
+  --color-line:     #E8E8E8;
+  --color-dark:     #0F0F0F;
+  --color-on-dark:  #FAFAF8;
+
+  /* Typografie */
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans:  'Inter', system-ui, sans-serif;
+
+  /* Spacing */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-5: 3rem;
+  --space-6: 5rem;
+  --space-7: 8rem;
+  --space-8: 11rem;
+
+  /* Container */
+  --container-pad-desktop: 3rem;
+  --container-pad-tablet:  2rem;
+  --container-pad-mobile:  1.25rem;
+  --max-content-width:     1200px;
+
+  /* Typografische Skala */
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  2rem;
+  --text-4xl:  2.75rem;
+  --text-5xl:  3.75rem;
+
+  /* Transitions */
+  --transition: 0.2s ease;
+}
