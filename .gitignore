@@ -1,0 +1,10 @@
+# Rohmaterial -- nicht ins Repo
+Bilder/
+Händler/
+Infos/
+Vorlagen/
+
+# System
+.DS_Store
+Thumbs.db
+desktop.ini
