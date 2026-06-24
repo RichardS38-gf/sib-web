@@ -3,6 +3,8 @@
 **Stand:** Juni 2026
 **Ziel:** Lokaler Marktplatz für Braunschweiger Innenstadthändler — Phase 1 "Newsletter-Marktplatz" (Reservierung + Abholung, kein Versand)
 **Domain:** shoppeninbraunschweig.de (vorerst Vercel-Subdomain, WordPress bleibt vorerst aktiv)
+**Vercel-URL:** https://sib-web.vercel.app/
+**GitHub:** https://github.com/RichardS38-gf/sib-web
 **Tech-Stack:** Reines HTML/CSS/Vanilla-JS + Supabase (Datenbank, Auth, Storage, E-Mail-Trigger)
 **Hosting:** Vercel
 **Erste Händler:** Amelie Fair Fashion, CrossoverDesign (Phase 10+)
@@ -31,8 +33,8 @@ Ein schwarzweißer, hochwertiger Marktplatz, der Braunschweiger Innenstadthändl
 - Body/UI: `Inter`, weight 300/400/500 (Google Fonts)
 - Labels/Tags: Inter 400, uppercase, letter-spacing 0.08em
 
-**Keine Border-Radius** auf Buttons und Karten — eckig, editorial.
-**Bilder dominieren** — große, ehrliche Produktfotos, kein Stock.
+**Keine Border-Radius** auf Buttons und Karten -- eckig, editorial.
+**Bilder dominieren** -- große, ehrliche Produktfotos, kein Stock.
 
 ---
 
@@ -54,7 +56,7 @@ Jede HTML-Seite bindet ein:
 ## Ordnerstruktur
 
 ```
-SIB/
+SIB/  (Git-Repo)
 ├── css/
 │   ├── reset.css
 │   ├── tokens.css
@@ -70,16 +72,16 @@ SIB/
 │   ├── dashboard.css
 │   └── admin.css
 ├── js/
-│   ├── supabase.js        ← Supabase Client Initialisierung
-│   ├── auth.js            ← Login/Logout Logik
-│   ├── produkte.js        ← Produkte laden und rendern
-│   ├── reservierung.js    ← Reservierungsformular + API-Calls
-│   └── dashboard.js       ← Händler-Dashboard Logik
-├── Bilder/                ← Logo + statische Assets
-├── Händler/               ← Rohmaterial (nicht deployed)
-├── Infos/                 ← Rohmaterial
-├── Vorlagen/              ← Design-Entwürfe (nicht deployed)
-├── Specs/                 ← Projekt-Dokumentation (nicht deployed)
+│   ├── supabase.js
+│   ├── auth.js
+│   ├── produkte.js
+│   ├── reservierung.js
+│   └── dashboard.js
+├── Bilder/         (gitignore)
+├── Händler/        (gitignore)
+├── Infos/          (gitignore)
+├── Vorlagen/       (gitignore)
+├── Specs/
 ├── index.html
 ├── kategorie.html
 ├── produkt.html
@@ -99,13 +101,13 @@ SIB/
 | Seite | Datei | Inhalt |
 |-------|-------|--------|
 | Startseite | `index.html` | Hero, Kategorien, Featured Produkte, Händler-CTA, Newsletter-CTA, Footer |
-| Kategorieseite | `kategorie.html` | Produktgrid gefiltert nach Kategorie, Sidebar-Filter |
-| Produktseite | `produkt.html` | Bildergalerie, Details, Reservierungsformular, Weitere Artikel des Händlers |
-| Shopseite | `shop.html` | Händler-Header, Banner, Alle Produkte des Händlers, Beschreibung, Infos |
+| Kategorieseite | `kategorie.html` | Produktgrid gefiltert nach Kategorie |
+| Produktseite | `produkt.html` | Bildergalerie, Details, Reservierungsformular, Weitere Artikel |
+| Shopseite | `shop.html` | Händler-Header, Banner, Produkte, Beschreibung, Infos |
 | Newsletter | `newsletter.html` | Anmeldeformular, Erklärung, Bestätigung |
-| Händler-Login | `login.html` | E-Mail + Passwort, Passwort vergessen |
+| Händler-Login | `login.html` | E-Mail + Passwort |
 | Händler-Dashboard | `dashboard.html` | Reservierungen, Produkte, Shop-Einstellungen |
-| Admin | `admin.html` | Händler, alle Produkte, alle Reservierungen, Newsletter-Abonnenten |
+| Admin | `admin.html` | Händler, Produkte, Reservierungen, Newsletter-Abonnenten |
 | Impressum | `impressum.html` | Standard |
 | Datenschutz | `datenschutz.html` | Standard |
 
@@ -114,93 +116,40 @@ SIB/
 ## Funktionen Phase 1
 
 ### Kunden (ohne Account)
-- Produkte durchstöbern (Startseite, Kategorien, Shopseiten)
-- Produkt reservieren: Name + E-Mail eingeben, kein Account nötig
-- Bestätigungsmail nach Reservierung erhalten
-- Benachrichtigung "Abholbereit" erhalten, sobald Händler bestätigt
+- Produkte durchstöbern
+- Produkt reservieren: Name + E-Mail, kein Account nötig
+- Bestätigungsmail nach Reservierung
+- Benachrichtigung "Abholbereit" sobald Händler bestätigt
 - Reservierung läuft nach 7 Tagen automatisch ab
-- Newsletter abonnieren via CTA -> newsletter.html
+- Newsletter abonnieren via CTA
 
-### Händler (Account via Supabase Auth)
-- Login über E-Mail + Passwort
-- Dashboard: offene / bestätigte / abgelaufene Reservierungen
-- Reservierung bestätigen -> Kunde erhält automatisch Abholbereit-Mail
-- Produkte anlegen (Titel, Beschreibung, Preis, Kategorie, bis zu 5 Bilder)
-- Produkte bearbeiten und löschen
-- Shopseite pflegen: Banner-Bild, Profilbild, Beschreibung, Öffnungszeiten, Adresse
+### Händler (Supabase Auth)
+- Login, Dashboard mit Reservierungen
+- Reservierung bestätigen (löst Kundenmail aus)
+- Produkte anlegen/bearbeiten/löschen
+- Shopseite pflegen
 - Produkte gehen sofort live
 
-### Admin (Florian, über admin.html)
-- Neue Händler anlegen (Name, E-Mail, Passwort, Shopname, Slug)
-- Händler deaktivieren/aktivieren
-- Alle Reservierungen einsehen
-- Alle Produkte einsehen und bei Bedarf löschen
-- Newsletter-Abonnenten einsehen und exportieren
-- Kategorien anlegen und verwalten
+### Admin (Florian)
+- Händler anlegen/deaktivieren
+- Alle Reservierungen und Produkte einsehen
+- Newsletter-Abonnenten verwalten
+- Kategorien verwalten
 
 ### Newsletter
-- Monatlicher automatischer Versand mit neuen Produkten
-- Abonnenten tragen sich auf newsletter.html ein
-- Versand über Supabase Edge Functions + Resend.com (gratis bis 3.000 Mails/Monat)
+- Monatlicher Auto-Versand neuer Produkte
+- Versand via Supabase Edge Functions + Resend.com (gratis)
 
 ---
 
 ## Supabase Datenbankstruktur
 
 ```sql
--- Händler
-shops (
-  id uuid PRIMARY KEY,
-  name text,
-  slug text UNIQUE,
-  beschreibung text,
-  adresse text,
-  oeffnungszeiten text,
-  logo_url text,
-  banner_url text,
-  aktiv boolean DEFAULT true,
-  erstellt_am timestamptz DEFAULT now()
-)
-
--- Produkte
-produkte (
-  id uuid PRIMARY KEY,
-  shop_id uuid REFERENCES shops(id),
-  titel text,
-  beschreibung text,
-  preis numeric,
-  kategorie_id uuid REFERENCES kategorien(id),
-  bilder text[],
-  verfuegbar boolean DEFAULT true,
-  erstellt_am timestamptz DEFAULT now()
-)
-
--- Kategorien
-kategorien (
-  id uuid PRIMARY KEY,
-  name text,
-  slug text UNIQUE,
-  bild_url text
-)
-
--- Reservierungen
-reservierungen (
-  id uuid PRIMARY KEY,
-  produkt_id uuid REFERENCES produkte(id),
-  kunde_name text,
-  kunde_email text,
-  status text DEFAULT 'offen',   -- offen | bestaetigt | abgeholt | abgelaufen
-  erstellt_am timestamptz DEFAULT now(),
-  ablauf_am timestamptz
-)
-
--- Newsletter-Abonnenten
-newsletter_abonnenten (
-  id uuid PRIMARY KEY,
-  email text UNIQUE,
-  aktiv boolean DEFAULT true,
-  erstellt_am timestamptz DEFAULT now()
-)
+shops                 — id, name, slug, beschreibung, adresse, oeffnungszeiten, logo_url, banner_url, aktiv
+produkte              — id, shop_id, titel, beschreibung, preis, kategorie_id, bilder[], verfuegbar
+kategorien            — id, name, slug, bild_url
+reservierungen        — id, produkt_id, kunde_name, kunde_email, status, erstellt_am, ablauf_am
+newsletter_abonnenten — id, email, aktiv, erstellt_am
 ```
 
 ---
@@ -209,18 +158,18 @@ newsletter_abonnenten (
 
 | Phase | Inhalt | Status |
 |-------|--------|--------|
-| 1 | GitHub-Repo, Vercel, Ordnerstruktur, CSS-Grunddateien | **als nächstes** |
-| 2 | Supabase Setup: DB-Schema, Auth, Storage-Bucket | offen |
-| 3 | Startseite `index.html` (Daten live aus Supabase) | offen |
-| 4 | Kategorieseite + Produktseite + Reservierungsformular + E-Mail-Flow | offen |
-| 5 | Shopseite (öffentliches Händlerprofil) | offen |
-| 6 | Newsletter-Anmeldeseite + monatlicher Auto-Versand | offen |
-| 7 | Händler-Login + Dashboard (Reservierungen + Produkte verwalten) | offen |
+| 1 | GitHub-Repo, Vercel, Ordnerstruktur, CSS-Grunddateien | erledigt |
+| 2 | Supabase Setup: DB-Schema, Auth, Storage | als nächstes |
+| 3 | Startseite index.html | offen |
+| 4 | Kategorieseite + Produktseite + Reservierung + E-Mail-Flow | offen |
+| 5 | Shopseite | offen |
+| 6 | Newsletter-Anmeldeseite + Auto-Versand | offen |
+| 7 | Händler-Login + Dashboard | offen |
 | 8 | Admin-Bereich | offen |
-| 9 | Amelie Fair Fashion eintragen (echte Daten, echte Bilder) | offen |
-| 10 | CrossoverDesign + Produkt-Konfigurator (Custom-Print, Bild-Upload) | Zukunft |
-| 11 | Weitere Städte / Multi-City | Zukunft |
-| 12 | Vollständiger Versand-Marktplatz (Kundenaccounts, Zahlung) | Zukunft |
+| 9 | Amelie Fair Fashion live eintragen | offen |
+| 10 | CrossoverDesign + Konfigurator | Zukunft |
+| 11 | Weitere Städte | Zukunft |
+| 12 | Vollständiger Versand-Marktplatz | Zukunft |
 
 ---
 
@@ -229,17 +178,8 @@ newsletter_abonnenten (
 - Immer vollständige Datei lesen bevor etwas geändert wird
 - Bei jedem CSS-Change Versionsnummer hochzählen (`?v=N`)
 - Gebrochenes Verhalten zuerst als Cache-Problem behandeln
-- Seitenspezifische Fixes im `<style>`-Tag direkt in der HTML-Datei
-- Geteiltes CSS nur für Elemente die mehrere Seiten teilen
 - Git nach jeder abgeschlossenen Änderung:
 
 ```bash
 git add -A && git commit -m "beschreibung" && git push
 ```
-
----
-
-## Nächster Schritt
-
-Phase 1 starten: Spec-Datei `Specs/phase-1-setup.md` schreiben und an Claude Code übergeben.
-Inhalt: GitHub-Repo anlegen, Vercel verbinden, Ordnerstruktur, alle CSS-Grunddateien mit tokens.css befüllt.

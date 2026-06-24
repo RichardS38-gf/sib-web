@@ -4,6 +4,10 @@ Händler/
 Infos/
 Vorlagen/
 
+# Secrets
+.env.local
+.env
+
 # System
 .DS_Store
 Thumbs.db
