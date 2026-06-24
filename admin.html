@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin-Bereich — Shoppen in Braunschweig</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/admin.css?v=1">
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="container">
+      <div class="site-header__inner">
+        <a class="site-header__logo" href="index.html" aria-label="Shoppen in Braunschweig — Startseite">
+          <img src="https://ezruwstzpncunbjzwdfk.supabase.co/storage/v1/object/public/produkt-bilder/Group%20635898.-fotor-enhance-2026031913012.jpg" alt="Shoppen in Braunschweig"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+          <span class="site-header__logo-text" style="display:none">Shoppen in&nbsp;Braunschweig</span>
+        </a>
+
+        <form class="site-header__search" role="search" action="kategorie.html" method="get">
+          <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
+        </form>
+
+        <nav class="site-header__nav" aria-label="Hauptnavigation">
+          <a href="shop.html">Geschäfte</a>
+          <a href="kategorie.html">Produkte</a>
+        </nav>
+
+        <div class="site-header__actions">
+          <a class="btn btn--outline-light site-header__desktop-only" href="login.html">Anmelden</a>
+          <a class="btn btn--light site-header__desktop-only" href="login.html">Händler werden</a>
+          <button class="site-header__burger" type="button" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile-Menü -->
+      <div class="site-header__mobile" id="mobile-menu" hidden>
+        <form class="site-header__mobile-search" role="search" action="kategorie.html" method="get">
+          <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
+        </form>
+        <a href="kategorie.html">Produkte</a>
+        <a href="shop.html">Geschäfte</a>
+        <a href="newsletter.html">Newsletter</a>
+        <a class="btn btn--outline-light btn--full" href="login.html">Anmelden</a>
+        <a class="btn btn--light btn--full" href="login.html">Händler werden</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Zugangs-Overlay (Admin-Login) ── -->
+  <div class="admin-gate" id="admin-gate" hidden>
+    <div class="admin-gate__box">
+      <span class="badge badge--outline" style="margin-bottom:var(--space-3)">Geschützter Bereich</span>
+      <h1 class="admin-gate__title">Admin-Login</h1>
+      <p class="admin-gate__hint">Bitte mit dem Admin-Konto anmelden.</p>
+      <form class="admin-gate__form" id="admin-gate-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="admin-email">E-Mail</label>
+          <input class="form-input" type="email" id="admin-email" name="email" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="admin-password">Passwort</label>
+          <input class="form-input" type="password" id="admin-password" name="password" required autocomplete="current-password">
+        </div>
+        <button class="btn btn--primary btn--full" type="submit">Anmelden</button>
+        <div id="admin-gate-feedback" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+
+  <main>
+    <section class="section">
+      <div class="container">
+
+        <div id="admin-loading" class="loading">Admin-Bereich wird geladen…</div>
+
+        <!-- Admin-Inhalt -->
+        <div id="admin" hidden>
+
+          <div class="admin-head">
+            <div>
+              <p class="label">Verwaltung</p>
+              <h1 class="admin-head__title">Admin-Bereich</h1>
+            </div>
+            <button class="btn btn--outline" id="admin-logout" type="button">Abmelden</button>
+          </div>
+
+          <!-- Tab-Navigation -->
+          <div class="admin-tabs" role="tablist">
+            <button class="admin-tab is-active" data-tab="haendler" role="tab">Händler</button>
+            <button class="admin-tab" data-tab="produkte" role="tab">Produkte</button>
+            <button class="admin-tab" data-tab="reservierungen" role="tab">Reservierungen</button>
+            <button class="admin-tab" data-tab="newsletter" role="tab">Newsletter</button>
+          </div>
+
+          <!-- TAB 1: Händler -->
+          <div class="admin-panel is-active" data-panel="haendler">
+            <div class="admin-panel__toolbar">
+              <h2>Alle Händler</h2>
+              <button class="btn btn--primary" id="toggle-shop-form" type="button">Händler anlegen</button>
+            </div>
+
+            <form class="admin-shop-form" id="shop-create-form" hidden>
+              <div class="admin-shop-form__row">
+                <div class="form-group">
+                  <label class="form-label" for="cs-name">Name</label>
+                  <input class="form-input" type="text" id="cs-name" name="name" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="cs-slug">Slug</label>
+                  <input class="form-input" type="text" id="cs-slug" name="slug" placeholder="z. B. amelie-fair-fashion" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cs-beschreibung">Beschreibung</label>
+                <textarea class="form-input" id="cs-beschreibung" name="beschreibung" rows="3"></textarea>
+              </div>
+              <div class="admin-shop-form__row">
+                <div class="form-group">
+                  <label class="form-label" for="cs-adresse">Adresse</label>
+                  <input class="form-input" type="text" id="cs-adresse" name="adresse">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="cs-oeffnungszeiten">Öffnungszeiten</label>
+                  <input class="form-input" type="text" id="cs-oeffnungszeiten" name="oeffnungszeiten" placeholder="z. B. Mo–Fr 10–18 Uhr">
+                </div>
+              </div>
+              <div class="admin-shop-form__actions">
+                <button class="btn btn--primary" type="submit">Anlegen</button>
+                <button class="btn btn--outline" type="button" id="cancel-shop-form">Abbrechen</button>
+              </div>
+              <div id="shop-create-feedback" aria-live="polite"></div>
+            </form>
+
+            <div id="haendler-content">
+              <div class="loading">Händler werden geladen…</div>
+            </div>
+          </div>
+
+          <!-- TAB 2: Produkte -->
+          <div class="admin-panel" data-panel="produkte" hidden>
+            <h2 class="admin-panel__heading">Alle Produkte</h2>
+            <div id="produkte-content">
+              <div class="loading">Produkte werden geladen…</div>
+            </div>
+          </div>
+
+          <!-- TAB 3: Reservierungen -->
+          <div class="admin-panel" data-panel="reservierungen" hidden>
+            <h2 class="admin-panel__heading">Alle Reservierungen</h2>
+            <div id="reservierungen-content">
+              <div class="loading">Reservierungen werden geladen…</div>
+            </div>
+          </div>
+
+          <!-- TAB 4: Newsletter -->
+          <div class="admin-panel" data-panel="newsletter" hidden>
+            <div class="admin-panel__toolbar">
+              <h2>Newsletter-Abonnenten</h2>
+              <span class="admin-count" id="newsletter-count">—</span>
+            </div>
+            <div id="newsletter-content">
+              <div class="loading">Abonnenten werden geladen…</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__brand">
+        <span class="site-footer__logo">Shoppen in Braunschweig</span>
+        <p class="site-footer__slogan">Lokale Händler. Einzigartige Produkte.</p>
+      </div>
+
+      <div class="site-footer__grid">
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Für Käufer</p>
+          <ul>
+            <li><a href="kategorie.html">Alle Produkte</a></li>
+            <li><a href="shop.html">Geschäfte entdecken</a></li>
+            <li><a href="newsletter.html">Newsletter</a></li>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Für Verkäufer</p>
+          <ul>
+            <li><a href="login.html">Händler werden</a></li>
+            <li><a href="login.html">Anmelden</a></li>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Kontakt</p>
+          <ul>
+            <li><a href="mailto:support@shoppeninbraunschweig.de">support@shoppeninbraunschweig.de</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="site-footer__bottom">
+        <p>© 2026 Shoppen in Braunschweig</p>
+        <p><a href="datenschutz.html">Datenschutz</a> &nbsp;|&nbsp; <a href="impressum.html">Impressum</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

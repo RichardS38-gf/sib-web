@@ -1,0 +1,190 @@
+/* admin.css — SIB Admin-Bereich */
+
+/* ── Zugangs-Overlay ── */
+.admin-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background-color: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--container-pad-mobile);
+}
+
+.admin-gate[hidden] { display: none; }
+
+.admin-gate__box {
+  width: 100%;
+  max-width: 26rem;
+  text-align: center;
+}
+
+.admin-gate__title {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-2);
+}
+
+.admin-gate__hint {
+  font-weight: 300;
+  color: var(--color-muted);
+  margin-bottom: var(--space-4);
+}
+
+.admin-gate__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+/* ── Kopf ── */
+.admin-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.admin-head__title {
+  font-size: var(--text-3xl);
+  margin-top: 0.25rem;
+}
+
+/* ── Tabs ── */
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--color-line);
+  margin-bottom: var(--space-4);
+}
+
+.admin-tab {
+  background: none;
+  border: none;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.admin-tab:hover { color: var(--color-ink); }
+.admin-tab.is-active { color: var(--color-ink); border-bottom-color: var(--color-ink); }
+
+/* ── Panels ── */
+.admin-panel { display: none; }
+.admin-panel.is-active { display: block; }
+.admin-panel[hidden] { display: none; }
+
+.admin-panel__heading { margin-bottom: var(--space-3); }
+
+.admin-panel__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.admin-count {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+/* ── Tabellen ── */
+.admin-table-wrap { overflow-x: auto; }
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.admin-table th {
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.admin-table td.is-wrap { white-space: normal; }
+
+/* Status-/Mute-Badge */
+.badge--muted {
+  background-color: transparent;
+  color: var(--color-muted);
+  border: 1px solid var(--color-line);
+}
+
+/* Kleiner Inline-Button in Tabellen */
+.btn--xs {
+  padding: 0.4rem 0.9rem;
+  font-size: var(--text-xs);
+}
+
+.admin-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.admin-link-btn:hover { color: var(--color-ink); }
+.admin-link-btn + .admin-link-btn { margin-left: var(--space-2); }
+
+/* ── Formulare ── */
+.admin-shop-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 44rem;
+  margin-bottom: var(--space-5);
+}
+
+.admin-shop-form[hidden] { display: none; }
+
+.admin-shop-form__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .admin-shop-form__row { grid-template-columns: 1fr 1fr; }
+}
+
+.admin-shop-form__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+textarea.form-input { resize: vertical; font-family: var(--font-sans); }
+
+/* ── Leerzustand ── */
+.admin-empty {
+  padding: var(--space-4) 0;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
