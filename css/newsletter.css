@@ -1,0 +1,42 @@
+/* newsletter.css — SIB Newsletter-Anmeldeseite */
+
+.newsletter {
+  display: flex;
+  justify-content: center;
+}
+
+.newsletter__box {
+  width: 100%;
+  max-width: 32rem;
+  text-align: center;
+}
+
+.newsletter__eyebrow {
+  margin-bottom: var(--space-3);
+}
+
+.newsletter__headline {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: var(--text-4xl);
+  line-height: 1.15;
+  margin-bottom: var(--space-3);
+}
+
+.newsletter__subtext {
+  font-size: var(--text-lg);
+  font-weight: 300;
+  color: var(--color-muted);
+  margin-bottom: var(--space-4);
+}
+
+.newsletter-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: left;
+}
+
+.newsletter-form #newsletter-feedback:not(:empty) {
+  margin-top: var(--space-1);
+}
