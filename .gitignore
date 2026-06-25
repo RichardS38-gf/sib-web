@@ -11,6 +11,11 @@ Vorlagen/
 # Supabase CLI lokaler Status/Cache
 supabase/.temp/
 
+# OneDrive Sync-Konfliktkopien (z. B. "datei-RichardsLaptop.html")
+*-*Laptop*
+*-DESKTOP-*
+*-LAPTOP-*
+
 # System
 .DS_Store
 Thumbs.db
