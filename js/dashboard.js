@@ -3,6 +3,7 @@
 // Verknüpfung Händler <-> Shop über shops.user_id = auth.uid().
 
 import { supabase } from './supabase.js'
+import { initHeaderSearch } from './header.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -460,6 +461,7 @@ function initShopForm () {
 // ── Init: Auth-Schutz + Daten laden ──
 async function init () {
   initMobileMenu()
+  initHeaderSearch()
 
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {

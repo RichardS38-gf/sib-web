@@ -3,6 +3,7 @@
 // Reservierungsformular und weitere Artikel desselben Shops.
 
 import { supabase } from './supabase.js'
+import { initHeaderSearch } from './header.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -300,6 +301,7 @@ async function ladeWeitere (produkt) {
 // ── Init ──
 async function init () {
   initMobileMenu()
+  initHeaderSearch()
 
   const id = getProduktId()
   if (!id) {

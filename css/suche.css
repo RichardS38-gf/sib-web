@@ -1,0 +1,39 @@
+/* suche.css — SIB Suchergebnisse */
+
+/* ── Seiten-Header ── */
+.page-head {
+  margin-bottom: var(--space-5);
+}
+
+.page-head__title {
+  font-size: var(--text-4xl);
+  margin-bottom: var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+.page-head__subtext {
+  font-size: var(--text-lg);
+  font-weight: 300;
+  color: var(--color-muted);
+}
+
+/* ── Ergebnis-Grid ── */
+.suche-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4) var(--space-3);
+}
+
+@media (min-width: 640px) { .suche-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .suche-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.suche-grid .loading,
+.suche-empty {
+  grid-column: 1 / -1;
+}
+
+.suche-empty {
+  padding: var(--space-5) 0;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}

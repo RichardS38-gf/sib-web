@@ -2,6 +2,7 @@
 // Lädt Kategorien und neue Produkte live aus Supabase.
 
 import { supabase } from './supabase.js'
+import { initHeaderSearch } from './header.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -113,5 +114,6 @@ async function ladeProdukte () {
 }
 
 initMobileMenu()
+initHeaderSearch()
 ladeKategorien()
 ladeProdukte()

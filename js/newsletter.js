@@ -2,6 +2,7 @@
 // Speichert E-Mail-Adressen in der Tabelle newsletter_abonnenten.
 
 import { supabase } from './supabase.js'
+import { initHeaderSearch } from './header.js'
 
 // ── Mobile-Menü ──
 function initMobileMenu () {
@@ -65,4 +66,5 @@ function initNewsletter () {
 }
 
 initMobileMenu()
+initHeaderSearch()
 initNewsletter()

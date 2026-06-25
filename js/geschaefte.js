@@ -3,6 +3,7 @@
 // (Hauptkategorie = Kategorie der meisten Produkte eines Händlers).
 
 import { supabase } from './supabase.js'
+import { initHeaderSearch } from './header.js'
 
 function esc (value) {
   return String(value ?? '')
@@ -72,6 +73,7 @@ function renderGrid () {
 // ── Init: Daten laden ──
 async function init () {
   initMobileMenu()
+  initHeaderSearch()
   const grid = document.getElementById('haendler-grid')
 
   // Suche verdrahten

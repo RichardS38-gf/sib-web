@@ -2,6 +2,7 @@
 // Authentifizierung via Supabase Auth (E-Mail + Passwort).
 
 import { supabase } from './supabase.js'
+import { initHeaderSearch } from './header.js'
 
 // ── Mobile-Menü ──
 function initMobileMenu () {
@@ -57,5 +58,6 @@ function initLogin () {
 }
 
 initMobileMenu()
+initHeaderSearch()
 redirectIfLoggedIn()
 initLogin()

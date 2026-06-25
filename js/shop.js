@@ -2,6 +2,7 @@
 // Lädt ein Geschäft (per slug) live aus Supabase und zeigt Profil + Produkte.
 
 import { supabase } from './supabase.js'
+import { initHeaderSearch } from './header.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -135,6 +136,7 @@ async function ladeProdukte (shop) {
 // ── Init ──
 async function init () {
   initMobileMenu()
+  initHeaderSearch()
 
   const slug = getSlug()
   if (!slug) {

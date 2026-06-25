@@ -2,6 +2,7 @@
 // Zeigt Produkte gefiltert nach Kategorie (?slug=XXX) oder alle Produkte.
 
 import { supabase } from './supabase.js'
+import { initHeaderSearch } from './header.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -74,6 +75,7 @@ function renderProdukte (produkte) {
 // ── Init ──
 async function init () {
   initMobileMenu()
+  initHeaderSearch()
 
   const slug = getSlug()
   const titelEl = document.getElementById('kategorie-titel')

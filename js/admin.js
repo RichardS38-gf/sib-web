@@ -3,6 +3,7 @@
 // Vollzugriff wird serverseitig per RLS-Policy gewährt (siehe supabase/admin-setup.sql).
 
 import { supabase } from './supabase.js'
+import { initHeaderSearch } from './header.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -555,6 +556,7 @@ async function toggleAbo (id, aktivJetzt) {
 // ── Init ──
 async function init () {
   initMobileMenu()
+  initHeaderSearch()
   initGateForm()
 
   if (await istAdmin()) {

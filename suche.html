@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Newsletter — Shoppen in Braunschweig</title>
-  <meta name="description" content="Einmal im Monat die neuesten Produkte aus Braunschweiger Geschäften — direkt in dein Postfach.">
+  <title>Suche — Shoppen in Braunschweig</title>
+  <meta name="description" content="Produkte lokaler Braunschweiger Händler durchsuchen.">
+  <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -13,7 +14,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/newsletter.css?v=1">
+  <link rel="stylesheet" href="css/suche.css?v=1">
 </head>
 <body>
 
@@ -60,22 +61,20 @@
   </header>
 
   <main>
-    <section class="section newsletter">
+    <section class="section">
       <div class="container">
-        <div class="newsletter__box">
-          <span class="badge badge--outline newsletter__eyebrow">Newsletter</span>
-          <h1 class="newsletter__headline">Lokale Produkte. Direkt in dein Postfach.</h1>
-          <p class="newsletter__subtext">Einmal im Monat die neuesten Produkte aus Braunschweiger Geschäften. Kein Spam, jederzeit abmeldbar.</p>
 
-          <form class="newsletter-form" id="newsletter-form" novalidate>
-            <div class="form-group">
-              <label class="form-label" for="newsletter-email">E-Mail</label>
-              <input class="form-input" type="email" id="newsletter-email" name="email" placeholder="deine@email.de" required autocomplete="email">
-            </div>
-            <button class="btn btn--primary btn--full" type="submit">Anmelden</button>
-            <div id="newsletter-feedback" aria-live="polite"></div>
-          </form>
+        <!-- Seiten-Header -->
+        <div class="page-head">
+          <h1 class="page-head__title" id="suche-titel">Suche</h1>
+          <p class="page-head__subtext" id="suche-anzahl">Suche läuft…</p>
         </div>
+
+        <!-- Ergebnis-Grid -->
+        <div class="suche-grid" id="ergebnisse">
+          <div class="loading">Suche läuft…</div>
+        </div>
+
       </div>
     </section>
   </main>
@@ -119,6 +118,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/newsletter.js?v=2"></script>
+  <script type="module" src="js/suche.js?v=1"></script>
 </body>
 </html>
