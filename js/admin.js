@@ -59,7 +59,7 @@ async function istAdmin () {
 }
 
 function zeigeGate (msg) {
-  document.getElementById('admin-loading').hidden = true
+  document.getElementById('admin-loading').style.display = 'none'
   document.getElementById('admin').hidden = true
   const gate = document.getElementById('admin-gate')
   gate.hidden = false
@@ -70,7 +70,7 @@ function zeigeGate (msg) {
 
 function zeigeAdmin () {
   document.getElementById('admin-gate').hidden = true
-  document.getElementById('admin-loading').hidden = true
+  document.getElementById('admin-loading').style.display = 'none'
   document.getElementById('admin').hidden = false
 
   initTabs()

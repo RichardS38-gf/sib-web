@@ -377,7 +377,9 @@ async function init () {
   }
 
   // UI vorbereiten
-  loading.hidden = true
+  // .style.display statt .hidden, da die .loading-Klasse (display:flex)
+  // das [hidden]-Attribut überstimmen würde.
+  loading.style.display = 'none'
   dashboard.hidden = false
   document.getElementById('dash-greeting').textContent = `Willkommen, ${shop.name}`
 
