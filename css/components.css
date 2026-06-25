@@ -331,3 +331,47 @@
   color: #006600;
   font-size: var(--text-sm);
 }
+
+/* ── Social-Share-Zeile ── */
+.share-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.share-row__label {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin-right: 0.25rem;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-ink);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition);
+}
+
+.share-btn:hover { background-color: var(--color-ink); color: var(--color-on-dark); }
+.share-btn svg { width: 18px; height: 18px; display: block; fill: currentColor; }
+
+.share-btn--copy.is-copied {
+  width: auto;
+  padding: 0 0.6rem;
+  background-color: var(--color-ink);
+  color: var(--color-on-dark);
+}
+
+.share-btn__copied {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}

@@ -40,6 +40,49 @@ function neuBadge (p) {
     : ''
 }
 
+// ── Social-Share ──
+const SHARE_ICONS = {
+  whatsapp: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.11 17.2c-.28-.14-1.65-.81-1.9-.9-.26-.1-.45-.14-.63.14-.19.28-.72.9-.88 1.08-.16.19-.32.21-.6.07-.28-.14-1.18-.43-2.25-1.39-.83-.74-1.39-1.65-1.55-1.93-.16-.28-.02-.43.12-.57.13-.13.28-.32.42-.48.14-.16.19-.28.28-.46.09-.19.05-.35-.02-.49-.07-.14-.63-1.51-.86-2.07-.23-.55-.46-.48-.63-.49h-.54c-.19 0-.49.07-.75.35-.26.28-.98.96-.98 2.33 0 1.37 1 2.7 1.14 2.89.14.19 1.97 3.01 4.78 4.22.67.29 1.19.46 1.6.59.67.21 1.28.18 1.76.11.54-.08 1.65-.67 1.88-1.32.23-.65.23-1.21.16-1.32-.07-.11-.26-.18-.54-.32z M12 2a10 10 0 00-8.6 15.06L2 22l5.06-1.33A10 10 0 1012 2zm0 18.2a8.18 8.18 0 01-4.17-1.14l-.3-.18-3 .79.8-2.92-.2-.31A8.2 8.2 0 1112 20.2z"/></svg>',
+  facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.12 5.32H17V2.14A26.11 26.11 0 0014.26 2c-2.72 0-4.58 1.66-4.58 4.7v2.6H6.6v3.56h3.08V22h3.68v-9.14h3.06l.46-3.56h-3.52V7.05c0-1.03.28-1.73 1.76-1.73z"/></svg>',
+  link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.9 12a3.1 3.1 0 013.1-3.1h4V7H7a5 5 0 000 10h4v-1.9H7A3.1 3.1 0 013.9 12zM8 13h8v-2H8v2zm9-6h-4v1.9h4A3.1 3.1 0 0117 15.1h-4V17h4a5 5 0 000-10z"/></svg>'
+}
+
+function shareRow (waText, url) {
+  const wa = `https://wa.me/?text=${encodeURIComponent(waText)}`
+  const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+  return `
+    <div class="share-row">
+      <span class="share-row__label">Teilen:</span>
+      <a class="share-btn" href="${esc(wa)}" target="_blank" rel="noopener" aria-label="Auf WhatsApp teilen" title="WhatsApp">${SHARE_ICONS.whatsapp}</a>
+      <a class="share-btn" href="${esc(fb)}" target="_blank" rel="noopener" aria-label="Auf Facebook teilen" title="Facebook">${SHARE_ICONS.facebook}</a>
+      <button class="share-btn share-btn--copy" type="button" data-copy-url="${esc(url)}" aria-label="Link kopieren" title="Link kopieren">${SHARE_ICONS.link}</button>
+    </div>`
+}
+
+function initCopyButtons (root) {
+  (root || document).querySelectorAll('[data-copy-url]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const url = btn.dataset.copyUrl
+      try {
+        await navigator.clipboard.writeText(url)
+      } catch (e) {
+        const ta = document.createElement('textarea')
+        ta.value = url
+        ta.style.position = 'fixed'
+        ta.style.opacity = '0'
+        document.body.appendChild(ta)
+        ta.select()
+        try { document.execCommand('copy') } catch (e2) { /* ignore */ }
+        document.body.removeChild(ta)
+      }
+      const orig = btn.innerHTML
+      btn.classList.add('is-copied')
+      btn.innerHTML = '<span class="share-btn__copied">Kopiert!</span>'
+      setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('is-copied') }, 1500)
+    })
+  })
+}
+
 // ── Mobile-Menü (wie auf der Startseite) ──
 function initMobileMenu () {
   const burger = document.querySelector('.site-header__burger')
@@ -146,6 +189,7 @@ function renderDetail (produkt, varianten = []) {
         ${shopLink}
         <h1 class="product-info__title">${esc(produkt.titel)}</h1>
         <p class="product-info__price">${esc(preis)}</p>
+        ${shareRow(`Schau mal: ${produkt.titel} bei ${shopName} auf Shoppen in Braunschweig – ${window.location.href}`, window.location.href)}
         ${beschreibung}
         <hr>
         ${formularOderStatus}
@@ -155,6 +199,7 @@ function renderDetail (produkt, varianten = []) {
   if (produkt.titel) document.title = `${produkt.titel} — Shoppen in Braunschweig`
 
   initGallery()
+  initCopyButtons(el)
   if (verfuegbar) {
     initGroessen()
     initReservierung(produkt)
