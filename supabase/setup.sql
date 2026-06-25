@@ -50,6 +50,20 @@ create table if not exists public.produkt_varianten (
 create index if not exists produkt_varianten_produkt_id_idx
   on public.produkt_varianten (produkt_id);
 
+-- Händler-Registrierungsanfragen (von der Seite haendler-werden.html)
+create table if not exists public.haendler_anfragen (
+  id uuid primary key default gen_random_uuid(),
+  vorname text,
+  nachname text,
+  email text,
+  telefon text,
+  geschaeft_name text,
+  adresse text,
+  beschreibung text,
+  logo_url text,
+  erstellt_am timestamptz not null default now()
+);
+
 -- Admin-Registry: Auth-Konten mit Vollzugriff
 create table if not exists public.admins (
   user_id uuid primary key references auth.users (id) on delete cascade,
@@ -104,6 +118,11 @@ grant select on public.produkt_varianten to anon;
 grant select, insert, update, delete on public.produkt_varianten to authenticated;
 grant all on public.produkt_varianten to service_role;
 
+-- Händler-Anfragen: anon darf anlegen, authenticated (Admin) verwaltet
+grant insert on public.haendler_anfragen to anon, authenticated;
+grant select, update, delete on public.haendler_anfragen to authenticated;
+grant all on public.haendler_anfragen to service_role;
+
 -- is_admin() ausführbar für eingeloggte Nutzer (und anon, schadet nicht)
 grant execute on function public.is_admin () to anon, authenticated;
 
@@ -118,6 +137,7 @@ alter table public.reservierungen        enable row level security;
 alter table public.newsletter_abonnenten enable row level security;
 alter table public.admins                enable row level security;
 alter table public.produkt_varianten     enable row level security;
+alter table public.haendler_anfragen     enable row level security;
 
 
 -- ============================================================
@@ -235,6 +255,18 @@ create policy "Admin Vollzugriff varianten"
   on public.produkt_varianten for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
+-- 3f) Händler-Anfragen --------------------------------------------
+-- Öffentlich anlegen (Registrierungsformular), Admin verwaltet alles.
+drop policy if exists "anfragen_insert"                  on public.haendler_anfragen;
+drop policy if exists "Admin Vollzugriff haendler_anfragen" on public.haendler_anfragen;
+
+create policy "anfragen_insert"
+  on public.haendler_anfragen for insert to anon, authenticated with check (true);
+
+create policy "Admin Vollzugriff haendler_anfragen"
+  on public.haendler_anfragen for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+
 
 -- ============================================================
 -- 4) Indizes
@@ -244,6 +276,20 @@ create index if not exists shops_user_id_idx on public.shops (user_id);
 -- Newsletter: E-Mail eindeutig (für "bereits angemeldet"-Erkennung, Code 23505)
 create unique index if not exists newsletter_abonnenten_email_key
   on public.newsletter_abonnenten (lower(email));
+
+
+-- ============================================================
+-- 4b) Storage: Bucket für Händler-Logos
+-- ============================================================
+-- Privater Bucket; anonyme Besucher dürfen Logos beim Registrieren hochladen.
+insert into storage.buckets (id, name, public)
+values ('haendler-logos', 'haendler-logos', false)
+on conflict (id) do nothing;
+
+drop policy if exists "haendler-logos anon upload" on storage.objects;
+create policy "haendler-logos anon upload"
+  on storage.objects for insert to anon, authenticated
+  with check (bucket_id = 'haendler-logos');
 
 
 -- ============================================================

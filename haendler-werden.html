@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/haendler-werden.css?v=1">
+  <link rel="stylesheet" href="css/haendler-werden.css?v=2">
 </head>
 <body>
 
@@ -60,16 +60,80 @@
   </header>
 
   <main>
-    <section class="section haendler-werden">
+
+    <!-- 1. Hero (dunkel) -->
+    <section class="section section--dark hw-hero">
       <div class="container">
-        <div class="haendler-werden__box">
-          <span class="badge badge--outline haendler-werden__eyebrow">Für Händler</span>
-          <h1 class="haendler-werden__headline">Händler werden</h1>
-          <p class="haendler-werden__subtext">Weitere Informationen folgen in Kürze. Melde dich in der Zwischenzeit direkt bei uns: <a href="mailto:support@shoppeninbraunschweig.de">support@shoppeninbraunschweig.de</a></p>
-          <a class="btn btn--outline" href="haendler-login.html">Bereits registriert? Zum Login</a>
+        <h1 class="hw-hero__headline">Dein Geschäft.<br>Online sichtbar.</h1>
+        <p class="hw-hero__subtext">Registriere dein Geschäft auf Shoppen in Braunschweig und erreiche tausende lokale Käufer.</p>
+        <ul class="hw-vorteile">
+          <li class="hw-vorteil">Kostenlos starten</li>
+          <li class="hw-vorteil">Keine Provision</li>
+          <li class="hw-vorteil">Volle Kontrolle</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 2. Formular (hell) -->
+    <section class="section">
+      <div class="container">
+        <div class="hw-form-wrap">
+          <h2 class="hw-form__headline">Jetzt registrieren</h2>
+
+          <form class="hw-form" id="haendler-form" novalidate>
+            <div class="hw-form__row">
+              <div class="form-group">
+                <label class="form-label" for="hf-vorname">Vorname</label>
+                <input class="form-input" type="text" id="hf-vorname" name="vorname" required autocomplete="given-name">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="hf-nachname">Nachname</label>
+                <input class="form-input" type="text" id="hf-nachname" name="nachname" required autocomplete="family-name">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="hf-email">E-Mail-Adresse</label>
+              <input class="form-input" type="email" id="hf-email" name="email" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="hf-telefon">Telefonnummer</label>
+              <input class="form-input" type="tel" id="hf-telefon" name="telefon" required autocomplete="tel">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="hf-geschaeft">Geschäftsname</label>
+              <input class="form-input" type="text" id="hf-geschaeft" name="geschaeft_name" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="hf-adresse">Adresse des Geschäfts</label>
+              <input class="form-input" type="text" id="hf-adresse" name="adresse" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="hf-beschreibung">Kurze Beschreibung des Geschäfts</label>
+              <textarea class="form-input" id="hf-beschreibung" name="beschreibung" rows="4"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="hf-logo">Logo hochladen <span class="hw-optional">(optional)</span></label>
+              <input class="form-input" type="file" id="hf-logo" name="logo" accept="image/*">
+            </div>
+
+            <label class="hw-check">
+              <input type="checkbox" id="hf-datenschutz" name="datenschutz" required>
+              <span>Ich habe die <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und akzeptiere sie.</span>
+            </label>
+
+            <button class="btn btn--primary btn--full" type="submit">Registrierung absenden</button>
+            <div id="hw-feedback" aria-live="polite"></div>
+          </form>
         </div>
       </div>
     </section>
+
   </main>
 
   <!-- ── Footer ── -->
@@ -112,6 +176,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/haendler-werden.js?v=1"></script>
+  <script type="module" src="js/haendler-werden.js?v=2"></script>
 </body>
 </html>

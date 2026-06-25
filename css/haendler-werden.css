@@ -1,31 +1,110 @@
-/* haendler-werden.css — SIB Händler-werden (Platzhalter) */
+/* haendler-werden.css — SIB Händler-Registrierung */
 
-.haendler-werden {
-  display: flex;
-  justify-content: center;
-}
+/* ── 1. Hero (dunkel) ── */
+.hw-hero { text-align: center; }
 
-.haendler-werden__box {
-  width: 100%;
-  max-width: 34rem;
-  text-align: center;
-}
-
-.haendler-werden__eyebrow { margin-bottom: var(--space-3); }
-
-.haendler-werden__headline {
+.hw-hero__headline {
+  color: var(--color-on-dark);
   font-size: var(--text-4xl);
+  line-height: 1.1;
   margin-bottom: var(--space-3);
 }
 
-.haendler-werden__subtext {
+.hw-hero__subtext {
+  color: #999;
   font-weight: 300;
-  color: var(--color-muted);
+  font-size: var(--text-lg);
+  max-width: 42rem;
+  margin: 0 auto var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .hw-hero__headline { font-size: var(--text-5xl); }
+}
+
+.hw-vorteile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.hw-vorteil {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-on-dark);
+}
+
+.hw-vorteil::before {
+  content: '— ';
+  color: #777;
+}
+
+@media (min-width: 640px) {
+  .hw-vorteile { flex-direction: row; justify-content: center; gap: var(--space-4); }
+}
+
+/* ── 2. Formular ── */
+.hw-form-wrap {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.hw-form__headline {
+  font-size: var(--text-3xl);
   margin-bottom: var(--space-4);
 }
 
-.haendler-werden__subtext a {
-  color: var(--color-ink);
+.hw-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hw-form__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .hw-form__row { grid-template-columns: 1fr 1fr; }
+}
+
+.hw-optional {
+  font-weight: 400;
+  color: var(--color-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+input[type="file"].form-input {
+  padding: 0.5rem var(--space-2);
+  font-size: var(--text-sm);
+}
+
+/* Checkbox-Zeile */
+.hw-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 300;
+  cursor: pointer;
+}
+
+.hw-check input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+  accent-color: var(--color-ink);
+  cursor: pointer;
+}
+
+.hw-check a {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
