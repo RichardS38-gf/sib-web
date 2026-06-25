@@ -68,9 +68,14 @@ function renderDetail (produkt, varianten = []) {
       <div class="product-groessen">
         <p class="product-groessen__label">Größe wählen</p>
         <div class="product-groessen__options">
-          ${varianten.map((v) =>
-            `<button type="button" class="product-groesse" data-groesse="${esc(v.groesse)}">${esc(v.groesse)}</button>`
-          ).join('')}
+          ${varianten.map((v) => {
+            const ausverkauft = !(v.stueckzahl > 0)
+            return `
+              <div class="product-groesse-item">
+                <button type="button" class="product-groesse${ausverkauft ? ' is-disabled' : ''}" data-groesse="${esc(v.groesse)}"${ausverkauft ? ' disabled aria-disabled="true"' : ''}>${esc(v.groesse)}</button>
+                ${ausverkauft ? '<span class="product-groesse__note">Nicht verfügbar</span>' : ''}
+              </div>`
+          }).join('')}
         </div>
       </div>`
     : ''
@@ -294,14 +299,13 @@ async function init () {
       return
     }
 
-    // Verfügbare Größen (Varianten mit Stückzahl > 0) laden
+    // Alle Größen (Varianten) laden — auch ausverkaufte werden angezeigt
     let varianten = []
     try {
       const { data: vData, error: vErr } = await supabase
         .from('produkt_varianten')
         .select('*')
         .eq('produkt_id', data.id)
-        .gt('stueckzahl', 0)
         .order('erstellt_am', { ascending: true })
       if (!vErr) varianten = vData || []
     } catch (vErr) {
