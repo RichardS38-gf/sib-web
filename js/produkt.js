@@ -10,6 +10,17 @@ const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR'
 let selectedGroesse = null
 let hatVarianten = false
 
+// Feste Größen-Reihenfolge für das Dropdown
+const GROESSEN_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Einheitsgröße']
+
+function sortiereVarianten (varianten) {
+  const rang = (g) => {
+    const i = GROESSEN_ORDER.indexOf(g)
+    return i === -1 ? GROESSEN_ORDER.length : i
+  }
+  return [...varianten].sort((a, b) => rang(a.groesse) - rang(b.groesse))
+}
+
 function esc (value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -66,17 +77,14 @@ function renderDetail (produkt, varianten = []) {
   const groessenBlock = hatVarianten
     ? `
       <div class="product-groessen">
-        <p class="product-groessen__label">Größe wählen</p>
-        <div class="product-groessen__options">
-          ${varianten.map((v) => {
+        <label class="product-groessen__label" for="groesse-select">Größe wählen</label>
+        <select class="form-select product-groessen__select" id="groesse-select">
+          <option value="">Bitte wählen…</option>
+          ${sortiereVarianten(varianten).map((v) => {
             const ausverkauft = !(v.stueckzahl > 0)
-            return `
-              <div class="product-groesse-item">
-                <button type="button" class="product-groesse${ausverkauft ? ' is-disabled' : ''}" data-groesse="${esc(v.groesse)}"${ausverkauft ? ' disabled aria-disabled="true"' : ''}>${esc(v.groesse)}</button>
-                ${ausverkauft ? '<span class="product-groesse__note">Nicht verfügbar</span>' : ''}
-              </div>`
+            return `<option value="${esc(v.groesse)}"${ausverkauft ? ' disabled' : ''}>${esc(v.groesse)}${ausverkauft ? ' (Nicht verfügbar)' : ''}</option>`
           }).join('')}
-        </div>
+        </select>
       </div>`
     : ''
 
@@ -142,21 +150,12 @@ function renderDetail (produkt, varianten = []) {
   }
 }
 
-// Größen-Buttons: Auswahl umschalten
+// Größen-Dropdown: Auswahl übernehmen
 function initGroessen () {
-  const buttons = document.querySelectorAll('.product-groesse')
-  buttons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const groesse = btn.dataset.groesse
-      if (selectedGroesse === groesse) {
-        // erneutes Klicken hebt die Auswahl auf
-        selectedGroesse = null
-        btn.classList.remove('is-active')
-      } else {
-        selectedGroesse = groesse
-        buttons.forEach((b) => b.classList.toggle('is-active', b === btn))
-      }
-    })
+  const select = document.getElementById('groesse-select')
+  if (!select) return
+  select.addEventListener('change', () => {
+    selectedGroesse = select.value || null
   })
 }
 
