@@ -1,0 +1,137 @@
+/* geschaefte.css — SIB Geschäfte-Übersicht */
+
+/* ── Seiten-Header ── */
+.page-head {
+  margin-bottom: var(--space-4);
+}
+
+.page-head__title {
+  font-size: var(--text-4xl);
+  margin-bottom: var(--space-1);
+}
+
+.page-head__subtext {
+  font-size: var(--text-lg);
+  font-weight: 300;
+  color: var(--color-muted);
+}
+
+/* ── Suche ── */
+.geschaefte-search {
+  margin-bottom: var(--space-3);
+}
+
+.geschaefte-search .form-input {
+  width: 100%;
+  max-width: 28rem;
+}
+
+/* ── Kategorie-Filter ── */
+.geschaefte-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-5);
+}
+
+.filter-btn {
+  padding: 0.5rem 1rem;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.filter-btn:hover { border-color: var(--color-ink); }
+
+.filter-btn.is-active {
+  background-color: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-on-dark);
+}
+
+/* ── Händler-Grid ── */
+.haendler-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) { .haendler-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .haendler-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.haendler-grid .loading,
+.haendler-empty {
+  grid-column: 1 / -1;
+}
+
+.haendler-empty {
+  padding: var(--space-5) 0;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* ── Händler-Karte ── */
+.haendler-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-line);
+  background-color: var(--color-bg);
+  transition: opacity var(--transition);
+}
+
+.haendler-card:hover { opacity: 0.92; }
+
+.haendler-card__banner {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  background-color: var(--color-bg-soft);
+}
+
+div.haendler-card__banner { display: block; }
+
+.haendler-card__body {
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.haendler-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.haendler-card__logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--color-bg-soft);
+  flex-shrink: 0;
+}
+
+.haendler-card__name {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  line-height: 1.2;
+}
+
+.haendler-card__adresse {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.haendler-card__count {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+}
