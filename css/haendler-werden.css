@@ -1,0 +1,31 @@
+/* haendler-werden.css — SIB Händler-werden (Platzhalter) */
+
+.haendler-werden {
+  display: flex;
+  justify-content: center;
+}
+
+.haendler-werden__box {
+  width: 100%;
+  max-width: 34rem;
+  text-align: center;
+}
+
+.haendler-werden__eyebrow { margin-bottom: var(--space-3); }
+
+.haendler-werden__headline {
+  font-size: var(--text-4xl);
+  margin-bottom: var(--space-3);
+}
+
+.haendler-werden__subtext {
+  font-weight: 300;
+  color: var(--color-muted);
+  margin-bottom: var(--space-4);
+}
+
+.haendler-werden__subtext a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

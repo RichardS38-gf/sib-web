@@ -64,7 +64,7 @@ function initLogout () {
   if (!btn) return
   btn.addEventListener('click', async () => {
     await supabase.auth.signOut()
-    window.location.replace('login.html')
+    window.location.replace('haendler-login.html')
   })
 }
 
@@ -465,7 +465,7 @@ async function init () {
 
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {
-    window.location.replace('login.html')
+    window.location.replace('haendler-login.html')
     return
   }
 
@@ -490,7 +490,7 @@ async function init () {
         </div>`
       document.getElementById('logout-btn2')?.addEventListener('click', async () => {
         await supabase.auth.signOut()
-        window.location.replace('login.html')
+        window.location.replace('haendler-login.html')
       })
       return
     }
