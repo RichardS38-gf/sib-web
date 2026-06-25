@@ -40,6 +40,24 @@
   display: flex;
   flex-direction: column;
   cursor: pointer;
+  position: relative;
+}
+
+/* "Neu"-Badge oben links auf dem Produktbild */
+.product-card__badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--color-ink);
+  color: var(--color-on-dark);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1;
 }
 
 .product-card__image {

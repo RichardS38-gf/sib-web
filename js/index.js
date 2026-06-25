@@ -15,6 +15,16 @@ function esc (value) {
     .replace(/"/g, '&quot;')
 }
 
+// "Neu"-Badge: nur für verfügbare, freigegebene Produkte < 7 Tage alt
+function neuBadge (p) {
+  if (p.verfuegbar === false || p.freigegeben !== true) return ''
+  const t = p.erstellt_am ? new Date(p.erstellt_am).getTime() : NaN
+  if (isNaN(t)) return ''
+  return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
+    ? '<span class="product-card__badge">Neu</span>'
+    : ''
+}
+
 // ── Mobile-Menü ──
 function initMobileMenu () {
   const burger = document.querySelector('.site-header__burger')
@@ -100,7 +110,7 @@ async function ladeProdukte () {
       const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
       return `
         <a class="product-card" href="produkt.html?id=${id}">
-          ${bild}
+          ${neuBadge(p)}${bild}
           <span class="product-card__shop">${esc(shopName)}</span>
           <span class="product-card__title">${esc(p.titel)}</span>
           <span class="product-card__price">${esc(preis)}</span>
