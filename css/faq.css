@@ -1,0 +1,107 @@
+/* faq.css — SIB FAQ-Seite */
+
+/* ── Seiten-Header ── */
+.page-head {
+  margin-bottom: var(--space-4);
+}
+
+.page-head__title {
+  font-size: var(--text-4xl);
+}
+
+/* ── Abschnittstitel ── */
+.faq-section__title {
+  font-size: var(--text-2xl);
+  margin-top: var(--space-5);
+  margin-bottom: var(--space-2);
+}
+
+/* ── Akkordeon ── */
+.faq-list {
+  border-top: 1px solid var(--color-line);
+}
+
+.faq-item {
+  border-bottom: 1px solid var(--color-line);
+}
+
+.faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  background: none;
+  border: none;
+  padding: var(--space-3) 0;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.faq-question:hover { opacity: 0.7; }
+
+/* Plus/Minus-Icon (reines CSS) */
+.faq-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.faq-icon::before,
+.faq-icon::after {
+  content: '';
+  position: absolute;
+  background-color: var(--color-ink);
+  transition: transform var(--transition), opacity var(--transition);
+}
+
+.faq-icon::before {
+  top: 7px; left: 0;
+  width: 16px; height: 2px;
+}
+
+.faq-icon::after {
+  top: 0; left: 7px;
+  width: 2px; height: 16px;
+}
+
+/* Offen: Minus (vertikaler Strich ausgeblendet) */
+.faq-question[aria-expanded="true"] .faq-icon::after {
+  transform: scaleY(0);
+  opacity: 0;
+}
+
+.faq-answer {
+  padding: 0 0 var(--space-3);
+  max-width: 60ch;
+}
+
+.faq-answer p {
+  font-weight: 300;
+  color: var(--color-ink);
+}
+
+.faq-answer a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Noch Fragen? (dunkel) ── */
+.faq-cta { text-align: center; }
+
+.faq-cta__headline {
+  color: var(--color-on-dark);
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-2);
+}
+
+.faq-cta__text {
+  color: #999;
+  font-weight: 300;
+  margin-bottom: var(--space-4);
+}

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Häufige Fragen — Shoppen in Braunschweig</title>
+  <meta name="description" content="Antworten auf häufige Fragen für Käufer und Händler bei Shoppen in Braunschweig.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/faq.css?v=1">
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="container">
+      <div class="site-header__inner">
+        <a class="site-header__logo" href="index.html" aria-label="Shoppen in Braunschweig — Startseite">
+          <img src="https://ezruwstzpncunbjzwdfk.supabase.co/storage/v1/object/public/produkt-bilder/Group%20635898.-fotor-enhance-2026031913012.jpg" alt="Shoppen in Braunschweig"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+          <span class="site-header__logo-text" style="display:none">Shoppen in&nbsp;Braunschweig</span>
+        </a>
+
+        <form class="site-header__search" role="search" action="suche.html" method="get">
+          <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
+        </form>
+
+        <nav class="site-header__nav" aria-label="Hauptnavigation">
+          <a href="geschaefte.html">Geschäfte</a>
+          <a href="kategorie.html">Produkte</a>
+        </nav>
+
+        <div class="site-header__actions">
+          <a class="btn btn--outline-light site-header__desktop-only" href="haendler-login.html">Anmelden</a>
+          <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Händler werden</a>
+          <button class="site-header__burger" type="button" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile-Menü -->
+      <div class="site-header__mobile" id="mobile-menu" hidden>
+        <form class="site-header__mobile-search" role="search" action="suche.html" method="get">
+          <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
+        </form>
+        <a href="kategorie.html">Produkte</a>
+        <a href="geschaefte.html">Geschäfte</a>
+        <a href="newsletter.html">Newsletter</a>
+        <a class="btn btn--outline-light btn--full" href="haendler-login.html">Anmelden</a>
+        <a class="btn btn--light btn--full" href="haendler-werden.html">Händler werden</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Seiten-Header -->
+    <section class="section">
+      <div class="container">
+        <div class="page-head">
+          <h1 class="page-head__title">Häufige Fragen</h1>
+        </div>
+
+        <!-- Für Käufer -->
+        <h2 class="faq-section__title">Für Käufer</h2>
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Wie funktioniert die Reservierung?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Du reservierst ein Produkt online, gibst Name und E-Mail an und holst es dann direkt im Geschäft ab. Kein Account nötig, keine Zahlung online.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Kostet die Reservierung etwas?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Nein, die Reservierung ist komplett kostenlos.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Wie lange gilt meine Reservierung?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Deine Reservierung ist 7 Tage gültig. Danach wird sie automatisch storniert.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Wann weiß ich, dass mein Artikel abholbereit ist?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Du erhältst eine E-Mail, sobald der Händler deine Reservierung bestätigt hat.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Kann ich eine Reservierung stornieren?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Kontaktiere den Händler direkt oder schreib uns an <a href="mailto:support@shoppeninbraunschweig.de">support@shoppeninbraunschweig.de</a>.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Muss ich den Artikel kaufen, wenn ich ihn abhole?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Nein, du kannst den Artikel vor Ort ansehen und dich dann entscheiden.</p></div>
+          </div>
+        </div>
+
+        <!-- Für Händler -->
+        <h2 class="faq-section__title">Für Händler</h2>
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Was kostet die Teilnahme?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Der Start ist kostenlos. Wir informieren dich rechtzeitig, falls sich das ändert.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Wie melde ich mein Geschäft an?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Fülle das Registrierungsformular auf unserer <a href="haendler-werden.html">„Händler werden"-Seite</a> aus. Wir melden uns innerhalb von 2 Werktagen.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Wer sieht meine Produkte?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Alle Besucher von Shoppen in Braunschweig können deine Produkte sehen und reservieren.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Kann ich meine Produkte selbst verwalten?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Ja, nach der Registrierung erhältst du Zugang zu deinem Händler-Dashboard, wo du Produkte, Bilder und dein Profil verwalten kannst.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Was passiert, wenn ein Produkt reserviert wird?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Du erhältst eine Benachrichtigung und kannst die Reservierung in deinem Dashboard bestätigen. Der Kunde wird dann automatisch informiert.</p></div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" type="button" aria-expanded="false">Kann ich Produkte, die nicht mehr verfügbar sind, deaktivieren?<span class="faq-icon" aria-hidden="true"></span></button>
+            <div class="faq-answer" hidden><p>Ja, du kannst Produkte in deinem Dashboard jederzeit als nicht verfügbar markieren oder löschen.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Noch Fragen? (dunkel) -->
+    <section class="section section--dark faq-cta">
+      <div class="container">
+        <h2 class="faq-cta__headline">Noch Fragen?</h2>
+        <p class="faq-cta__text">Wir helfen dir gerne weiter.</p>
+        <a class="btn btn--light" href="mailto:support@shoppeninbraunschweig.de">Schreib uns</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__brand">
+        <span class="site-footer__logo">Shoppen in Braunschweig</span>
+        <p class="site-footer__slogan">Lokale Händler. Einzigartige Produkte.</p>
+      </div>
+
+      <div class="site-footer__grid">
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Für Käufer</p>
+          <ul>
+            <li><a href="kategorie.html">Alle Produkte</a></li>
+            <li><a href="geschaefte.html">Geschäfte entdecken</a></li>
+            <li><a href="newsletter.html">Newsletter</a></li>
+            <li><a href="ueber-uns.html">Über uns</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Für Verkäufer</p>
+          <ul>
+            <li><a href="haendler-werden.html">Händler werden</a></li>
+            <li><a href="haendler-login.html">Händler Login</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Kontakt</p>
+          <ul>
+            <li><a href="mailto:support@shoppeninbraunschweig.de">support@shoppeninbraunschweig.de</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="site-footer__bottom">
+        <p>© 2026 Shoppen in Braunschweig</p>
+        <p><a href="datenschutz.html">Datenschutz</a> &nbsp;|&nbsp; <a href="impressum.html">Impressum</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="js/faq.js?v=1"></script>
+</body>
+</html>
