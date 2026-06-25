@@ -308,6 +308,65 @@ async function ladeWeitere (produkt) {
   }
 }
 
+// Array mischen (Fisher-Yates)
+function mischen (arr) {
+  const a = arr.slice()
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+// ── Das könnte dir auch gefallen (gleiche Kategorie, andere Händler) ──
+async function ladeAehnliche (produkt) {
+  const section = document.getElementById('aehnliche-section')
+  const container = document.getElementById('aehnliche')
+  if (!produkt.kategorie_id) return
+
+  try {
+    let query = supabase
+      .from('produkte')
+      .select('*, shops(name, slug)')
+      .eq('kategorie_id', produkt.kategorie_id)
+      .eq('verfuegbar', true)
+      .eq('freigegeben', true)
+      .neq('id', produkt.id)
+      .limit(24)
+
+    if (produkt.shop_id) query = query.neq('shop_id', produkt.shop_id)
+
+    const { data, error } = await query
+    if (error) throw error
+    const kandidaten = data || []
+    if (kandidaten.length === 0) return
+
+    const auswahl = mischen(kandidaten).slice(0, 4)
+
+    container.innerHTML = auswahl.map((p) => {
+      const id = encodeURIComponent(p.id)
+      const bilder = bilderOf(p)
+      const bild = bilder[0]
+        ? `<img class="product-card__image" src="${esc(bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
+        : '<div class="product-card__image"></div>'
+      const sName = p.shops?.name || 'Lokaler Händler'
+      const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
+      return `
+        <a class="product-card" href="produkt.html?id=${id}">
+          ${neuBadge(p)}${bild}
+          <span class="product-card__shop">${esc(sName)}</span>
+          <span class="product-card__title">${esc(p.titel)}</span>
+          <span class="product-card__price">${esc(preis)}</span>
+        </a>`
+    }).join('')
+
+    section.hidden = false
+  } catch (err) {
+    console.error('Ähnliche Artikel konnten nicht geladen werden:', err)
+    // Stumm scheitern — Sektion bleibt ausgeblendet
+  }
+}
+
 // ── Init ──
 async function init () {
   initMobileMenu()
@@ -347,6 +406,7 @@ async function init () {
 
     renderDetail(data, varianten)
     ladeWeitere(data)
+    ladeAehnliche(data)
   } catch (err) {
     console.error('Produkt konnte nicht geladen werden:', err)
     notFound('Das Produkt konnte gerade nicht geladen werden.')
