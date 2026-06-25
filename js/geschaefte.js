@@ -26,8 +26,7 @@ function initMobileMenu () {
 }
 
 // Zustand
-let alleShops = []          // angereicherte Shops: { ...shop, anzahl, hauptKat }
-let aktiveKategorie = 'alle'
+let alleShops = []          // angereicherte Shops: { ...shop, anzahl }
 let suchbegriff = ''
 
 // ── Händler-Karte ──
@@ -60,9 +59,7 @@ function renderGrid () {
   const term = suchbegriff.trim().toLowerCase()
 
   const liste = alleShops.filter((s) => {
-    const passtKat = aktiveKategorie === 'alle' || s.hauptKat === aktiveKategorie
-    const passtName = !term || (s.name || '').toLowerCase().includes(term)
-    return passtKat && passtName
+    return !term || (s.name || '').toLowerCase().includes(term)
   })
 
   if (liste.length === 0) {
@@ -70,21 +67,6 @@ function renderGrid () {
     return
   }
   grid.innerHTML = liste.map(renderCard).join('')
-}
-
-// ── Kategorie-Filter-Buttons ──
-function renderFilter (kategorien) {
-  const filter = document.getElementById('kategorie-filter')
-  filter.innerHTML = `<button class="filter-btn is-active" type="button" data-kat="alle">Alle</button>` +
-    kategorien.map((k) => `<button class="filter-btn" type="button" data-kat="${esc(k.id)}">${esc(k.name)}</button>`).join('')
-
-  filter.querySelectorAll('.filter-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      aktiveKategorie = btn.dataset.kat
-      filter.querySelectorAll('.filter-btn').forEach((b) => b.classList.toggle('is-active', b === btn))
-      renderGrid()
-    })
-  })
 }
 
 // ── Init: Daten laden ──
@@ -100,49 +82,30 @@ async function init () {
   })
 
   try {
-    // Aktive Shops, Kategorien und (sichtbare) Produkte parallel laden
-    const [shopsRes, katRes, prodRes] = await Promise.all([
+    // Aktive Shops und (sichtbare) Produkte parallel laden
+    const [shopsRes, prodRes] = await Promise.all([
       supabase.from('shops').select('*').eq('aktiv', true).order('name'),
-      supabase.from('kategorien').select('id, name').order('name'),
-      supabase.from('produkte').select('shop_id, kategorie_id')
+      supabase.from('produkte').select('shop_id')
     ])
 
     if (shopsRes.error) throw shopsRes.error
     const shops = shopsRes.data || []
-    const kategorien = katRes.error ? [] : (katRes.data || [])
     const produkte = prodRes.error ? [] : (prodRes.data || [])
 
-    // Pro Shop: Anzahl + Kategorie-Häufigkeit
-    const statsByShop = {}
+    // Pro Shop: Anzahl Produkte
+    const anzahlByShop = {}
     produkte.forEach((p) => {
       if (!p.shop_id) return
-      if (!statsByShop[p.shop_id]) statsByShop[p.shop_id] = { anzahl: 0, kat: {} }
-      const s = statsByShop[p.shop_id]
-      s.anzahl++
-      if (p.kategorie_id) s.kat[p.kategorie_id] = (s.kat[p.kategorie_id] || 0) + 1
+      anzahlByShop[p.shop_id] = (anzahlByShop[p.shop_id] || 0) + 1
     })
 
-    function hauptKategorie (stats) {
-      if (!stats) return null
-      let best = null
-      let bestN = -1
-      for (const katId in stats.kat) {
-        if (stats.kat[katId] > bestN) { bestN = stats.kat[katId]; best = katId }
-      }
-      return best
-    }
-
-    alleShops = shops.map((s) => {
-      const stats = statsByShop[s.id]
-      return { ...s, anzahl: stats ? stats.anzahl : 0, hauptKat: hauptKategorie(stats) }
-    })
+    alleShops = shops.map((s) => ({ ...s, anzahl: anzahlByShop[s.id] || 0 }))
 
     if (alleShops.length === 0) {
       grid.innerHTML = '<p class="haendler-empty">Noch keine Geschäfte verfügbar.</p>'
       return
     }
 
-    renderFilter(kategorien)
     renderGrid()
   } catch (err) {
     console.error('Geschäfte konnten nicht geladen werden:', err)
