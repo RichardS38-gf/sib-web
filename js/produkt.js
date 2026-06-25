@@ -146,7 +146,7 @@ function renderDetail (produkt, varianten = []) {
   initGallery()
   if (verfuegbar) {
     initGroessen()
-    initReservierung(produkt.id)
+    initReservierung(produkt)
   }
 }
 
@@ -173,8 +173,19 @@ function initGallery () {
   })
 }
 
+// Reservierungsbestätigung per E-Mail (Edge Function) — stört den Ablauf nicht
+async function sendeBestaetigungsMail (payload) {
+  try {
+    await supabase.functions.invoke('send-email', {
+      body: { type: 'reservierung', ...payload }
+    })
+  } catch (err) {
+    console.error('Bestätigungs-E-Mail konnte nicht gesendet werden:', err)
+  }
+}
+
 // ── Reservierung speichern ──
-function initReservierung (produktId) {
+function initReservierung (produkt) {
   const form = document.getElementById('reservierung-form')
   const feedback = document.getElementById('reservierung-feedback')
   if (!form) return
@@ -204,19 +215,30 @@ function initReservierung (produktId) {
     const ablauf = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
     try {
-      const { error } = await supabase.from('reservierungen').insert({
-        produkt_id: produktId,
+      const { data: neu, error } = await supabase.from('reservierungen').insert({
+        produkt_id: produkt.id,
         kunde_name: name,
         kunde_email: email,
         groesse: selectedGroesse,
         status: 'offen',
         ablauf_am: ablauf
-      })
+      }).select('id').single()
 
       if (error) throw error
 
       // Formular durch Erfolgsmeldung ersetzen
       form.innerHTML = '<div class="success-msg">Reservierung erfolgreich! Wir benachrichtigen dich wenn der Artikel abholbereit ist.</div>'
+
+      // Bestätigungs-E-Mail an den Kunden (nicht blockierend)
+      sendeBestaetigungsMail({
+        kunde_name: name,
+        kunde_email: email,
+        produkt_titel: produkt.titel,
+        shop_name: produkt.shops?.name || 'dem Geschäft',
+        shop_adresse: produkt.shops?.adresse || '',
+        reservierung_id: neu?.id,
+        ablauf_am: ablauf
+      })
     } catch (err) {
       console.error('Reservierung fehlgeschlagen:', err)
       feedback.innerHTML = '<div class="error-msg">Die Reservierung konnte nicht gespeichert werden. Bitte versuche es später erneut.</div>'
@@ -288,7 +310,7 @@ async function init () {
   try {
     const { data, error } = await supabase
       .from('produkte')
-      .select('*, shops(name, slug)')
+      .select('*, shops(name, slug, adresse)')
       .eq('id', id)
       .maybeSingle()
 

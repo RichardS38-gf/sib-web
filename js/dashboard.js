@@ -10,6 +10,7 @@ const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR'
 const GROESSEN = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Einheitsgröße']
 
 let shop = null // aktueller Shop des eingeloggten Händlers
+let reservierungenListe = [] // Cache für die E-Mail-Daten beim Bestätigen
 
 function esc (value) {
   return String(value ?? '')
@@ -88,6 +89,7 @@ async function ladeReservierungen () {
 
     if (error) throw error
     const reservierungen = data || []
+    reservierungenListe = reservierungen
 
     if (reservierungen.length === 0) {
       el.innerHTML = '<p class="dash-empty">Noch keine Reservierungen.</p>'
@@ -131,6 +133,25 @@ async function ladeReservierungen () {
   }
 }
 
+// Abholbereit-E-Mail an den Kunden (Edge Function) — stört den Ablauf nicht
+async function sendeAbholbereitMail (r) {
+  try {
+    await supabase.functions.invoke('send-email', {
+      body: {
+        type: 'abholbereit',
+        kunde_name: r.kunde_name,
+        kunde_email: r.kunde_email,
+        produkt_titel: r.produkte?.titel || 'dein Artikel',
+        shop_name: shop?.name || 'dem Geschäft',
+        shop_adresse: shop?.adresse || '',
+        reservierung_id: r.id
+      }
+    })
+  } catch (err) {
+    console.error('Abholbereit-E-Mail konnte nicht gesendet werden:', err)
+  }
+}
+
 async function bestaetige (id, btn) {
   btn.disabled = true
   btn.textContent = '…'
@@ -140,6 +161,11 @@ async function bestaetige (id, btn) {
       .update({ status: 'bestaetigt' })
       .eq('id', id)
     if (error) throw error
+
+    // Kunde benachrichtigen (nicht blockierend)
+    const r = reservierungenListe.find((x) => x.id === id)
+    if (r) sendeAbholbereitMail(r)
+
     ladeReservierungen()
   } catch (err) {
     console.error('Bestätigen fehlgeschlagen:', err)
