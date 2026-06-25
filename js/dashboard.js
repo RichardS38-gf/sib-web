@@ -6,6 +6,9 @@ import { supabase } from './supabase.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
+// Feste Größen-Liste (Reihenfolge wie auf der Produktseite)
+const GROESSEN = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Einheitsgröße']
+
 let shop = null // aktueller Shop des eingeloggten Händlers
 
 function esc (value) {
@@ -192,14 +195,20 @@ async function ladeProdukte () {
         : '<span class="badge badge--outline dash-produkt__badge">Ausstehend</span>'
 
       const varianten = variantenByProdukt[p.id] || []
-      const variantenRows = varianten.length
-        ? varianten.map((v) => `
-            <tr>
-              <td>${esc(v.groesse)}</td>
-              <td>${esc(v.stueckzahl ?? 0)}</td>
-              <td><button class="dash-variante__del" data-del-variante="${esc(v.id)}" aria-label="Variante löschen" title="Variante löschen">×</button></td>
-            </tr>`).join('')
-        : '<tr><td colspan="3" class="dash-variante__empty">Noch keine Größen</td></tr>'
+      const byGroesse = {}
+      varianten.forEach((v) => { byGroesse[v.groesse] = v })
+
+      const groessenRows = GROESSEN.map((g) => {
+        const vorhanden = byGroesse[g]
+        const checked = !!vorhanden
+        const stk = vorhanden ? (vorhanden.stueckzahl ?? 0) : 1
+        return `
+          <label class="dash-groesse-row">
+            <input type="checkbox" class="dash-groesse-check" value="${esc(g)}" ${checked ? 'checked' : ''}>
+            <span class="dash-groesse-name">${esc(g)}</span>
+            <input type="number" class="form-input dash-groesse-stk" min="0" value="${esc(stk)}" ${checked ? '' : 'disabled'}>
+          </label>`
+      }).join('')
 
       return `
         <div class="dash-produkt">
@@ -209,17 +218,13 @@ async function ladeProdukte () {
           <p class="dash-produkt__price">${esc(preis)}</p>
           <p class="dash-produkt__status">${status}</p>
 
-          <div class="dash-varianten">
+          <div class="dash-varianten" data-groessen="${esc(p.id)}">
             <p class="dash-varianten__label">Größen &amp; Stück</p>
-            <table class="dash-varianten__table">
-              <thead><tr><th>Größe</th><th>Stück</th><th></th></tr></thead>
-              <tbody>${variantenRows}</tbody>
-            </table>
-            <form class="dash-variante-form" data-add-variante="${esc(p.id)}">
-              <input class="form-input dash-variante__input" name="groesse" placeholder="Größe (S/M/L…)" required>
-              <input class="form-input dash-variante__input dash-variante__input--num" name="stueckzahl" type="number" min="0" value="1" required>
-              <button class="btn btn--outline dash-variante__add" type="submit">Variante hinzufügen</button>
-            </form>
+            <div class="dash-groessen">${groessenRows}</div>
+            <div class="dash-groessen__bar">
+              <button class="btn btn--outline dash-groessen__save" type="button" data-save-groessen="${esc(p.id)}">Größen speichern</button>
+              <span class="dash-groessen__feedback" data-feedback="${esc(p.id)}" aria-live="polite"></span>
+            </div>
           </div>
 
           <button class="dash-produkt__delete" data-delete="${esc(p.id)}" data-titel="${esc(p.titel)}">Produkt löschen</button>
@@ -229,11 +234,20 @@ async function ladeProdukte () {
     el.querySelectorAll('[data-delete]').forEach((btn) => {
       btn.addEventListener('click', () => loesche(btn.dataset.delete, btn.dataset.titel))
     })
-    el.querySelectorAll('[data-del-variante]').forEach((btn) => {
-      btn.addEventListener('click', () => loescheVariante(btn.dataset.delVariante))
+
+    // Checkbox aktiviert/deaktiviert das zugehörige Stückzahl-Feld
+    el.querySelectorAll('.dash-groesse-row').forEach((row) => {
+      const cb = row.querySelector('.dash-groesse-check')
+      const stk = row.querySelector('.dash-groesse-stk')
+      cb.addEventListener('change', () => {
+        stk.disabled = !cb.checked
+        if (cb.checked) stk.focus()
+      })
     })
-    el.querySelectorAll('[data-add-variante]').forEach((form) => {
-      form.addEventListener('submit', (e) => addVariante(e, form.dataset.addVariante))
+
+    // Größen speichern
+    el.querySelectorAll('[data-save-groessen]').forEach((btn) => {
+      btn.addEventListener('click', () => speichereGroessen(btn.dataset.saveGroessen, btn))
     })
   } catch (err) {
     console.error('Produkte konnten nicht geladen werden:', err)
@@ -241,36 +255,39 @@ async function ladeProdukte () {
   }
 }
 
-async function addVariante (e, produktId) {
-  e.preventDefault()
-  const form = e.currentTarget
-  const groesse = form.groesse.value.trim()
-  const stueckRaw = form.stueckzahl.value
-  if (!groesse) return
-  const stueckzahl = parseInt(stueckRaw, 10)
+// Größen eines Produkts speichern: angehakte Größen ersetzen die bestehenden
+async function speichereGroessen (produktId, btn) {
+  const container = document.querySelector(`.dash-varianten[data-groessen="${CSS.escape(produktId)}"]`)
+  const feedback = container?.querySelector('.dash-groessen__feedback')
+  if (!container) return
+
+  const neu = []
+  container.querySelectorAll('.dash-groesse-row').forEach((row) => {
+    const cb = row.querySelector('.dash-groesse-check')
+    if (!cb.checked) return
+    let stk = parseInt(row.querySelector('.dash-groesse-stk').value, 10)
+    if (isNaN(stk) || stk < 0) stk = 0
+    neu.push({ produkt_id: produktId, groesse: cb.value, stueckzahl: stk })
+  })
+
+  btn.disabled = true
+  btn.textContent = 'Wird gespeichert…'
+  if (feedback) feedback.innerHTML = ''
 
   try {
-    const { error } = await supabase.from('produkt_varianten').insert({
-      produkt_id: produktId,
-      groesse,
-      stueckzahl: isNaN(stueckzahl) ? 0 : stueckzahl
-    })
-    if (error) throw error
+    // bestehende Varianten ersetzen
+    const { error: delErr } = await supabase.from('produkt_varianten').delete().eq('produkt_id', produktId)
+    if (delErr) throw delErr
+    if (neu.length) {
+      const { error: insErr } = await supabase.from('produkt_varianten').insert(neu)
+      if (insErr) throw insErr
+    }
     ladeProdukte()
   } catch (err) {
-    console.error('Variante hinzufügen fehlgeschlagen:', err)
-    window.alert('Die Variante konnte nicht hinzugefügt werden.')
-  }
-}
-
-async function loescheVariante (id) {
-  try {
-    const { error } = await supabase.from('produkt_varianten').delete().eq('id', id)
-    if (error) throw error
-    ladeProdukte()
-  } catch (err) {
-    console.error('Variante löschen fehlgeschlagen:', err)
-    window.alert('Die Variante konnte nicht gelöscht werden.')
+    console.error('Größen speichern fehlgeschlagen:', err)
+    if (feedback) feedback.innerHTML = '<span class="error-msg">Speichern fehlgeschlagen.</span>'
+    btn.disabled = false
+    btn.textContent = 'Größen speichern'
   }
 }
 

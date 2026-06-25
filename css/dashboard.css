@@ -171,70 +171,56 @@
   margin-bottom: 0.4rem;
 }
 
-.dash-varianten__table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-sm);
+.dash-groessen {
+  display: flex;
+  flex-direction: column;
   margin-bottom: var(--space-2);
 }
 
-.dash-varianten__table th,
-.dash-varianten__table td {
-  text-align: left;
-  padding: 0.3rem 0.4rem;
+.dash-groesse-row {
+  display: grid;
+  grid-template-columns: auto 1fr 4.5rem;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.3rem 0;
   border-bottom: 1px solid var(--color-line);
+  font-size: var(--text-sm);
 }
 
-.dash-varianten__table th {
-  font-size: var(--text-xs);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-muted);
-}
-
-.dash-varianten__table th:last-child,
-.dash-varianten__table td:last-child {
-  text-align: right;
-  width: 1%;
-  white-space: nowrap;
-}
-
-.dash-variante__del {
-  background: none;
-  border: none;
+.dash-groesse-check {
+  width: 1rem;
+  height: 1rem;
   cursor: pointer;
-  font-size: var(--text-base);
-  line-height: 1;
-  color: var(--color-muted);
-  padding: 0 0.25rem;
+  accent-color: var(--color-ink);
 }
 
-.dash-variante__del:hover { color: var(--color-ink); }
+.dash-groesse-name { font-weight: 500; }
 
-.dash-variante__empty {
-  color: var(--color-muted);
-  font-size: var(--text-xs);
-  text-align: left !important;
+.dash-groesse-stk {
+  padding: 0.35rem 0.5rem;
+  font-size: var(--text-sm);
+  text-align: right;
 }
 
-.dash-variante-form {
+.dash-groesse-stk:disabled {
+  background-color: var(--color-bg-soft);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.dash-groessen__bar {
   display: flex;
+  align-items: center;
+  gap: var(--space-2);
   flex-wrap: wrap;
-  gap: var(--space-1);
-  align-items: stretch;
 }
 
-.dash-variante__input { padding: 0.4rem 0.6rem; font-size: var(--text-sm); }
-.dash-variante__input { flex: 1 1 6rem; min-width: 0; }
-.dash-variante__input--num { flex: 0 0 4.5rem; }
-
-.dash-variante__add {
-  flex: 1 1 100%;
-  justify-content: center;
+.dash-groessen__save {
   padding: 0.45rem 0.9rem;
   font-size: var(--text-xs);
 }
+
+.dash-groessen__feedback { font-size: var(--text-xs); }
 
 /* ── Formulare ── */
 .dash-produkt-form,
