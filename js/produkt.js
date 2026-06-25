@@ -6,6 +6,10 @@ import { supabase } from './supabase.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
+// Ausgewählte Größe (Variante) für die Reservierung
+let selectedGroesse = null
+let hatVarianten = false
+
 function esc (value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -47,13 +51,29 @@ function notFound (text) {
 }
 
 // ── Detail rendern ──
-function renderDetail (produkt) {
+function renderDetail (produkt, varianten = []) {
   const el = document.getElementById('produkt-detail')
   const bilder = bilderOf(produkt)
   const shop = produkt.shops || null
   const shopName = shop?.name || 'Lokaler Händler'
   const preis = (produkt.preis !== null && produkt.preis !== undefined) ? euro.format(produkt.preis) : ''
   const verfuegbar = produkt.verfuegbar !== false
+
+  // Status für Reservierung zurücksetzen
+  selectedGroesse = null
+  hatVarianten = varianten.length > 0
+
+  const groessenBlock = hatVarianten
+    ? `
+      <div class="product-groessen">
+        <p class="product-groessen__label">Größe wählen</p>
+        <div class="product-groessen__options">
+          ${varianten.map((v) =>
+            `<button type="button" class="product-groesse" data-groesse="${esc(v.groesse)}">${esc(v.groesse)}</button>`
+          ).join('')}
+        </div>
+      </div>`
+    : ''
 
   const mainImg = bilder[0]
     ? `<img class="product-gallery__main" id="gallery-main" src="${esc(bilder[0])}" alt="${esc(produkt.titel)}">`
@@ -75,6 +95,7 @@ function renderDetail (produkt) {
 
   const formularOderStatus = verfuegbar
     ? `
+      ${groessenBlock}
       <p class="reservierung__title">Artikel reservieren</p>
       <p class="reservierung__hint">Reservieren, im Geschäft abholen — kein Account nötig. Die Reservierung gilt 7&nbsp;Tage.</p>
       <form class="reservierung-form" id="reservierung-form" novalidate>
@@ -110,7 +131,28 @@ function renderDetail (produkt) {
   if (produkt.titel) document.title = `${produkt.titel} — Shoppen in Braunschweig`
 
   initGallery()
-  if (verfuegbar) initReservierung(produkt.id)
+  if (verfuegbar) {
+    initGroessen()
+    initReservierung(produkt.id)
+  }
+}
+
+// Größen-Buttons: Auswahl umschalten
+function initGroessen () {
+  const buttons = document.querySelectorAll('.product-groesse')
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const groesse = btn.dataset.groesse
+      if (selectedGroesse === groesse) {
+        // erneutes Klicken hebt die Auswahl auf
+        selectedGroesse = null
+        btn.classList.remove('is-active')
+      } else {
+        selectedGroesse = groesse
+        buttons.forEach((b) => b.classList.toggle('is-active', b === btn))
+      }
+    })
+  })
 }
 
 // Thumbnail-Klick tauscht das Hauptbild
@@ -145,6 +187,11 @@ function initReservierung (produktId) {
       return
     }
 
+    if (hatVarianten && !selectedGroesse) {
+      feedback.innerHTML = '<div class="error-msg">Bitte wähle eine Größe.</div>'
+      return
+    }
+
     const submitBtn = form.querySelector('button[type="submit"]')
     submitBtn.disabled = true
     submitBtn.textContent = 'Wird gesendet…'
@@ -157,6 +204,7 @@ function initReservierung (produktId) {
         produkt_id: produktId,
         kunde_name: name,
         kunde_email: email,
+        groesse: selectedGroesse,
         status: 'offen',
         ablauf_am: ablauf
       })
@@ -246,7 +294,21 @@ async function init () {
       return
     }
 
-    renderDetail(data)
+    // Verfügbare Größen (Varianten mit Stückzahl > 0) laden
+    let varianten = []
+    try {
+      const { data: vData, error: vErr } = await supabase
+        .from('produkt_varianten')
+        .select('*')
+        .eq('produkt_id', data.id)
+        .gt('stueckzahl', 0)
+        .order('erstellt_am', { ascending: true })
+      if (!vErr) varianten = vData || []
+    } catch (vErr) {
+      console.error('Größen konnten nicht geladen werden:', vErr)
+    }
+
+    renderDetail(data, varianten)
     ladeWeitere(data)
   } catch (err) {
     console.error('Produkt konnte nicht geladen werden:', err)

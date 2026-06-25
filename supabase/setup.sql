@@ -34,6 +34,22 @@ alter table public.shops
 alter table public.produkte
   add column if not exists freigegeben boolean not null default false;
 
+-- Reservierungen: gewählte Größe (Variante) mitspeichern
+alter table public.reservierungen
+  add column if not exists groesse text;
+
+-- Produkt-Varianten: Größen + Stückzahlen je Produkt
+create table if not exists public.produkt_varianten (
+  id uuid primary key default gen_random_uuid(),
+  produkt_id uuid references public.produkte (id) on delete cascade,
+  groesse text not null,
+  stueckzahl integer not null default 1,
+  erstellt_am timestamptz not null default now()
+);
+
+create index if not exists produkt_varianten_produkt_id_idx
+  on public.produkt_varianten (produkt_id);
+
 -- Admin-Registry: Auth-Konten mit Vollzugriff
 create table if not exists public.admins (
   user_id uuid primary key references auth.users (id) on delete cascade,
@@ -83,6 +99,11 @@ grant all on public.kategorien to service_role;
 grant all on public.produkte   to service_role;
 grant all on public.shops      to service_role;
 
+-- Produkt-Varianten: anon liest, authenticated verwaltet (per RLS eingegrenzt)
+grant select on public.produkt_varianten to anon;
+grant select, insert, update, delete on public.produkt_varianten to authenticated;
+grant all on public.produkt_varianten to service_role;
+
 -- is_admin() ausführbar für eingeloggte Nutzer (und anon, schadet nicht)
 grant execute on function public.is_admin () to anon, authenticated;
 
@@ -96,6 +117,7 @@ alter table public.shops                 enable row level security;
 alter table public.reservierungen        enable row level security;
 alter table public.newsletter_abonnenten enable row level security;
 alter table public.admins                enable row level security;
+alter table public.produkt_varianten     enable row level security;
 
 
 -- ============================================================
@@ -184,6 +206,33 @@ create policy "Admin Vollzugriff newsletter"
   using (public.is_admin()) with check (public.is_admin());
 create policy "Admin Vollzugriff kategorien"
   on public.kategorien for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+
+-- 3e) Produkt-Varianten -----------------------------------------
+-- Öffentlich lesbar nur für sichtbare Produkte; Händler verwalten ihre
+-- eigenen; Admin Vollzugriff.
+drop policy if exists "Oeffentliches Lesen varianten"      on public.produkt_varianten;
+drop policy if exists "Haendler verwaltet eigene Varianten" on public.produkt_varianten;
+drop policy if exists "Admin Vollzugriff varianten"        on public.produkt_varianten;
+
+create policy "Oeffentliches Lesen varianten"
+  on public.produkt_varianten for select using (
+    produkt_id in (
+      select id from public.produkte where verfuegbar = true and freigegeben = true));
+
+create policy "Haendler verwaltet eigene Varianten"
+  on public.produkt_varianten for all to authenticated
+  using (produkt_id in (
+    select p.id from public.produkte p
+    join public.shops s on s.id = p.shop_id
+    where s.user_id = auth.uid()))
+  with check (produkt_id in (
+    select p.id from public.produkte p
+    join public.shops s on s.id = p.shop_id
+    where s.user_id = auth.uid()));
+
+create policy "Admin Vollzugriff varianten"
+  on public.produkt_varianten for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
 

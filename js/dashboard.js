@@ -163,6 +163,23 @@ async function ladeProdukte () {
       return
     }
 
+    // Varianten aller Produkte laden und nach produkt_id gruppieren
+    const variantenByProdukt = {}
+    const ids = produkte.map((p) => p.id)
+    if (ids.length) {
+      const { data: vData, error: vErr } = await supabase
+        .from('produkt_varianten')
+        .select('*')
+        .in('produkt_id', ids)
+        .order('erstellt_am', { ascending: true })
+      if (!vErr) {
+        (vData || []).forEach((v) => {
+          if (!variantenByProdukt[v.produkt_id]) variantenByProdukt[v.produkt_id] = []
+          variantenByProdukt[v.produkt_id].push(v)
+        })
+      }
+    }
+
     el.innerHTML = `<div class="dash-produkte-grid">${produkte.map((p) => {
       const bilder = Array.isArray(p.bilder) ? p.bilder.filter(Boolean) : []
       const bild = bilder[0]
@@ -173,6 +190,17 @@ async function ladeProdukte () {
       const freigabeBadge = p.freigegeben === true
         ? '<span class="badge badge--muted dash-produkt__badge">Freigegeben</span>'
         : '<span class="badge badge--outline dash-produkt__badge">Ausstehend</span>'
+
+      const varianten = variantenByProdukt[p.id] || []
+      const variantenRows = varianten.length
+        ? varianten.map((v) => `
+            <tr>
+              <td>${esc(v.groesse)}</td>
+              <td>${esc(v.stueckzahl ?? 0)}</td>
+              <td><button class="dash-variante__del" data-del-variante="${esc(v.id)}" aria-label="Variante löschen" title="Variante löschen">×</button></td>
+            </tr>`).join('')
+        : '<tr><td colspan="3" class="dash-variante__empty">Noch keine Größen</td></tr>'
+
       return `
         <div class="dash-produkt">
           ${bild}
@@ -180,16 +208,69 @@ async function ladeProdukte () {
           <p class="dash-produkt__title">${esc(p.titel)}</p>
           <p class="dash-produkt__price">${esc(preis)}</p>
           <p class="dash-produkt__status">${status}</p>
-          <button class="dash-produkt__delete" data-delete="${esc(p.id)}" data-titel="${esc(p.titel)}">Löschen</button>
+
+          <div class="dash-varianten">
+            <p class="dash-varianten__label">Größen &amp; Stück</p>
+            <table class="dash-varianten__table">
+              <thead><tr><th>Größe</th><th>Stück</th><th></th></tr></thead>
+              <tbody>${variantenRows}</tbody>
+            </table>
+            <form class="dash-variante-form" data-add-variante="${esc(p.id)}">
+              <input class="form-input dash-variante__input" name="groesse" placeholder="Größe (S/M/L…)" required>
+              <input class="form-input dash-variante__input dash-variante__input--num" name="stueckzahl" type="number" min="0" value="1" required>
+              <button class="btn btn--outline dash-variante__add" type="submit">Variante hinzufügen</button>
+            </form>
+          </div>
+
+          <button class="dash-produkt__delete" data-delete="${esc(p.id)}" data-titel="${esc(p.titel)}">Produkt löschen</button>
         </div>`
     }).join('')}</div>`
 
     el.querySelectorAll('[data-delete]').forEach((btn) => {
       btn.addEventListener('click', () => loesche(btn.dataset.delete, btn.dataset.titel))
     })
+    el.querySelectorAll('[data-del-variante]').forEach((btn) => {
+      btn.addEventListener('click', () => loescheVariante(btn.dataset.delVariante))
+    })
+    el.querySelectorAll('[data-add-variante]').forEach((form) => {
+      form.addEventListener('submit', (e) => addVariante(e, form.dataset.addVariante))
+    })
   } catch (err) {
     console.error('Produkte konnten nicht geladen werden:', err)
     el.innerHTML = '<p class="dash-empty">Produkte konnten nicht geladen werden.</p>'
+  }
+}
+
+async function addVariante (e, produktId) {
+  e.preventDefault()
+  const form = e.currentTarget
+  const groesse = form.groesse.value.trim()
+  const stueckRaw = form.stueckzahl.value
+  if (!groesse) return
+  const stueckzahl = parseInt(stueckRaw, 10)
+
+  try {
+    const { error } = await supabase.from('produkt_varianten').insert({
+      produkt_id: produktId,
+      groesse,
+      stueckzahl: isNaN(stueckzahl) ? 0 : stueckzahl
+    })
+    if (error) throw error
+    ladeProdukte()
+  } catch (err) {
+    console.error('Variante hinzufügen fehlgeschlagen:', err)
+    window.alert('Die Variante konnte nicht hinzugefügt werden.')
+  }
+}
+
+async function loescheVariante (id) {
+  try {
+    const { error } = await supabase.from('produkt_varianten').delete().eq('id', id)
+    if (error) throw error
+    ladeProdukte()
+  } catch (err) {
+    console.error('Variante löschen fehlgeschlagen:', err)
+    window.alert('Die Variante konnte nicht gelöscht werden.')
   }
 }
 
