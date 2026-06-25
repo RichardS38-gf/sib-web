@@ -14,7 +14,15 @@
 //                                Default: "Shoppen in Braunschweig <onboarding@resend.dev>"
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const FROM = Deno.env.get('RESEND_FROM') || 'Shoppen in Braunschweig <onboarding@resend.dev>'
+// Vorübergehend Resends Test-Absender: funktioniert ohne Domain-Verifizierung,
+// darf aber NUR an die eigene Resend-Account-E-Mail senden (siehe unten).
+// Sobald die Domain verifiziert ist: RESEND_FROM-Secret setzen.
+const FROM = Deno.env.get('RESEND_FROM') || 'onboarding@resend.dev'
+
+// Resend erlaubt im Test-Modus (ohne verifizierte Domain) nur den Versand an
+// die eigene Account-Adresse. An andere Empfänger wird trotzdem versucht zu
+// senden — etwaige Fehler werden nur still geloggt, nicht als Fehler gemeldet.
+const TEST_EMPFAENGER = 'richardschilling@maneri.de'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -168,13 +176,20 @@ Deno.serve(async (req: Request) => {
 
     const data = await res.json().catch(() => ({}))
     if (!res.ok) {
-      console.error('Resend-Fehler:', res.status, data)
-      return jsonResponse({ error: 'E-Mail konnte nicht gesendet werden.', details: data }, 502)
+      // Im Test-Modus scheitert der Versand an fremde Adressen erwartungsgemäß.
+      // Fehler nur still loggen und nicht-fatal antworten, damit der Frontend-
+      // Ablauf (Reservierung/Bestätigung) nicht gestört wird.
+      const fremderEmpfaenger = payload.kunde_email !== TEST_EMPFAENGER
+      console.error(
+        `Resend-Fehler (${res.status})${fremderEmpfaenger ? ' — Empfänger ist nicht der Test-Account, im Test-Modus erwartet' : ''}:`,
+        data
+      )
+      return jsonResponse({ ok: false, logged: true }, 200)
     }
 
     return jsonResponse({ ok: true, id: (data as { id?: string }).id })
   } catch (err) {
     console.error('Senden fehlgeschlagen:', err)
-    return jsonResponse({ error: 'E-Mail konnte nicht gesendet werden.' }, 500)
+    return jsonResponse({ ok: false, logged: true }, 200)
   }
 })
