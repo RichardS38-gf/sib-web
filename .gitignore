@@ -8,6 +8,9 @@ Vorlagen/
 .env.local
 .env
 
+# Supabase CLI lokaler Status/Cache
+supabase/.temp/
+
 # System
 .DS_Store
 Thumbs.db
