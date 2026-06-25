@@ -29,13 +29,23 @@ div.shop-banner { display: block; }
   flex-shrink: 0;
 }
 
+.shop-head__main { margin-right: auto; }
+
 .shop-head__name {
   font-family: var(--font-serif);
   font-weight: 700;
   font-size: var(--text-4xl);
   line-height: 1.1;
-  margin-right: auto;
 }
+
+.shop-rating {
+  margin-top: 0.4rem;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.shop-rating__stars { color: var(--color-ink); }
+.shop-rating__count { color: var(--color-muted); }
 
 .shop-head__meta {
   display: flex;
@@ -91,4 +101,83 @@ div.shop-banner { display: block; }
   font-size: var(--text-3xl);
   color: var(--color-ink);
   margin-bottom: var(--space-2);
+}
+
+/* ── Bewertungen ── */
+.bewertung-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 40rem;
+  margin-bottom: var(--space-4);
+}
+
+.bewertung-form[hidden] { display: none; }
+
+.bewertung-form__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .bewertung-form__row { grid-template-columns: 1fr 1fr; }
+}
+
+.bw-optional {
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+/* Sterne-Eingabe */
+.sterne-input {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.stern {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--text-2xl);
+  line-height: 1;
+  color: var(--color-line);
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.stern:hover { color: var(--color-muted); }
+.stern.is-on { color: var(--color-ink); }
+
+/* Bewertungs-Liste */
+.bewertung {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.bewertung__kopf {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 0.25rem;
+}
+
+.bewertung__autor { font-weight: 500; }
+
+.bewertung__datum {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.bewertung__sterne {
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  margin-bottom: 0.4rem;
+}
+
+.bewertung__text {
+  font-weight: 300;
+  color: var(--color-ink);
+  max-width: 60ch;
 }

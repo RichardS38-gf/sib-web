@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css?v=2">
-  <link rel="stylesheet" href="css/shop.css?v=1">
+  <link rel="stylesheet" href="css/shop.css?v=2">
 </head>
 <body>
 
@@ -74,6 +74,47 @@
         <div class="grid-4" id="shop-produkte"></div>
       </div>
     </section>
+
+    <!-- Bewertungen -->
+    <section class="section" id="bewertungen-section" hidden>
+      <div class="container">
+        <div class="section-header">
+          <h2>Bewertungen</h2>
+          <button class="btn btn--outline" id="toggle-bewertung-form" type="button">Bewertung schreiben</button>
+        </div>
+
+        <form class="bewertung-form" id="bewertung-form" hidden>
+          <div class="bewertung-form__row">
+            <div class="form-group">
+              <label class="form-label" for="bw-name">Name</label>
+              <input class="form-input" type="text" id="bw-name" name="name" required autocomplete="name">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="bw-email">E-Mail</label>
+              <input class="form-input" type="email" id="bw-email" name="email" required autocomplete="email">
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="form-label">Sterne</span>
+            <div class="sterne-input" id="sterne-input" role="radiogroup" aria-label="Bewertung in Sternen">
+              <button type="button" class="stern" data-wert="1" aria-label="1 Stern">★</button>
+              <button type="button" class="stern" data-wert="2" aria-label="2 Sterne">★</button>
+              <button type="button" class="stern" data-wert="3" aria-label="3 Sterne">★</button>
+              <button type="button" class="stern" data-wert="4" aria-label="4 Sterne">★</button>
+              <button type="button" class="stern" data-wert="5" aria-label="5 Sterne">★</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="bw-text">Deine Bewertung <span class="bw-optional">(optional)</span></label>
+            <textarea class="form-input" id="bw-text" name="text" rows="3"></textarea>
+          </div>
+          <button class="btn btn--primary" type="submit">Absenden</button>
+          <div id="bewertung-feedback" aria-live="polite"></div>
+        </form>
+
+        <div id="bewertungen-liste"></div>
+      </div>
+    </section>
   </main>
 
   <!-- ── Footer ── -->
@@ -118,6 +159,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/shop.js?v=3"></script>
+  <script type="module" src="js/shop.js?v=4"></script>
 </body>
 </html>

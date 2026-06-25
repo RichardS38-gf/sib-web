@@ -83,6 +83,7 @@ function zeigeAdmin () {
   ladeProdukte()
   ladeReservierungen()
   ladeNewsletter()
+  ladeBewertungen()
   fuelleProduktDropdowns()
 }
 
@@ -550,6 +551,66 @@ async function toggleAbo (id, aktivJetzt) {
   } catch (err) {
     console.error('Status ändern fehlgeschlagen:', err)
     window.alert('Der Status konnte nicht geändert werden.')
+  }
+}
+
+// ── TAB 5: Bewertungen ──
+function sterne (n) {
+  const v = Math.max(0, Math.min(5, parseInt(n, 10) || 0))
+  return '★★★★★☆☆☆☆☆'.slice(5 - v, 10 - v)
+}
+
+async function ladeBewertungen () {
+  const el = document.getElementById('bewertungen-content')
+  try {
+    const { data, error } = await supabase
+      .from('bewertungen')
+      .select('*, shops(name)')
+      .order('erstellt_am', { ascending: false })
+    if (error) throw error
+    const bewertungen = data || []
+
+    if (bewertungen.length === 0) {
+      el.innerHTML = '<p class="admin-empty">Noch keine Bewertungen.</p>'
+      return
+    }
+
+    const rows = bewertungen.map((b) => `
+      <tr>
+        <td class="is-wrap">${esc(b.shops?.name || '—')}</td>
+        <td class="is-wrap">${esc(b.autor_name)}</td>
+        <td>${sterne(b.sterne)}</td>
+        <td class="is-wrap">${esc(b.text || '—')}</td>
+        <td>${formatDatum(b.erstellt_am)}</td>
+        <td><button class="admin-link-btn" data-delete-bewertung="${esc(b.id)}">Löschen</button></td>
+      </tr>`).join('')
+
+    el.innerHTML = `
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Shop</th><th>Autor</th><th>Sterne</th><th>Text</th><th>Datum</th><th>Aktion</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`
+
+    el.querySelectorAll('[data-delete-bewertung]').forEach((btn) => {
+      btn.addEventListener('click', () => loescheBewertung(btn.dataset.deleteBewertung))
+    })
+  } catch (err) {
+    console.error('Bewertungen konnten nicht geladen werden:', err)
+    el.innerHTML = '<p class="admin-empty">Bewertungen konnten nicht geladen werden.</p>'
+  }
+}
+
+async function loescheBewertung (id) {
+  if (!window.confirm('Diese Bewertung wirklich löschen?')) return
+  try {
+    const { error } = await supabase.from('bewertungen').delete().eq('id', id)
+    if (error) throw error
+    ladeBewertungen()
+  } catch (err) {
+    console.error('Löschen fehlgeschlagen:', err)
+    window.alert('Die Bewertung konnte nicht gelöscht werden.')
   }
 }
 

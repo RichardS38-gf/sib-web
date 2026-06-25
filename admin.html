@@ -103,6 +103,7 @@
             <button class="admin-tab" data-tab="produkte" role="tab">Produkte</button>
             <button class="admin-tab" data-tab="reservierungen" role="tab">Reservierungen</button>
             <button class="admin-tab" data-tab="newsletter" role="tab">Newsletter</button>
+            <button class="admin-tab" data-tab="bewertungen" role="tab">Bewertungen</button>
           </div>
 
           <!-- TAB 1: Händler -->
@@ -218,6 +219,14 @@
             </div>
           </div>
 
+          <!-- TAB 5: Bewertungen -->
+          <div class="admin-panel" data-panel="bewertungen" hidden>
+            <h2 class="admin-panel__heading">Alle Bewertungen</h2>
+            <div id="bewertungen-content">
+              <div class="loading">Bewertungen werden geladen…</div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -265,6 +274,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/admin.js?v=3"></script>
+  <script type="module" src="js/admin.js?v=4"></script>
 </body>
 </html>

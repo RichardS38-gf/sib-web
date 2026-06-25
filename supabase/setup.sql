@@ -64,6 +64,19 @@ create table if not exists public.haendler_anfragen (
   erstellt_am timestamptz not null default now()
 );
 
+-- Bewertungen (Kundenbewertungen je Shop)
+create table if not exists public.bewertungen (
+  id uuid primary key default gen_random_uuid(),
+  shop_id uuid references public.shops (id) on delete cascade,
+  autor_name text not null,
+  autor_email text not null,
+  sterne integer not null check (sterne between 1 and 5),
+  text text,
+  erstellt_am timestamptz default now()
+);
+
+create index if not exists bewertungen_shop_id_idx on public.bewertungen (shop_id);
+
 -- Admin-Registry: Auth-Konten mit Vollzugriff
 create table if not exists public.admins (
   user_id uuid primary key references auth.users (id) on delete cascade,
@@ -123,6 +136,12 @@ grant insert on public.haendler_anfragen to anon, authenticated;
 grant select, update, delete on public.haendler_anfragen to authenticated;
 grant all on public.haendler_anfragen to service_role;
 
+-- Bewertungen: anon liest + schreibt, authenticated (Admin) loescht
+grant insert on public.bewertungen to anon;
+grant select on public.bewertungen to anon, authenticated;
+grant delete on public.bewertungen to authenticated;
+grant all on public.bewertungen to service_role;
+
 -- is_admin() ausführbar für eingeloggte Nutzer (und anon, schadet nicht)
 grant execute on function public.is_admin () to anon, authenticated;
 
@@ -138,6 +157,7 @@ alter table public.newsletter_abonnenten enable row level security;
 alter table public.admins                enable row level security;
 alter table public.produkt_varianten     enable row level security;
 alter table public.haendler_anfragen     enable row level security;
+alter table public.bewertungen           enable row level security;
 
 
 -- ============================================================
@@ -267,6 +287,20 @@ create policy "anfragen_insert"
 
 create policy "Admin Vollzugriff haendler_anfragen"
   on public.haendler_anfragen for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+
+-- 3g) Bewertungen ------------------------------------------------
+-- Öffentlich lesbar + von anon schreibbar; Admin verwaltet/löscht.
+drop policy if exists "bewertungen_lesen"            on public.bewertungen;
+drop policy if exists "bewertungen_schreiben"        on public.bewertungen;
+drop policy if exists "Admin Vollzugriff bewertungen" on public.bewertungen;
+
+create policy "bewertungen_lesen"
+  on public.bewertungen for select using (true);
+create policy "bewertungen_schreiben"
+  on public.bewertungen for insert to anon with check (true);
+create policy "Admin Vollzugriff bewertungen"
+  on public.bewertungen for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
 
