@@ -187,6 +187,7 @@ async function ladeWeitere (produkt) {
       .select('*, shops(name, slug)')
       .eq('shop_id', produkt.shop_id)
       .eq('verfuegbar', true)
+      .eq('freigegeben', true)
       .neq('id', produkt.id)
       .order('erstellt_am', { ascending: false })
       .limit(4)

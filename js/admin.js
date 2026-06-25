@@ -76,11 +76,13 @@ function zeigeAdmin () {
   initTabs()
   initLogout()
   initShopCreateForm()
+  initProduktCreateForm()
 
   ladeHaendler()
   ladeProdukte()
   ladeReservierungen()
   ladeNewsletter()
+  fuelleProduktDropdowns()
 }
 
 function initGateForm () {
@@ -280,15 +282,24 @@ async function ladeProdukte () {
 
     const rows = produkte.map((p) => {
       const verfuegbar = p.verfuegbar !== false
+      const freigegeben = p.freigegeben === true
       const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : '—'
       const toggleLabel = verfuegbar ? 'Auf nicht verfügbar' : 'Auf verfügbar'
+      const freigabeZelle = freigegeben
+        ? '<span class="badge badge--muted">freigegeben</span>'
+        : '<span class="badge badge--outline">ausstehend</span>'
+      const freigebenBtn = freigegeben
+        ? ''
+        : `<button class="admin-link-btn" data-freigeben-produkt="${esc(p.id)}">Freigeben</button>`
       return `
         <tr>
           <td class="is-wrap">${esc(p.titel)}</td>
           <td class="is-wrap">${esc(p.shops?.name || '—')}</td>
           <td>${esc(preis)}</td>
           <td>${jaNein(verfuegbar)}</td>
+          <td>${freigabeZelle}</td>
           <td>
+            ${freigebenBtn}
             <button class="admin-link-btn" data-toggle-produkt="${esc(p.id)}" data-verf="${verfuegbar}">${toggleLabel}</button>
             <button class="admin-link-btn" data-delete-produkt="${esc(p.id)}" data-titel="${esc(p.titel)}">Löschen</button>
           </td>
@@ -298,11 +309,14 @@ async function ladeProdukte () {
     el.innerHTML = `
       <div class="admin-table-wrap">
         <table class="admin-table">
-          <thead><tr><th>Titel</th><th>Shop</th><th>Preis</th><th>Verfügbar</th><th>Aktion</th></tr></thead>
+          <thead><tr><th>Titel</th><th>Shop</th><th>Preis</th><th>Verfügbar</th><th>Freigabe</th><th>Aktion</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`
 
+    el.querySelectorAll('[data-freigeben-produkt]').forEach((btn) => {
+      btn.addEventListener('click', () => freigebenProdukt(btn.dataset.freigebenProdukt))
+    })
     el.querySelectorAll('[data-toggle-produkt]').forEach((btn) => {
       btn.addEventListener('click', () => toggleProdukt(btn.dataset.toggleProdukt, btn.dataset.verf === 'true'))
     })
@@ -336,6 +350,107 @@ async function loescheProdukt (id, titel) {
     console.error('Löschen fehlgeschlagen:', err)
     window.alert('Das Produkt konnte nicht gelöscht werden.')
   }
+}
+
+async function freigebenProdukt (id) {
+  try {
+    const { error } = await supabase.from('produkte').update({ freigegeben: true }).eq('id', id)
+    if (error) throw error
+    ladeProdukte()
+  } catch (err) {
+    console.error('Freigeben fehlgeschlagen:', err)
+    window.alert('Das Produkt konnte nicht freigegeben werden.')
+  }
+}
+
+// Dropdowns (Händler + Kategorien) für das Admin-Produktformular füllen
+async function fuelleProduktDropdowns () {
+  const shopSelect = document.getElementById('cp-shop')
+  const katSelect = document.getElementById('cp-kategorie')
+  try {
+    const [shopsRes, katRes] = await Promise.all([
+      supabase.from('shops').select('id, name').order('name'),
+      supabase.from('kategorien').select('id, name').order('name')
+    ])
+    if (!shopsRes.error) {
+      ;(shopsRes.data || []).forEach((s) => {
+        const opt = document.createElement('option')
+        opt.value = s.id
+        opt.textContent = s.name
+        shopSelect.appendChild(opt)
+      })
+    }
+    if (!katRes.error) {
+      ;(katRes.data || []).forEach((k) => {
+        const opt = document.createElement('option')
+        opt.value = k.id
+        opt.textContent = k.name
+        katSelect.appendChild(opt)
+      })
+    }
+  } catch (err) {
+    console.error('Dropdowns konnten nicht geladen werden:', err)
+  }
+}
+
+function initProduktCreateForm () {
+  const toggleBtn = document.getElementById('toggle-produkt-form')
+  const cancelBtn = document.getElementById('cancel-produkt-form')
+  const form = document.getElementById('produkt-create-form')
+  const feedback = document.getElementById('produkt-create-feedback')
+
+  toggleBtn.addEventListener('click', () => {
+    form.hidden = !form.hidden
+    if (!form.hidden) form.titel.focus()
+  })
+  cancelBtn.addEventListener('click', () => {
+    form.reset()
+    feedback.innerHTML = ''
+    form.hidden = true
+  })
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    feedback.innerHTML = ''
+
+    const shopId = form.shop_id.value
+    const titel = form.titel.value.trim()
+    const preisRaw = form.preis.value
+    if (!shopId || !titel || preisRaw === '') {
+      feedback.innerHTML = '<div class="error-msg">Bitte Händler, Titel und Preis ausfüllen.</div>'
+      return
+    }
+
+    const bildUrl = form.bild_url.value.trim()
+    const neu = {
+      shop_id: shopId,
+      titel,
+      beschreibung: form.beschreibung.value.trim() || null,
+      preis: parseFloat(preisRaw),
+      kategorie_id: form.kategorie_id.value || null,
+      bilder: bildUrl ? [bildUrl] : [],
+      verfuegbar: true,
+      freigegeben: true // Admin-Produkte gehen sofort live
+    }
+
+    const submitBtn = form.querySelector('button[type="submit"]')
+    submitBtn.disabled = true
+    submitBtn.textContent = 'Wird angelegt…'
+
+    try {
+      const { error } = await supabase.from('produkte').insert(neu)
+      if (error) throw error
+      form.reset()
+      form.hidden = true
+      ladeProdukte()
+    } catch (err) {
+      console.error('Produkt anlegen fehlgeschlagen:', err)
+      feedback.innerHTML = '<div class="error-msg">Das Produkt konnte nicht angelegt werden.</div>'
+    } finally {
+      submitBtn.disabled = false
+      submitBtn.textContent = 'Anlegen'
+    }
+  })
 }
 
 // ── TAB 3: Reservierungen ──

@@ -100,6 +100,7 @@ async function ladeProdukte (shop) {
       .select('*')
       .eq('shop_id', shop.id)
       .eq('verfuegbar', true)
+      .eq('freigegeben', true)
       .order('erstellt_am', { ascending: false })
 
     if (error) throw error

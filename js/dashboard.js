@@ -170,9 +170,13 @@ async function ladeProdukte () {
         : '<div class="dash-produkt__image"></div>'
       const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
       const status = p.verfuegbar !== false ? 'Verfügbar: ja' : 'Verfügbar: nein'
+      const freigabeBadge = p.freigegeben === true
+        ? '<span class="badge badge--muted dash-produkt__badge">Freigegeben</span>'
+        : '<span class="badge badge--outline dash-produkt__badge">Ausstehend</span>'
       return `
         <div class="dash-produkt">
           ${bild}
+          ${freigabeBadge}
           <p class="dash-produkt__title">${esc(p.titel)}</p>
           <p class="dash-produkt__price">${esc(preis)}</p>
           <p class="dash-produkt__status">${status}</p>
@@ -252,7 +256,8 @@ function initProduktForm () {
       preis: parseFloat(preisRaw),
       kategorie_id: form.kategorie_id.value || null,
       bilder: bildUrl ? [bildUrl] : [],
-      verfuegbar: true
+      verfuegbar: true,
+      freigegeben: false // muss vom Admin freigegeben werden
     }
 
     const submitBtn = form.querySelector('button[type="submit"]')

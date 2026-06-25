@@ -114,6 +114,11 @@
   margin-bottom: var(--space-1);
 }
 
+.dash-produkt__badge {
+  align-self: flex-start;
+  margin-bottom: var(--space-1);
+}
+
 .dash-produkt__title {
   font-size: var(--text-sm);
   font-weight: 400;

@@ -76,6 +76,7 @@ async function ladeProdukte () {
       .from('produkte')
       .select('*, shops(name, slug)')
       .eq('verfuegbar', true)
+      .eq('freigegeben', true)
       .order('erstellt_am', { ascending: false })
       .limit(8)
 

@@ -29,6 +29,11 @@
 alter table public.shops
   add column if not exists user_id uuid references auth.users (id) on delete set null;
 
+-- Freigabe-System: neue Produkte müssen vom Admin freigegeben werden,
+-- bevor sie öffentlich erscheinen (Admin-Produkte werden direkt true gesetzt).
+alter table public.produkte
+  add column if not exists freigegeben boolean not null default false;
+
 -- Admin-Registry: Auth-Konten mit Vollzugriff
 create table if not exists public.admins (
   user_id uuid primary key references auth.users (id) on delete cascade,
@@ -105,8 +110,9 @@ drop policy if exists "Oeffentliches Lesen shops"      on public.shops;
 
 create policy "Oeffentliches Lesen kategorien"
   on public.kategorien for select using (true);
+-- Produkte öffentlich nur sichtbar, wenn verfügbar UND vom Admin freigegeben.
 create policy "Oeffentliches Lesen produkte"
-  on public.produkte for select using (true);
+  on public.produkte for select using (verfuegbar = true and freigegeben = true);
 create policy "Oeffentliches Lesen shops"
   on public.shops for select using (true);
 
