@@ -38,6 +38,11 @@ alter table public.produkte
 alter table public.reservierungen
   add column if not exists groesse text;
 
+-- Reservierungs-Status inkl. "abgeholt" und "storniert" erlauben
+alter table public.reservierungen drop constraint if exists reservierungen_status_check;
+alter table public.reservierungen add constraint reservierungen_status_check
+  check (status in ('offen', 'bestaetigt', 'abgeholt', 'abgelaufen', 'storniert'));
+
 -- Produkt-Varianten: Größen + Stückzahlen je Produkt
 create table if not exists public.produkt_varianten (
   id uuid primary key default gen_random_uuid(),
@@ -112,6 +117,8 @@ grant select on public.shops      to anon;
 -- … und öffentlich schreiben, wo nötig (Reservierung + Newsletter-Anmeldung)
 grant insert on public.reservierungen        to anon;
 grant insert on public.newsletter_abonnenten to anon;
+-- Kunde darf seine Reservierung per id-Link ansehen + stornieren
+grant select, update on public.reservierungen to anon;
 
 -- authenticated (Händler + Admin): volle Tabellen-Privilegien.
 -- Die tatsächliche Einschränkung erfolgt über RLS (Abschnitt 3).
@@ -189,6 +196,16 @@ create policy "Oeffentlich reservieren"
   on public.reservierungen for insert to anon, authenticated with check (true);
 create policy "Oeffentlich Newsletter-Anmeldung"
   on public.newsletter_abonnenten for insert to anon, authenticated with check (true);
+
+-- Kunde sieht seine Reservierung (per id-Link) und darf sie stornieren.
+-- Hinweis: USING (true) -> die UUID dient als nicht erratbarer Zugriffstoken.
+drop policy if exists "reservierungen_ansehen"    on public.reservierungen;
+drop policy if exists "reservierungen_stornieren" on public.reservierungen;
+create policy "reservierungen_ansehen"
+  on public.reservierungen for select to anon using (true);
+create policy "reservierungen_stornieren"
+  on public.reservierungen for update to anon
+  using (true) with check (status = 'storniert');
 
 -- 3c) Händler — sieht/ändert NUR seine eigenen Daten ----------
 --     (Verknüpfung über shops.user_id = auth.uid())

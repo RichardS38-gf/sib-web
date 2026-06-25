@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Produkt — Shoppen in Braunschweig</title>
-  <meta name="description" content="Produktdetails und Reservierung — Shoppen in Braunschweig.">
+  <title>Meine Reservierung — Shoppen in Braunschweig</title>
+  <meta name="description" content="Reservierung einsehen und verwalten — Shoppen in Braunschweig.">
+  <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -12,8 +13,8 @@
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
-  <link rel="stylesheet" href="css/components.css?v=3">
-  <link rel="stylesheet" href="css/produkt.css?v=4">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/reservierung.css?v=1">
 </head>
 <body>
 
@@ -62,35 +63,9 @@
   <main>
     <section class="section">
       <div class="container">
-
-        <!-- Breadcrumb / Zurück -->
-        <a class="product-back section-link" href="kategorie.html">← Zurück zu den Produkten</a>
-
-        <!-- Produktdetail (wird per JS gefüllt) -->
-        <div id="produkt-detail">
-          <div class="loading">Produkt wird geladen…</div>
+        <div id="reservierung-inhalt">
+          <div class="loading">Reservierung wird geladen…</div>
         </div>
-
-      </div>
-    </section>
-
-    <!-- Weitere Artikel desselben Shops -->
-    <section class="section section--soft" id="weitere-section" hidden>
-      <div class="container">
-        <div class="section-header">
-          <h2 id="weitere-titel">Weitere Artikel</h2>
-        </div>
-        <div class="grid-4" id="weitere"></div>
-      </div>
-    </section>
-
-    <!-- Das könnte dir auch gefallen (gleiche Kategorie, andere Händler) -->
-    <section class="section" id="aehnliche-section" hidden>
-      <div class="container">
-        <div class="section-header">
-          <h2>Das könnte dir auch gefallen</h2>
-        </div>
-        <div class="grid-4" id="aehnliche"></div>
       </div>
     </section>
   </main>
@@ -137,6 +112,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/produkt.js?v=9"></script>
+  <script type="module" src="js/reservierung.js?v=1"></script>
 </body>
 </html>

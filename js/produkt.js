@@ -283,7 +283,10 @@ function initReservierung (produkt) {
       if (error) throw error
 
       // Formular durch Erfolgsmeldung ersetzen
-      form.innerHTML = '<div class="success-msg">Reservierung erfolgreich! Wir benachrichtigen dich wenn der Artikel abholbereit ist.</div>'
+      const ansehen = neu?.id
+        ? ` <a href="reservierung.html?id=${encodeURIComponent(neu.id)}">Reservierung ansehen →</a>`
+        : ''
+      form.innerHTML = `<div class="success-msg">Reservierung erfolgreich! Wir benachrichtigen dich wenn der Artikel abholbereit ist.${ansehen}</div>`
 
       // Bestätigungs-E-Mail an den Kunden (nicht blockierend)
       sendeBestaetigungsMail({
