@@ -152,9 +152,11 @@ drop policy if exists "Oeffentliches Lesen shops"      on public.shops;
 
 create policy "Oeffentliches Lesen kategorien"
   on public.kategorien for select using (true);
--- Produkte öffentlich nur sichtbar, wenn verfügbar UND vom Admin freigegeben.
+-- Produkte öffentlich sichtbar, sobald vom Admin freigegeben.
+-- (Verfügbarkeit wird im Frontend gefiltert; die Kategorieseite kann so auch
+--  ausverkaufte Artikel anzeigen. Andere Seiten filtern verfuegbar=true selbst.)
 create policy "Oeffentliches Lesen produkte"
-  on public.produkte for select using (verfuegbar = true and freigegeben = true);
+  on public.produkte for select using (freigegeben = true);
 create policy "Oeffentliches Lesen shops"
   on public.shops for select using (true);
 

@@ -1,5 +1,6 @@
-// js/kategorie.js — SIB Kategorie-/Produktübersicht
-// Zeigt Produkte gefiltert nach Kategorie (?slug=XXX) oder alle Produkte.
+// js/kategorie.js — SIB Kategorie-/Produktübersicht mit Filtern
+// Produkte einer Kategorie (?slug=XXX) bzw. alle Produkte; Filter clientseitig,
+// Zustand in URL-Parametern.
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
@@ -12,6 +13,11 @@ function esc (value) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
+}
+
+function preisOf (p) {
+  const n = Number(p.preis)
+  return isNaN(n) ? 0 : n
 }
 
 // ── Mobile-Menü ──
@@ -27,33 +33,58 @@ function initMobileMenu () {
   })
 }
 
-function getSlug () {
-  return new URLSearchParams(window.location.search).get('slug')
+function getParams () {
+  return new URLSearchParams(window.location.search)
+}
+
+// Zustand
+let alleProdukte = []
+let aktiverSlug = null
+let haendlerById = {} // shop_id -> name
+const state = {
+  min: null,
+  max: null,
+  nurVerfuegbar: true,
+  haendler: '',
+  sort: 'neu'
 }
 
 // ── Sidebar mit allen Kategorien ──
-function renderSidebar (kategorien, aktiverSlug) {
+function renderSidebar (kategorien, slug) {
   const nav = document.getElementById('kategorie-nav')
   const links = [
-    `<a class="kategorie-sidebar__link${!aktiverSlug ? ' is-active' : ''}" href="kategorie.html">Alle Produkte</a>`,
+    `<a class="kategorie-sidebar__link${!slug ? ' is-active' : ''}" href="kategorie.html">Alle Produkte</a>`,
     ...kategorien.map((k) => {
-      const slug = encodeURIComponent(k.slug || k.id)
-      const aktiv = aktiverSlug && (k.slug === aktiverSlug)
-      return `<a class="kategorie-sidebar__link${aktiv ? ' is-active' : ''}" href="kategorie.html?slug=${slug}">${esc(k.name)}</a>`
+      const ks = encodeURIComponent(k.slug || k.id)
+      const aktiv = slug && k.slug === slug
+      return `<a class="kategorie-sidebar__link${aktiv ? ' is-active' : ''}" href="kategorie.html?slug=${ks}">${esc(k.name)}</a>`
     })
   ]
   nav.innerHTML = links.join('')
 }
 
-// ── Produktgrid ──
+// ── Filter anwenden ──
+function gefilterteListe () {
+  let list = alleProdukte.slice()
+
+  if (state.nurVerfuegbar) list = list.filter((p) => p.verfuegbar !== false)
+  if (state.haendler) list = list.filter((p) => p.shop_id === state.haendler)
+  if (state.min !== null) list = list.filter((p) => preisOf(p) >= state.min)
+  if (state.max !== null) list = list.filter((p) => preisOf(p) <= state.max)
+
+  if (state.sort === 'preis-asc') list.sort((a, b) => preisOf(a) - preisOf(b))
+  else if (state.sort === 'preis-desc') list.sort((a, b) => preisOf(b) - preisOf(a))
+  else list.sort((a, b) => String(b.erstellt_am || '').localeCompare(String(a.erstellt_am || '')))
+
+  return list
+}
+
 function renderProdukte (produkte) {
   const container = document.getElementById('produkte')
-
   if (produkte.length === 0) {
-    container.innerHTML = '<p class="kategorie-empty">Keine Produkte in dieser Kategorie.</p>'
+    container.innerHTML = '<p class="kategorie-empty">Keine Produkte für diese Auswahl gefunden.</p>'
     return
   }
-
   container.innerHTML = produkte.map((p) => {
     const id = encodeURIComponent(p.id)
     const bilder = Array.isArray(p.bilder) ? p.bilder.filter(Boolean) : []
@@ -62,14 +93,137 @@ function renderProdukte (produkte) {
       : '<div class="product-card__image"></div>'
     const shopName = p.shops?.name || 'Lokaler Händler'
     const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
+    const soldout = p.verfuegbar === false
+      ? '<span class="product-card__soldout">Nicht verfügbar</span>'
+      : ''
     return `
       <a class="product-card" href="produkt.html?id=${id}">
         ${bild}
         <span class="product-card__shop">${esc(shopName)}</span>
         <span class="product-card__title">${esc(p.titel)}</span>
-        <span class="product-card__price">${esc(preis)}</span>
+        <span class="product-card__price">${esc(preis)}${soldout}</span>
       </a>`
   }).join('')
+}
+
+function renderTags () {
+  const el = document.getElementById('filter-tags')
+  const tags = []
+  if (state.min !== null) tags.push({ key: 'min', label: `ab ${euro.format(state.min)}` })
+  if (state.max !== null) tags.push({ key: 'max', label: `bis ${euro.format(state.max)}` })
+  if (state.haendler) tags.push({ key: 'haendler', label: haendlerById[state.haendler] || 'Händler' })
+  if (!state.nurVerfuegbar) tags.push({ key: 'verfuegbar', label: 'inkl. nicht verfügbare' })
+
+  el.innerHTML = tags.map((t) =>
+    `<button class="kat-tag" type="button" data-remove="${t.key}">${esc(t.label)} <span aria-hidden="true">×</span></button>`
+  ).join('')
+
+  el.querySelectorAll('[data-remove]').forEach((btn) => {
+    btn.addEventListener('click', () => entferneFilter(btn.dataset.remove))
+  })
+}
+
+function entferneFilter (key) {
+  if (key === 'min') { state.min = null; document.getElementById('filter-min').value = '' }
+  else if (key === 'max') { state.max = null; document.getElementById('filter-max').value = '' }
+  else if (key === 'haendler') { state.haendler = ''; document.getElementById('filter-haendler').value = '' }
+  else if (key === 'verfuegbar') { state.nurVerfuegbar = true; document.getElementById('filter-verfuegbar').checked = true }
+  anwenden()
+}
+
+// Zustand -> URL
+function updateURL () {
+  const params = new URLSearchParams()
+  if (aktiverSlug) params.set('slug', aktiverSlug)
+  if (state.min !== null) params.set('min', String(state.min))
+  if (state.max !== null) params.set('max', String(state.max))
+  if (!state.nurVerfuegbar) params.set('verf', '0')
+  if (state.haendler) params.set('shop', state.haendler)
+  if (state.sort !== 'neu') params.set('sort', state.sort)
+  const qs = params.toString()
+  window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
+}
+
+function anwenden () {
+  const liste = gefilterteListe()
+  document.getElementById('kategorie-anzahl').textContent =
+    `${liste.length} ${liste.length === 1 ? 'Produkt' : 'Produkte'}`
+  renderProdukte(liste)
+  renderTags()
+  updateURL()
+}
+
+// Händler-Dropdown aus den geladenen Produkten füllen
+function fuelleHaendler () {
+  const select = document.getElementById('filter-haendler')
+  const seen = {}
+  alleProdukte.forEach((p) => {
+    if (p.shop_id && p.shops?.name && !seen[p.shop_id]) {
+      seen[p.shop_id] = true
+      haendlerById[p.shop_id] = p.shops.name
+    }
+  })
+  const namen = Object.keys(haendlerById).sort((a, b) => haendlerById[a].localeCompare(haendlerById[b]))
+  namen.forEach((id) => {
+    const opt = document.createElement('option')
+    opt.value = id
+    opt.textContent = haendlerById[id]
+    select.appendChild(opt)
+  })
+  select.value = state.haendler || ''
+}
+
+function initFilterControls () {
+  const min = document.getElementById('filter-min')
+  const max = document.getElementById('filter-max')
+  const verf = document.getElementById('filter-verfuegbar')
+  const haendler = document.getElementById('filter-haendler')
+  const sort = document.getElementById('filter-sort')
+
+  document.getElementById('preis-anwenden').addEventListener('click', () => {
+    const minV = parseFloat(min.value)
+    const maxV = parseFloat(max.value)
+    state.min = isNaN(minV) ? null : minV
+    state.max = isNaN(maxV) ? null : maxV
+    anwenden()
+  })
+
+  document.getElementById('filter-reset').addEventListener('click', () => {
+    state.min = null; state.max = null; state.nurVerfuegbar = true; state.haendler = ''; state.sort = 'neu'
+    min.value = ''; max.value = ''; verf.checked = true; haendler.value = ''; sort.value = 'neu'
+    anwenden()
+  })
+
+  verf.addEventListener('change', () => { state.nurVerfuegbar = verf.checked; anwenden() })
+  haendler.addEventListener('change', () => { state.haendler = haendler.value; anwenden() })
+  sort.addEventListener('change', () => { state.sort = sort.value; anwenden() })
+
+  // Mobile: Filter-Panel auf-/zuklappen
+  const toggle = document.getElementById('filter-toggle')
+  const sidebar = document.getElementById('kategorie-sidebar')
+  toggle.addEventListener('click', () => {
+    const open = sidebar.classList.toggle('is-open')
+    toggle.setAttribute('aria-expanded', String(open))
+  })
+}
+
+// Filter-Controls aus URL/State vorbelegen
+function syncControlsFromState () {
+  document.getElementById('filter-min').value = state.min !== null ? state.min : ''
+  document.getElementById('filter-max').value = state.max !== null ? state.max : ''
+  document.getElementById('filter-verfuegbar').checked = state.nurVerfuegbar
+  document.getElementById('filter-sort').value = state.sort
+}
+
+function leseStateAusURL (params) {
+  const min = parseFloat(params.get('min'))
+  const max = parseFloat(params.get('max'))
+  state.min = isNaN(min) ? null : min
+  state.max = isNaN(max) ? null : max
+  state.nurVerfuegbar = params.get('verf') !== '0'
+  state.haendler = params.get('shop') || ''
+  const sort = params.get('sort')
+  state.sort = ['preis-asc', 'preis-desc'].includes(sort) ? sort : 'neu'
 }
 
 // ── Init ──
@@ -77,12 +231,17 @@ async function init () {
   initMobileMenu()
   initHeaderSearch()
 
-  const slug = getSlug()
+  const params = getParams()
+  const slug = params.get('slug')
+  aktiverSlug = slug || null
+  leseStateAusURL(params)
+
+  initFilterControls()
+  syncControlsFromState()
+
   const titelEl = document.getElementById('kategorie-titel')
-  const anzahlEl = document.getElementById('kategorie-anzahl')
 
   try {
-    // Kategorien für Sidebar laden
     const { data: katData } = await supabase
       .from('kategorien')
       .select('id, name, slug')
@@ -90,40 +249,31 @@ async function init () {
     const kategorien = katData || []
     renderSidebar(kategorien, slug)
 
-    // Aktive Kategorie bestimmen
     let aktiveKat = null
-    if (slug) {
-      aktiveKat = kategorien.find((k) => k.slug === slug) || null
-      if (!aktiveKat) {
-        // Slug unbekannt — Titel trotzdem sinnvoll setzen
-        titelEl.textContent = 'Kategorie'
-      }
-    }
+    if (slug) aktiveKat = kategorien.find((k) => k.slug === slug) || null
 
     titelEl.textContent = aktiveKat ? aktiveKat.name : (slug ? 'Kategorie' : 'Alle Produkte')
     if (slug && aktiveKat) document.title = `${aktiveKat.name} — Shoppen in Braunschweig`
 
-    // Produkte laden (nur sichtbare, neueste zuerst)
+    // Alle freigegebenen Produkte der Kategorie laden (Verfügbarkeit clientseitig)
     let query = supabase
       .from('produkte')
       .select('*, shops(name, slug)')
-      .eq('verfuegbar', true)
       .eq('freigegeben', true)
       .order('erstellt_am', { ascending: false })
 
     if (aktiveKat) query = query.eq('kategorie_id', aktiveKat.id)
-    // Unbekannter Slug -> keine Treffer erzwingen
-    if (slug && !aktiveKat) query = query.eq('kategorie_id', '00000000-0000-0000-0000-000000000000')
+    else if (slug) query = query.eq('kategorie_id', '00000000-0000-0000-0000-000000000000')
 
     const { data, error } = await query
     if (error) throw error
-    const produkte = data || []
+    alleProdukte = data || []
 
-    anzahlEl.textContent = `${produkte.length} ${produkte.length === 1 ? 'Produkt' : 'Produkte'}`
-    renderProdukte(produkte)
+    fuelleHaendler()
+    anwenden()
   } catch (err) {
     console.error('Produkte konnten nicht geladen werden:', err)
-    anzahlEl.textContent = ''
+    document.getElementById('kategorie-anzahl').textContent = ''
     document.getElementById('produkte').innerHTML =
       '<p class="kategorie-empty">Produkte konnten gerade nicht geladen werden.</p>'
   }

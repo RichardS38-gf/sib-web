@@ -56,13 +56,105 @@
   text-underline-offset: 4px;
 }
 
-/* Sidebar auf Mobile horizontal scrollbar */
+/* Sidebar-Blöcke (Kategorien + Filter) */
+.kat-side-block { margin-bottom: var(--space-4); }
+
+/* ── Filter-Steuerung ── */
+.kat-preis {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.kat-preis__input {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  font-size: var(--text-sm);
+}
+
+.kat-preis__sep { color: var(--color-muted); }
+
+.kat-preis__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.btn--xs {
+  padding: 0.45rem 0.9rem;
+  font-size: var(--text-xs);
+}
+
+.kat-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.kat-check input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--color-ink);
+  cursor: pointer;
+}
+
+.kategorie-sidebar .form-select { width: 100%; }
+
+/* ── Filter-Umschalter (Mobile) ── */
+.kat-filter-toggle {
+  display: none;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  margin-bottom: var(--space-3);
+  background: none;
+  border: 1px solid var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+/* ── Aktive Filter-Tags ── */
+.kat-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.kat-tags:empty { display: none; }
+
+.kat-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  background-color: var(--color-ink);
+  color: var(--color-on-dark);
+  border: none;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.kat-tag:hover { opacity: 0.85; }
+
+/* ── Produkt-Karte: Nicht-verfügbar-Hinweis ── */
+.product-card__soldout {
+  margin-left: 0.5rem;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+/* Mobile: Sidebar als aufklappbares Panel */
 @media (max-width: 1023px) {
-  #kategorie-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: var(--space-1) var(--space-3);
-  }
+  .kat-filter-toggle { display: block; }
+  .kategorie-sidebar { display: none; }
+  .kategorie-sidebar.is-open { display: block; margin-bottom: var(--space-4); }
 }
 
 /* ── Produktgrid ── */

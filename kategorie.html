@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/kategorie.css?v=1">
+  <link rel="stylesheet" href="css/kategorie.css?v=2">
 </head>
 <body>
 
@@ -69,18 +69,62 @@
           <p class="page-head__subtext" id="kategorie-anzahl">Produkte werden geladen…</p>
         </div>
 
+        <!-- Filter-Umschalter (nur Mobile) -->
+        <button class="kat-filter-toggle" id="filter-toggle" type="button" aria-expanded="false" aria-controls="kategorie-sidebar">Filter</button>
+
         <div class="kategorie-layout">
 
-          <!-- Sidebar: Kategorien -->
-          <aside class="kategorie-sidebar">
-            <p class="kategorie-sidebar__title">Kategorien</p>
-            <nav id="kategorie-nav" aria-label="Kategorien">
-              <div class="loading">…</div>
-            </nav>
+          <!-- Sidebar: Kategorien + Filter -->
+          <aside class="kategorie-sidebar" id="kategorie-sidebar">
+
+            <div class="kat-side-block">
+              <p class="kategorie-sidebar__title">Kategorien</p>
+              <nav id="kategorie-nav" aria-label="Kategorien">
+                <div class="loading">…</div>
+              </nav>
+            </div>
+
+            <div class="kat-side-block">
+              <p class="kategorie-sidebar__title">Preis</p>
+              <div class="kat-preis">
+                <input type="number" class="form-input kat-preis__input" id="filter-min" min="0" step="0.01" placeholder="Min." aria-label="Mindestpreis">
+                <span class="kat-preis__sep">–</span>
+                <input type="number" class="form-input kat-preis__input" id="filter-max" min="0" step="0.01" placeholder="Max." aria-label="Maximalpreis">
+              </div>
+              <div class="kat-preis__actions">
+                <button class="btn btn--primary btn--xs" id="preis-anwenden" type="button">Anwenden</button>
+                <button class="btn btn--outline btn--xs" id="filter-reset" type="button">Zurücksetzen</button>
+              </div>
+            </div>
+
+            <div class="kat-side-block">
+              <label class="kat-check">
+                <input type="checkbox" id="filter-verfuegbar" checked>
+                <span>Nur verfügbare Artikel</span>
+              </label>
+            </div>
+
+            <div class="kat-side-block">
+              <p class="kategorie-sidebar__title">Händler</p>
+              <select class="form-select" id="filter-haendler">
+                <option value="">Alle Händler</option>
+              </select>
+            </div>
+
+            <div class="kat-side-block">
+              <p class="kategorie-sidebar__title">Sortierung</p>
+              <select class="form-select" id="filter-sort">
+                <option value="neu">Neueste zuerst</option>
+                <option value="preis-asc">Preis aufsteigend</option>
+                <option value="preis-desc">Preis absteigend</option>
+              </select>
+            </div>
+
           </aside>
 
           <!-- Produktgrid -->
           <div class="kategorie-main">
+            <div class="kat-tags" id="filter-tags"></div>
             <div class="kategorie-grid" id="produkte">
               <div class="loading">Produkte werden geladen…</div>
             </div>
@@ -133,6 +177,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/kategorie.js?v=2"></script>
+  <script type="module" src="js/kategorie.js?v=3"></script>
 </body>
 </html>
