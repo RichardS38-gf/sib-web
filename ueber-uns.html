@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Händler-Login — Shoppen in Braunschweig</title>
-  <meta name="description" content="Händler-Login — Shoppen in Braunschweig.">
+  <title>Über uns — Shoppen in Braunschweig</title>
+  <meta name="description" content="Shoppen in Braunschweig verbindet lokalen Einzelhandel mit der Bequemlichkeit des Online-Shoppings. So funktioniert's.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/login.css?v=1">
+  <link rel="stylesheet" href="css/ueber-uns.css?v=1">
 </head>
 <body>
 
@@ -60,28 +60,58 @@
   </header>
 
   <main>
-    <section class="section login">
-      <div class="container">
-        <div class="login__box">
-          <span class="badge badge--outline login__eyebrow">Für Händler</span>
-          <h1 class="login__headline">Händler-Login</h1>
-          <p class="login__subtext">Melde dich an, um deine Produkte und Reservierungen zu verwalten.</p>
 
-          <form class="login-form" id="login-form" novalidate>
-            <div class="form-group">
-              <label class="form-label" for="login-email">E-Mail</label>
-              <input class="form-input" type="email" id="login-email" name="email" required autocomplete="email">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="login-password">Passwort</label>
-              <input class="form-input" type="password" id="login-password" name="password" required autocomplete="current-password">
-            </div>
-            <button class="btn btn--primary btn--full" type="submit">Anmelden</button>
-            <div id="login-feedback" aria-live="polite"></div>
-          </form>
+    <!-- 1. Hero (dunkel) -->
+    <section class="section section--dark ueber-hero">
+      <div class="container">
+        <h1 class="ueber-hero__headline">Lokale Geschäfte.<br>Online entdecken.</h1>
+        <p class="ueber-hero__subtext">Shoppen in Braunschweig verbindet die Stärken des lokalen Einzelhandels mit der Bequemlichkeit des Online-Shoppings.</p>
+      </div>
+    </section>
+
+    <!-- 2. Problem (hell) -->
+    <section class="section">
+      <div class="container">
+        <div class="ueber-block">
+          <h2 class="ueber-block__headline">Innenstädte brauchen uns.</h2>
+          <p class="ueber-text">Innenstädte sterben aus, weil Online-Riesen den lokalen Handel verdrängen. Dabei haben lokale Geschäfte etwas, das Amazon nie bieten kann: echte Menschen, echte Beratung, einzigartige Produkte und eine lebendige Stadt.</p>
         </div>
       </div>
     </section>
+
+    <!-- 3. Lösung (soft) -->
+    <section class="section section--soft">
+      <div class="container">
+        <h2 class="ueber-block__headline ueber-steps__headline">So funktioniert's</h2>
+        <div class="ueber-steps">
+          <div class="ueber-step">
+            <span class="ueber-step__num">01</span>
+            <h3 class="ueber-step__title">Entdecken</h3>
+            <p class="ueber-step__text">Stöbere durch Produkte lokaler Braunschweiger Händler.</p>
+          </div>
+          <div class="ueber-step">
+            <span class="ueber-step__num">02</span>
+            <h3 class="ueber-step__title">Reservieren</h3>
+            <p class="ueber-step__text">Reserviere dein Lieblingsprodukt online — kostenlos und ohne Account.</p>
+          </div>
+          <div class="ueber-step">
+            <span class="ueber-step__num">03</span>
+            <h3 class="ueber-step__title">Abholen</h3>
+            <p class="ueber-step__text">Hole deinen Artikel direkt im Geschäft ab und erlebe echten lokalen Service.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Für Händler (dunkel) -->
+    <section class="section section--dark ueber-haendler">
+      <div class="container">
+        <h2 class="ueber-haendler__headline">Du bist Händler?</h2>
+        <p class="ueber-haendler__text">Zeige deine Produkte tausenden Braunschweigern, die lokal einkaufen wollen. Kostenlos starten, keine Provision.</p>
+        <a class="btn btn--light" href="haendler-werden.html">Jetzt Händler werden</a>
+      </div>
+    </section>
+
   </main>
 
   <!-- ── Footer ── -->
@@ -124,6 +154,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/login.js?v=2"></script>
+  <script type="module" src="js/ueber-uns.js?v=1"></script>
 </body>
 </html>
