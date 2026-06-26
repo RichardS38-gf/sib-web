@@ -200,7 +200,8 @@ function initChatWidget (shop) {
 
   if (!widget || !panel) return
 
-  // Panel: hidden überschreiben damit CSS nicht interferiert
+  // Panel: hidden-Attribut entfernen, dann per inline style steuern
+  panel.removeAttribute('hidden')
   panel.style.display = 'none'
   widget.hidden = true
 
