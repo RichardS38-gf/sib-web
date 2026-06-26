@@ -298,7 +298,7 @@ function initChatWidget (shop) {
         const chatId = crypto.randomUUID()
         const { error: e1 } = await supabase
           .from('chats')
-          .insert({ id: chatId, shop_id: shop.id, sender_name: 'Anonym' })
+          .insert({ id: chatId, shop_id: shop.id, sender_name: 'Anonym', sender_email: '' })
         if (e1) throw e1
 
         const { error: e2 } = await supabase
@@ -333,7 +333,16 @@ function initChatWidget (shop) {
       input.style.height = 'auto'
       await loadMessages()
 
-    } catch (err) { console.error('Senden:', err) }
+    } catch (err) {
+      console.error('Senden:', err)
+      // Fehler sichtbar im Widget anzeigen
+      const errDiv = document.getElementById('chat-send-error')
+      if (errDiv) {
+        errDiv.textContent = err?.message || JSON.stringify(err) || 'Unbekannter Fehler'
+        errDiv.hidden = false
+        setTimeout(() => { errDiv.hidden = true }, 8000)
+      }
+    }
     finally { sendBtn.disabled = false; input.focus() }
   }
 
