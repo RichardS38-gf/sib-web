@@ -364,12 +364,10 @@ textarea.form-input {
   align-self: flex-end;
 }
 
-.chat-bubble__zeit {
-  display: block;
-  font-size: 0.65rem;
-  margin-top: 0.25rem;
-  opacity: 0.55;
-}
+.chat-bubble p { color: inherit !important; margin: 0; }
+.chat-bubble__zeit { color: inherit; opacity: 0.6; font-size: 0.65rem; display: block; margin-top: 2px; }
+.chat-bubble--kunde { color: var(--color-ink) !important; }
+.chat-bubble--haendler { color: #fff !important; }
 
 .chat-reply {
   display: flex;

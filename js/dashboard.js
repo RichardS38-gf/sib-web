@@ -514,9 +514,12 @@ async function ladeNachrichten () {
             .update({ aktualisiert_am: new Date().toISOString() })
             .eq('id', chatId)
           textarea.value = ''
-          ladeNachrichten()
+          // Thread nach Reload wieder öffnen
+          await ladeNachrichten()
+          const reopened = document.getElementById(`thread-${chatId}`)
+          if (reopened) reopened.hidden = false
         } catch (err) {
-          fb.innerHTML = '<span class="error-msg">Senden fehlgeschlagen.</span>'
+          fb.innerHTML = `<span class="error-msg">${err?.message || 'Fehler'}</span>`
           btn.disabled = false; btn.textContent = 'Antworten'
         }
       })
