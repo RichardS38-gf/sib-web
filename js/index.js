@@ -67,7 +67,38 @@ async function ladeKategorien () {
   }
 }
 
-// ── 4. Beliebte Produkte (sortiert nach Shop-Bewertung) ──
+// "Neu"-Badge: Produkte, die jünger als 7 Tage sind
+function neuBadge (p) {
+  const t = p.erstellt_am ? new Date(p.erstellt_am).getTime() : NaN
+  if (isNaN(t)) return ''
+  return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
+    ? '<span class="product-card__badge">Neu</span>'
+    : ''
+}
+
+// Einzelne Produktkarte rendern (inkl. Sterne-Meta + Neu-Badge)
+function produktKarte (p, ratings) {
+  const id = encodeURIComponent(p.id)
+  const bilder = Array.isArray(p.bilder) ? p.bilder : []
+  const bild = bilder[0]
+    ? `<img class="product-card__image" src="${esc(bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
+    : '<div class="product-card__image"></div>'
+  const shopName = p.shops?.name || 'Lokaler Händler'
+  const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
+  const r = ratings[p.shop_id]
+  const meta = (r && r.anzahl > 0)
+    ? `<span class="product-card__stars">★</span> <span class="product-card__rating-val">${(r.summe / r.anzahl).toFixed(1).replace('.', ',')}</span> <span class="product-card__count">(${r.anzahl})</span> von ${esc(shopName)}`
+    : `von ${esc(shopName)}`
+  return `
+    <a class="product-card" href="produkt.html?id=${id}">
+      ${neuBadge(p)}${bild}
+      <span class="product-card__title">${esc(p.titel)}</span>
+      <span class="product-card__meta">${meta}</span>
+      <span class="product-card__price">${esc(preis)}</span>
+    </a>`
+}
+
+// ── 4. Produkte: Tabs „Beliebt" (nach Bewertung) und „Neu" (nach Datum) ──
 async function ladeProdukte () {
   const container = document.getElementById('produkte')
   if (!container) return
@@ -83,15 +114,15 @@ async function ladeProdukte () {
 
     if (error) throw error
 
-    let produkte = data || []
+    const alle = data || []
 
-    if (produkte.length === 0) {
+    if (alle.length === 0) {
       container.innerHTML = '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
       return
     }
 
     // Shop-Bewertungen (Durchschnitt + Anzahl) für die geladenen Shops holen
-    const shopIds = [...new Set(produkte.map((p) => p.shop_id).filter(Boolean))]
+    const shopIds = [...new Set(alle.map((p) => p.shop_id).filter(Boolean))]
     const ratings = {}
     if (shopIds.length > 0) {
       const { data: bew } = await supabase
@@ -109,33 +140,37 @@ async function ladeProdukte () {
       return r && r.anzahl > 0 ? r.summe / r.anzahl : null
     }
 
-    // „Beliebt": nach Bewertung sortieren (ohne Bewertung ans Ende), Top 5
-    produkte = produkte
+    // Beliebt: nach Shop-Bewertung sortiert (ohne Bewertung ans Ende), Top 5
+    const beliebt = [...alle]
       .map((p) => ({ p, avg: avgOf(p.shop_id) }))
       .sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1))
       .slice(0, 5)
       .map((x) => x.p)
 
-    container.innerHTML = produkte.map((p) => {
-      const id = encodeURIComponent(p.id)
-      const bilder = Array.isArray(p.bilder) ? p.bilder : []
-      const bild = bilder[0]
-        ? `<img class="product-card__image" src="${esc(bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
-        : '<div class="product-card__image"></div>'
-      const shopName = p.shops?.name || 'Lokaler Händler'
-      const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
-      const r = ratings[p.shop_id]
-      const meta = (r && r.anzahl > 0)
-        ? `<span class="product-card__stars">★</span> <span class="product-card__rating-val">${(r.summe / r.anzahl).toFixed(1).replace('.', ',')}</span> <span class="product-card__count">(${r.anzahl})</span> von ${esc(shopName)}`
-        : `von ${esc(shopName)}`
-      return `
-        <a class="product-card" href="produkt.html?id=${id}">
-          ${bild}
-          <span class="product-card__title">${esc(p.titel)}</span>
-          <span class="product-card__meta">${meta}</span>
-          <span class="product-card__price">${esc(preis)}</span>
-        </a>`
-    }).join('')
+    // Neu: nach Erstelldatum sortiert (neueste zuerst), Top 5
+    const neu = [...alle]
+      .sort((a, b) => new Date(b.erstellt_am || 0) - new Date(a.erstellt_am || 0))
+      .slice(0, 5)
+
+    const listen = { beliebt, neu }
+    const render = (key) => {
+      container.innerHTML = (listen[key] || []).map((p) => produktKarte(p, ratings)).join('')
+    }
+    render('beliebt')
+
+    // Tab-Umschaltung
+    const tabs = document.querySelectorAll('.product-tab')
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((t) => {
+          t.classList.remove('is-active')
+          t.setAttribute('aria-selected', 'false')
+        })
+        tab.classList.add('is-active')
+        tab.setAttribute('aria-selected', 'true')
+        render(tab.dataset.tab)
+      })
+    })
   } catch (err) {
     // Stumm scheitern, Platzhalter zeigen
     console.error('Produkte konnten nicht geladen werden:', err)
