@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css?v=3">
   <link rel="stylesheet" href="css/components.css?v=6">
-  <link rel="stylesheet" href="css/shop.css?v=4">
+  <link rel="stylesheet" href="css/shop.css?v=5">
 </head>
 <body>
 
@@ -154,38 +154,63 @@
         <div class="shop-info-tabelle__body" id="shop-info-tabelle-body"></div>
       </div>
     </section>
-    <!-- Chat Modal -->
-    <div class="chat-overlay" id="chat-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="chat-modal-title">
-      <div class="chat-modal">
-        <div class="chat-modal__head">
-          <h2 class="chat-modal__title" id="chat-modal-title">Nachricht senden</h2>
-          <button class="chat-modal__close" id="chat-modal-close" type="button" aria-label="Schließen">
-            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <!-- Chat Widget (floating, bottom-right) -->
+    <div class="chat-widget" id="chat-widget" hidden>
+
+      <!-- Floating Trigger -->
+      <button class="chat-trigger" id="chat-trigger" aria-label="Chat öffnen" aria-expanded="false">
+        <svg class="chat-trigger__icon chat-trigger__icon--open" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <svg class="chat-trigger__icon chat-trigger__icon--close" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>
+        <span class="chat-trigger__badge" id="chat-trigger-badge" hidden></span>
+      </button>
+
+      <!-- Chat Panel -->
+      <div class="chat-panel" id="chat-panel" hidden>
+        <!-- Header -->
+        <div class="chat-panel__head">
+          <div class="chat-panel__shop">
+            <img class="chat-panel__logo" id="chat-panel-logo" src="" alt="" hidden>
+            <div class="chat-panel__shop-info">
+              <span class="chat-panel__name" id="chat-panel-name"></span>
+              <span class="chat-panel__status">Schreib uns eine Nachricht</span>
+            </div>
+          </div>
+          <button class="chat-panel__close" id="chat-panel-close" type="button" aria-label="Chat schließen">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
           </button>
         </div>
-        <div id="chat-success" hidden>
-          <div class="chat-modal__success">
-            <svg viewBox="0 0 24 24" width="48" height="48"><circle cx="12" cy="12" r="10" fill="#22c55e"/><path d="M8 12l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-            <p>Nachricht gesendet!</p>
-            <p class="chat-modal__success-sub">Der Händler meldet sich so bald wie möglich bei dir.</p>
+
+        <!-- Intro: Name + Email + erste Nachricht -->
+        <div class="chat-panel__intro" id="chat-intro">
+          <p class="chat-intro__text">Wie können wir dir helfen? Hinterlasse deine Kontaktdaten und wir melden uns so schnell wie möglich.</p>
+          <form class="chat-intro__form" id="chat-intro-form">
+            <div class="form-group">
+              <label class="form-label" for="ci-name">Dein Name</label>
+              <input class="form-input" type="text" id="ci-name" name="name" required autocomplete="name">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ci-email">E-Mail-Adresse</label>
+              <input class="form-input" type="email" id="ci-email" name="email" required autocomplete="email">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ci-text">Deine Nachricht</label>
+              <textarea class="form-input" id="ci-text" name="text" rows="3" required placeholder="Hallo, ich habe eine Frage zu..."></textarea>
+            </div>
+            <button class="btn btn--primary btn--full" type="submit" id="ci-submit">Starte den Chat</button>
+            <div id="ci-feedback" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <!-- Thread: Nachrichten + Eingabe -->
+        <div class="chat-panel__thread" id="chat-thread" hidden>
+          <div class="chat-messages" id="chat-messages"></div>
+          <div class="chat-input-wrap">
+            <textarea class="chat-input" id="chat-input" placeholder="Nachricht schreiben…" rows="1" aria-label="Nachricht"></textarea>
+            <button class="chat-send" id="chat-send" type="button" aria-label="Senden">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            </button>
           </div>
         </div>
-        <form class="chat-form" id="chat-form">
-          <div class="form-group">
-            <label class="form-label" for="chat-name">Dein Name</label>
-            <input class="form-input" type="text" id="chat-name" name="name" required autocomplete="name">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="chat-email">E-Mail-Adresse</label>
-            <input class="form-input" type="email" id="chat-email" name="email" required autocomplete="email">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="chat-text">Nachricht</label>
-            <textarea class="form-input" id="chat-text" name="text" rows="5" required placeholder="Hallo, ich habe eine Frage zu..."></textarea>
-          </div>
-          <button class="btn btn--primary btn--full" type="submit" id="chat-submit">Nachricht senden</button>
-          <div id="chat-feedback" aria-live="polite"></div>
-        </form>
       </div>
     </div>
 
@@ -236,6 +261,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/shop.js?v=6"></script>
+  <script type="module" src="js/shop.js?v=8"></script>
 </body>
 </html>

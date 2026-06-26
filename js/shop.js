@@ -1,7 +1,6 @@
-// js/shop.js — SIB Shopseite v7
-// Lädt ein Geschäft (per slug) aus Supabase.
+// js/shop.js — SIB Shopseite v8
 // Sektionen: Galerie → Info-Bar → Willkommen → Artikel → Bewertungen → Info-Tabelle
-// Chat-Modal wenn messaging_enabled = true
+// Chat-Widget (floating) wenn messaging_enabled = true
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
@@ -23,6 +22,17 @@ function formatDatum (value, opts) {
   return d.toLocaleDateString('de-DE', opts || { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+function formatMsgTime (value) {
+  if (!value) return ''
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return ''
+  const heute = new Date()
+  const sameDay = d.toDateString() === heute.toDateString()
+  if (sameDay) return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' +
+         d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+}
+
 function neuBadge (p) {
   if (p.verfuegbar === false || p.freigegeben !== true) return ''
   const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
@@ -34,9 +44,7 @@ function neuBadge (p) {
 
 function sterneHtml (n, max = 5) {
   const v = Math.max(0, Math.min(max, Math.round(n)))
-  const lit = '<span class="stern-on">★</span>'
-  const dim = '<span class="stern-off">★</span>'
-  return lit.repeat(v) + dim.repeat(max - v)
+  return '<span class="stern-on">★</span>'.repeat(v) + '<span class="stern-off">★</span>'.repeat(max - v)
 }
 
 function avatarHtml (name) {
@@ -135,7 +143,7 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
     ? `mailto:${esc(shop.email)}`
     : `mailto:support@shoppeninbraunschweig.de?subject=${encodeURIComponent('Nachricht an ' + shop.name)}`
 
-  // Chat-Button oder mailto je nach messaging_enabled
+  // Chat-Button öffnet Widget; mailto wenn deaktiviert
   const msgBtn = shop.messaging_enabled
     ? `<button class="btn btn--primary shop-infobar__msg" id="chat-open-btn" type="button">
         Nachricht
@@ -167,55 +175,158 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
 }
 
 // ─────────────────────────────────────────
-// CHAT MODAL
+// CHAT WIDGET (floating, bottom-right)
 // ─────────────────────────────────────────
-function initChatModal (shop) {
+function initChatWidget (shop) {
   if (!shop.messaging_enabled) return
 
-  const overlay  = document.getElementById('chat-overlay')
-  const openBtn  = document.getElementById('chat-open-btn')
-  const closeBtn = document.getElementById('chat-modal-close')
-  const form     = document.getElementById('chat-form')
-  const feedback = document.getElementById('chat-feedback')
-  const success  = document.getElementById('chat-success')
-  const submitBtn = document.getElementById('chat-submit')
+  const widget    = document.getElementById('chat-widget')
+  const trigger   = document.getElementById('chat-trigger')
+  const panel     = document.getElementById('chat-panel')
+  const closeBtn  = document.getElementById('chat-panel-close')
+  const intro     = document.getElementById('chat-intro')
+  const introForm = document.getElementById('chat-intro-form')
+  const thread    = document.getElementById('chat-thread')
+  const messages  = document.getElementById('chat-messages')
+  const input     = document.getElementById('chat-input')
+  const sendBtn   = document.getElementById('chat-send')
+  const badge     = document.getElementById('chat-trigger-badge')
+  const ciSubmit  = document.getElementById('ci-submit')
+  const ciFeedback = document.getElementById('ci-feedback')
 
-  if (!overlay || !openBtn) return
+  if (!widget) return
 
-  // Titel mit Shop-Name befüllen
-  document.getElementById('chat-modal-title').textContent = `Nachricht an ${shop.name}`
+  widget.hidden = false
 
-  function openModal () {
-    overlay.hidden = false
-    document.body.style.overflow = 'hidden'
-    setTimeout(() => document.getElementById('chat-name')?.focus(), 50)
+  // Panel-Header befüllen
+  document.getElementById('chat-panel-name').textContent = shop.name
+  const logoEl = document.getElementById('chat-panel-logo')
+  if (shop.logo_url) { logoEl.src = shop.logo_url; logoEl.hidden = false }
+
+  // Session aus localStorage
+  const SESSION_KEY = `sib_chat_${shop.id}`
+  let session = null
+  try { session = JSON.parse(localStorage.getItem(SESSION_KEY)) } catch {}
+
+  let pollTimer = null
+  let lastHaendlerCount = 0
+  let isOpen = false
+
+  // ── Öffnen/Schließen ──
+  function openPanel () {
+    isOpen = true
+    panel.hidden = false
+    trigger.setAttribute('aria-expanded', 'true')
+    trigger.classList.add('is-open')
+    badge.hidden = true
+    badge.textContent = ''
+    if (session?.chat_id) {
+      showThread()
+      loadMessages()
+      startPolling()
+    }
   }
 
-  function closeModal () {
-    overlay.hidden = true
-    document.body.style.overflow = ''
+  function closePanel () {
+    isOpen = false
+    panel.hidden = true
+    trigger.setAttribute('aria-expanded', 'false')
+    trigger.classList.remove('is-open')
+    stopPolling()
   }
 
-  openBtn.addEventListener('click', openModal)
-  closeBtn.addEventListener('click', closeModal)
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal() })
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.hidden) closeModal() })
+  trigger.addEventListener('click', () => isOpen ? closePanel() : openPanel())
+  closeBtn.addEventListener('click', closePanel)
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault()
-    feedback.innerHTML = ''
+  // Infobar-Button öffnet ebenfalls das Widget
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('#chat-open-btn')) openPanel()
+  })
 
-    const nameVal  = form.querySelector('[name="name"]').value.trim()
-    const emailVal = form.querySelector('[name="email"]').value.trim()
-    const textVal  = form.querySelector('[name="text"]').value.trim()
+  // ── Thread anzeigen ──
+  function showThread () {
+    intro.hidden = true
+    thread.hidden = false
+    setTimeout(() => { messages.scrollTop = messages.scrollHeight }, 50)
+  }
 
-    if (!nameVal || !emailVal || !textVal) {
-      feedback.innerHTML = '<div class="error-msg">Bitte alle Felder ausfüllen.</div>'
+  // ── Nachrichten rendern ──
+  function renderMessages (msgs) {
+    if (msgs.length === 0) {
+      messages.innerHTML = '<p class="chat-empty">Schreib deine erste Nachricht!</p>'
       return
     }
 
-    submitBtn.disabled = true
-    submitBtn.textContent = 'Wird gesendet…'
+    // Datum-Trennlinien einfügen
+    let lastDate = ''
+    messages.innerHTML = msgs.map(m => {
+      const day = new Date(m.erstellt_am).toDateString()
+      const sep = day !== lastDate
+        ? `<div class="chat-date-sep">${formatDatum(m.erstellt_am)}</div>`
+        : ''
+      lastDate = day
+      return `${sep}
+        <div class="chat-msg ${m.von_haendler ? 'chat-msg--in' : 'chat-msg--out'}">
+          <div class="chat-msg__bubble">${esc(m.text)}</div>
+          <span class="chat-msg__time">${formatMsgTime(m.erstellt_am)}</span>
+        </div>`
+    }).join('')
+
+    messages.scrollTop = messages.scrollHeight
+  }
+
+  // ── Nachrichten laden ──
+  async function loadMessages () {
+    if (!session?.chat_id) return
+    try {
+      const { data, error } = await supabase
+        .from('chat_nachrichten')
+        .select('*')
+        .eq('chat_id', session.chat_id)
+        .order('erstellt_am', { ascending: true })
+      if (error) throw error
+
+      const msgs = data || []
+      renderMessages(msgs)
+
+      // Badge wenn neue Händler-Nachrichten und Panel geschlossen
+      const haendlerCount = msgs.filter(m => m.von_haendler).length
+      if (!isOpen && haendlerCount > lastHaendlerCount) {
+        const neu = haendlerCount - lastHaendlerCount
+        badge.hidden = false
+        badge.textContent = neu
+      }
+      lastHaendlerCount = haendlerCount
+    } catch (err) {
+      console.error('Chat laden fehlgeschlagen:', err)
+    }
+  }
+
+  function startPolling () {
+    stopPolling()
+    pollTimer = setInterval(loadMessages, 10000)
+  }
+
+  function stopPolling () {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
+  }
+
+  // ── Intro-Formular: Chat starten ──
+  introForm.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    ciFeedback.innerHTML = ''
+
+    const nameVal  = introForm.querySelector('[name="name"]').value.trim()
+    const emailVal = introForm.querySelector('[name="email"]').value.trim()
+    const textVal  = introForm.querySelector('[name="text"]').value.trim()
+
+    if (!nameVal || !emailVal || !textVal) {
+      ciFeedback.innerHTML = '<div class="error-msg">Bitte alle Felder ausfüllen.</div>'
+      return
+    }
+
+    ciSubmit.disabled = true
+    ciSubmit.textContent = 'Verbinden…'
 
     try {
       const { data: chat, error: chatErr } = await supabase
@@ -230,15 +341,59 @@ function initChatModal (shop) {
         .insert({ chat_id: chat.id, text: textVal, von_haendler: false })
       if (msgErr) throw msgErr
 
-      form.hidden = true
-      success.hidden = false
-      setTimeout(closeModal, 2500)
+      session = { chat_id: chat.id, name: nameVal, email: emailVal }
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+
+      showThread()
+      await loadMessages()
+      startPolling()
     } catch (err) {
-      console.error('Nachricht senden fehlgeschlagen:', err)
-      feedback.innerHTML = '<div class="error-msg">Die Nachricht konnte nicht gesendet werden.</div>'
-      submitBtn.disabled = false
-      submitBtn.textContent = 'Nachricht senden'
+      console.error('Chat starten fehlgeschlagen:', err)
+      ciFeedback.innerHTML = '<div class="error-msg">Fehler beim Verbinden. Bitte erneut versuchen.</div>'
+      ciSubmit.disabled = false
+      ciSubmit.textContent = 'Starte den Chat'
     }
+  })
+
+  // ── Nachricht senden ──
+  async function sendMessage () {
+    const text = input.value.trim()
+    if (!text || !session?.chat_id) return
+
+    input.value = ''
+    input.style.height = 'auto'
+    sendBtn.disabled = true
+
+    try {
+      const { error } = await supabase
+        .from('chat_nachrichten')
+        .insert({ chat_id: session.chat_id, text, von_haendler: false })
+      if (error) throw error
+
+      await supabase
+        .from('chats')
+        .update({ aktualisiert_am: new Date().toISOString() })
+        .eq('id', session.chat_id)
+
+      await loadMessages()
+    } catch (err) {
+      console.error('Senden fehlgeschlagen:', err)
+      input.value = text
+    } finally {
+      sendBtn.disabled = false
+      input.focus()
+    }
+  }
+
+  sendBtn.addEventListener('click', sendMessage)
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
+  })
+
+  // Textarea auto-resize
+  input.addEventListener('input', () => {
+    input.style.height = 'auto'
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px'
   })
 }
 
@@ -247,23 +402,16 @@ function initChatModal (shop) {
 // ─────────────────────────────────────────
 function renderAbout (shop) {
   if (!shop.beschreibung && !shop.bild_url && !shop.banner_url) return
-
   const section = document.getElementById('shop-about')
   const inner   = document.getElementById('shop-about-inner')
   section.hidden = false
 
   const willkommenBild = shop.bild_url || (
-    Array.isArray(shop.galerie) && shop.galerie.length > 1
-      ? shop.galerie[1]
-      : null
+    Array.isArray(shop.galerie) && shop.galerie.length > 1 ? shop.galerie[1] : null
   )
-
   const bildHtml = willkommenBild
-    ? `<div class="shop-about__bild-wrap">
-         <img class="shop-about__bild" src="${esc(willkommenBild)}" alt="${esc(shop.name)}" loading="lazy">
-       </div>`
+    ? `<div class="shop-about__bild-wrap"><img class="shop-about__bild" src="${esc(willkommenBild)}" alt="${esc(shop.name)}" loading="lazy"></div>`
     : ''
-
   const beschreibung = shop.beschreibung
     ? shop.beschreibung.split('\n').filter(Boolean).map(p => `<p>${esc(p)}</p>`).join('')
     : ''
@@ -314,11 +462,8 @@ async function ladeProdukte (shop) {
 
   try {
     const { data, error } = await supabase
-      .from('produkte')
-      .select('*')
-      .eq('shop_id', shop.id)
-      .eq('verfuegbar', true)
-      .eq('freigegeben', true)
+      .from('produkte').select('*')
+      .eq('shop_id', shop.id).eq('verfuegbar', true).eq('freigegeben', true)
       .order('erstellt_am', { ascending: false })
 
     if (error) throw error
@@ -330,13 +475,12 @@ async function ladeProdukte (shop) {
       container.innerHTML = '<p class="shop-empty">Dieses Geschäft hat aktuell keine Artikel.</p>'
       return 0
     }
-
     renderProduktBatch(shop)
     document.getElementById('shop-mehr-btn').addEventListener('click', () => renderProduktBatch(shop))
     return alleProdukte.length
   } catch (err) {
-    console.error('Artikel konnten nicht geladen werden:', err)
-    container.innerHTML = '<p class="shop-empty">Die Artikel konnten gerade nicht geladen werden.</p>'
+    console.error(err)
+    container.innerHTML = '<p class="shop-empty">Artikel konnten nicht geladen werden.</p>'
     return 0
   }
 }
@@ -363,7 +507,7 @@ function renderBewertungBatch () {
           <span class="bw-karte__datum">am ${formatDatum(b.erstellt_am)}</span>
         </div>
       </div>
-      <div class="bw-karte__sterne" aria-label="${b.sterne} von 5 Sternen">${sterneHtml(b.sterne)}</div>
+      <div class="bw-karte__sterne">${sterneHtml(b.sterne)}</div>
       ${b.text ? `<p class="bw-karte__text">${esc(b.text)}</p>` : ''}
     </article>`).join('')
 
@@ -376,17 +520,13 @@ async function ladeBewertungen (shop) {
 
   try {
     const { data, error } = await supabase
-      .from('bewertungen')
-      .select('*')
-      .eq('shop_id', shop.id)
+      .from('bewertungen').select('*').eq('shop_id', shop.id)
       .order('erstellt_am', { ascending: false })
-
     if (error) throw error
     alleBewertungen = data || []
 
     const schnitt = alleBewertungen.length > 0
-      ? alleBewertungen.reduce((s, b) => s + (b.sterne || 0), 0) / alleBewertungen.length
-      : 0
+      ? alleBewertungen.reduce((s, b) => s + (b.sterne || 0), 0) / alleBewertungen.length : 0
 
     const summary = document.getElementById('shop-rating-summary')
     if (alleBewertungen.length > 0) {
@@ -406,19 +546,18 @@ async function ladeBewertungen (shop) {
       renderBewertungBatch()
       document.getElementById('bw-mehr-btn').addEventListener('click', renderBewertungBatch)
     }
-
     return { schnitt, anzahl: alleBewertungen.length }
   } catch (err) {
-    console.error('Bewertungen konnten nicht geladen werden:', err)
+    console.error(err)
     document.getElementById('shop-rating-summary').innerHTML = ''
     return { schnitt: 0, anzahl: 0 }
   }
 }
 
 function initBewertungForm (shop) {
-  const toggle   = document.getElementById('toggle-bewertung-form')
-  const form     = document.getElementById('bewertung-form')
-  const feedback = document.getElementById('bewertung-feedback')
+  const toggle    = document.getElementById('toggle-bewertung-form')
+  const form      = document.getElementById('bewertung-form')
+  const feedback  = document.getElementById('bewertung-feedback')
   const sternBtns = Array.from(document.querySelectorAll('#sterne-input .stern'))
 
   function zeichneSterne (wert) {
@@ -430,56 +569,38 @@ function initBewertungForm (shop) {
     if (!form.hidden) form.querySelector('[name="name"]').focus()
   })
 
-  sternBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      gewaehlteSterne = Number(btn.dataset.wert)
-      zeichneSterne(gewaehlteSterne)
-    })
-  })
+  sternBtns.forEach(btn => btn.addEventListener('click', () => {
+    gewaehlteSterne = Number(btn.dataset.wert)
+    zeichneSterne(gewaehlteSterne)
+  }))
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
     feedback.innerHTML = ''
-
     const nameVal  = form.querySelector('[name="name"]').value.trim()
     const emailVal = form.querySelector('[name="email"]').value.trim()
     const textVal  = form.querySelector('[name="text"]').value.trim()
 
-    if (!nameVal || !emailVal) {
-      feedback.innerHTML = '<div class="error-msg">Bitte Name und E-Mail ausfüllen.</div>'
-      return
-    }
-    if (gewaehlteSterne < 1) {
-      feedback.innerHTML = '<div class="error-msg">Bitte wähle eine Sterne-Bewertung.</div>'
-      return
-    }
+    if (!nameVal || !emailVal) { feedback.innerHTML = '<div class="error-msg">Bitte Name und E-Mail ausfüllen.</div>'; return }
+    if (gewaehlteSterne < 1) { feedback.innerHTML = '<div class="error-msg">Bitte wähle eine Sterne-Bewertung.</div>'; return }
 
     const submitBtn = form.querySelector('button[type="submit"]')
-    submitBtn.disabled = true
-    submitBtn.textContent = 'Wird gesendet…'
+    submitBtn.disabled = true; submitBtn.textContent = 'Wird gesendet…'
 
     try {
       const { error } = await supabase.from('bewertungen').insert({
-        shop_id: shop.id,
-        autor_name: nameVal,
-        autor_email: emailVal,
-        sterne: gewaehlteSterne,
-        text: textVal || null
+        shop_id: shop.id, autor_name: nameVal, autor_email: emailVal,
+        sterne: gewaehlteSterne, text: textVal || null
       })
       if (error) throw error
-
-      form.reset()
-      form.hidden = true
-      gewaehlteSterne = 0
-      zeichneSterne(0)
-      alleBewertungen = []
-      gezeigteB = 0
+      form.reset(); form.hidden = true
+      gewaehlteSterne = 0; zeichneSterne(0)
+      alleBewertungen = []; gezeigteB = 0
       ladeBewertungen(shop)
     } catch (err) {
-      console.error('Bewertung speichern fehlgeschlagen:', err)
+      console.error(err)
       feedback.innerHTML = '<div class="error-msg">Konnte nicht gespeichert werden.</div>'
-      submitBtn.disabled = false
-      submitBtn.textContent = 'Absenden'
+      submitBtn.disabled = false; submitBtn.textContent = 'Absenden'
     }
   })
 }
@@ -495,15 +616,11 @@ function renderInfoTabelle (shop) {
     { key: 'stornierungen',   label: 'Stornierungen',         formatter: v => esc(v) },
     { key: 'oeffnungszeiten', label: 'Öffnungszeiten',       formatter: v => esc(v) },
   ]
-
   const vorhandene = felder.filter(f => shop[f.key])
   if (vorhandene.length === 0) return
 
-  const section = document.getElementById('shop-info-tabelle')
-  const body    = document.getElementById('shop-info-tabelle-body')
-  section.hidden = false
-
-  body.innerHTML = vorhandene.map(f => `
+  document.getElementById('shop-info-tabelle').hidden = false
+  document.getElementById('shop-info-tabelle-body').innerHTML = vorhandene.map(f => `
     <div class="shop-info-row">
       <span class="shop-info-row__label">${f.label}</span>
       <span class="shop-info-row__value">${f.formatter(shop[f.key])}</span>
@@ -522,10 +639,7 @@ async function init () {
 
   try {
     const { data: shop, error } = await supabase
-      .from('shops')
-      .select('*')
-      .eq('slug', slug)
-      .maybeSingle()
+      .from('shops').select('*').eq('slug', slug).maybeSingle()
 
     if (error) throw error
     if (!shop) { notFound(); return }
@@ -544,7 +658,7 @@ async function init () {
     renderAbout(shop)
     renderInfoTabelle(shop)
     initBewertungForm(shop)
-    initChatModal(shop)
+    initChatWidget(shop)
 
   } catch (err) {
     console.error('Geschäft konnte nicht geladen werden:', err)
