@@ -524,7 +524,7 @@ async function ladeNachrichten () {
 
   } catch (err) {
     console.error('Nachrichten laden:', err)
-    el.innerHTML = '<p class="dash-empty">Nachrichten konnten nicht geladen werden.</p>'
+    el.innerHTML = `<p class="dash-empty" style="color:red">${err?.message || JSON.stringify(err)}</p>`
   }
 }
 
