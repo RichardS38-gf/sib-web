@@ -31,16 +31,19 @@
 .grid-2 { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
 .grid-3 { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
 .grid-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+.grid-5 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
 
 @media (min-width: 640px) {
   .grid-2 { grid-template-columns: repeat(2, 1fr); }
   .grid-3 { grid-template-columns: repeat(2, 1fr); }
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-5 { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (min-width: 1024px) {
   .grid-3 { grid-template-columns: repeat(3, 1fr); }
   .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-5 { grid-template-columns: repeat(5, 1fr); }
 }
 
 /* Section-Header */

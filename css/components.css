@@ -12,6 +12,7 @@
   cursor: pointer;
   transition: opacity var(--transition);
   border: none;
+  border-radius: var(--radius-pill);
 }
 
 .btn:hover { opacity: 0.8; }
@@ -145,25 +146,33 @@
 
 .site-header__search {
   flex: 1;
-  max-width: 400px;
+  max-width: 420px;
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: #fff;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
   padding: 0.5rem var(--space-2);
+}
+
+.site-header__search svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: var(--color-muted);
 }
 
 .site-header__search input {
   background: none;
   border: none;
   outline: none;
-  color: var(--color-on-dark);
+  color: var(--color-ink);
   font-size: var(--text-sm);
   width: 100%;
 }
 
-.site-header__search input::placeholder { color: #666; }
+.site-header__search input::placeholder { color: var(--color-muted); }
 
 .site-header__nav {
   display: none;
@@ -281,6 +290,7 @@
   letter-spacing: 0.06em;
   background-color: var(--color-ink);
   color: var(--color-on-dark);
+  border-radius: var(--radius-pill);
 }
 
 .badge--outline {

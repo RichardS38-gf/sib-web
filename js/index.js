@@ -15,16 +15,6 @@ function esc (value) {
     .replace(/"/g, '&quot;')
 }
 
-// "Neu"-Badge: nur für verfügbare, freigegebene Produkte < 7 Tage alt
-function neuBadge (p) {
-  if (p.verfuegbar === false || p.freigegeben !== true) return ''
-  const t = p.erstellt_am ? new Date(p.erstellt_am).getTime() : NaN
-  if (isNaN(t)) return ''
-  return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
-    ? '<span class="product-card__badge">Neu</span>'
-    : ''
-}
-
 // ── Mobile-Menü ──
 function initMobileMenu () {
   const burger = document.querySelector('.site-header__burger')
@@ -77,7 +67,7 @@ async function ladeKategorien () {
   }
 }
 
-// ── 4. Neue Produkte ──
+// ── 4. Beliebte Produkte (sortiert nach Shop-Bewertung) ──
 async function ladeProdukte () {
   const container = document.getElementById('produkte')
   if (!container) return
@@ -89,16 +79,42 @@ async function ladeProdukte () {
       .eq('verfuegbar', true)
       .eq('freigegeben', true)
       .order('erstellt_am', { ascending: false })
-      .limit(8)
+      .limit(12)
 
     if (error) throw error
 
-    const produkte = data || []
+    let produkte = data || []
 
     if (produkte.length === 0) {
       container.innerHTML = '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
       return
     }
+
+    // Shop-Bewertungen (Durchschnitt + Anzahl) für die geladenen Shops holen
+    const shopIds = [...new Set(produkte.map((p) => p.shop_id).filter(Boolean))]
+    const ratings = {}
+    if (shopIds.length > 0) {
+      const { data: bew } = await supabase
+        .from('bewertungen')
+        .select('shop_id, sterne')
+        .in('shop_id', shopIds)
+      ;(bew || []).forEach((b) => {
+        const r = ratings[b.shop_id] || (ratings[b.shop_id] = { summe: 0, anzahl: 0 })
+        r.summe += (b.sterne || 0)
+        r.anzahl += 1
+      })
+    }
+    const avgOf = (id) => {
+      const r = ratings[id]
+      return r && r.anzahl > 0 ? r.summe / r.anzahl : null
+    }
+
+    // „Beliebt": nach Bewertung sortieren (ohne Bewertung ans Ende), Top 5
+    produkte = produkte
+      .map((p) => ({ p, avg: avgOf(p.shop_id) }))
+      .sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1))
+      .slice(0, 5)
+      .map((x) => x.p)
 
     container.innerHTML = produkte.map((p) => {
       const id = encodeURIComponent(p.id)
@@ -108,11 +124,15 @@ async function ladeProdukte () {
         : '<div class="product-card__image"></div>'
       const shopName = p.shops?.name || 'Lokaler Händler'
       const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
+      const r = ratings[p.shop_id]
+      const meta = (r && r.anzahl > 0)
+        ? `<span class="product-card__stars">★</span> <span class="product-card__rating-val">${(r.summe / r.anzahl).toFixed(1).replace('.', ',')}</span> <span class="product-card__count">(${r.anzahl})</span> von ${esc(shopName)}`
+        : `von ${esc(shopName)}`
       return `
         <a class="product-card" href="produkt.html?id=${id}">
-          ${neuBadge(p)}${bild}
-          <span class="product-card__shop">${esc(shopName)}</span>
+          ${bild}
           <span class="product-card__title">${esc(p.titel)}</span>
+          <span class="product-card__meta">${meta}</span>
           <span class="product-card__price">${esc(preis)}</span>
         </a>`
     }).join('')

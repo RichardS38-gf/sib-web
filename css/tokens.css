@@ -42,4 +42,10 @@
 
   /* Transitions */
   --transition: 0.2s ease;
+
+  /* Radius (runde Entwurfs-Optik) */
+  --radius-sm:   8px;
+  --radius-md:   14px;
+  --radius-lg:   24px;
+  --radius-pill: 999px;
 }

@@ -7,13 +7,13 @@
   <meta name="description" content="Entdecke lokale Geschäfte in Braunschweig. Unterstütze lokale Händler und finde einzigartige Produkte aus deiner Nachbarschaft.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/tokens.css?v=2">
   <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/layout.css">
-  <link rel="stylesheet" href="css/components.css?v=2">
-  <link rel="stylesheet" href="css/index.css?v=2">
+  <link rel="stylesheet" href="css/layout.css?v=2">
+  <link rel="stylesheet" href="css/components.css?v=3">
+  <link rel="stylesheet" href="css/index.css?v=3">
 </head>
 <body>
 
@@ -28,16 +28,17 @@
         </a>
 
         <form class="site-header__search" role="search" action="suche.html" method="get">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 20.3l-5.4-5.4a7.5 7.5 0 1 0-1.4 1.4l5.4 5.4a1 1 0 0 0 1.4-1.4zM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z"/></svg>
           <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
         </form>
 
         <nav class="site-header__nav" aria-label="Hauptnavigation">
+          <a href="kategorie.html">Artikel</a>
           <a href="geschaefte.html">Geschäfte</a>
-          <a href="kategorie.html">Produkte</a>
         </nav>
 
         <div class="site-header__actions">
-          <a class="btn btn--outline-light site-header__desktop-only" href="haendler-login.html">Anmelden</a>
+          <a class="site-header__textlink site-header__desktop-only" href="haendler-login.html">Anmelden</a>
           <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Händler werden</a>
           <button class="site-header__burger" type="button" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
             <span></span><span></span><span></span>
@@ -50,7 +51,7 @@
         <form class="site-header__mobile-search" role="search" action="suche.html" method="get">
           <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
         </form>
-        <a href="kategorie.html">Produkte</a>
+        <a href="kategorie.html">Artikel</a>
         <a href="geschaefte.html">Geschäfte</a>
         <a href="newsletter.html">Newsletter</a>
         <a class="btn btn--outline-light btn--full" href="haendler-login.html">Anmelden</a>
@@ -67,20 +68,20 @@
         <div class="hero__grid">
           <div class="hero__content">
             <span class="badge badge--outline hero__eyebrow">lokal kaufen</span>
-            <h1 class="hero__headline">Entdecke lokale Geschäfte in Braunschweig</h1>
+            <h1 class="hero__headline">Entdecke lokale <span class="hero__accent">Geschäfte</span> in Braunschweig</h1>
             <p class="hero__subtext">Unterstütze lokale Händler und finde einzigartige Produkte aus deiner Nachbarschaft — ohne das Haus zu verlassen.</p>
             <form class="hero__search" role="search" action="suche.html" method="get">
-              <input type="text" name="q" class="hero__search-input" placeholder="Wonach suchst du?" aria-label="Suchen">
+              <input type="text" name="q" class="hero__search-input" placeholder="Was suchst du?" aria-label="Suchen">
               <button type="submit" class="btn btn--primary">Suchen</button>
             </form>
           </div>
           <div class="hero__collage" aria-hidden="true">
             <div class="hero__tile">
-              <img src="https://ezruwstzpncunbjzwdfk.supabase.co/storage/v1/object/public/produkt-bilder/maneri_a_young_woman_wearing_the_exact_same_sweater_from_the__2c0eb302-bda9-44ad-96bf-57a5b9a3d896_1.png" alt=""
+              <img src="https://ezruwstzpncunbjzwdfk.supabase.co/storage/v1/object/public/produkt-bilder/maneri_a_product_picture_of_this_handbag_on_a_desk_--oref_htt_fc82a7d8-0d2b-4b8b-a266-310298fad744_0.png" alt=""
                    onerror="this.style.display='none';">
             </div>
             <div class="hero__tile">
-              <img src="https://ezruwstzpncunbjzwdfk.supabase.co/storage/v1/object/public/produkt-bilder/maneri_a_product_picture_of_this_handbag_on_a_desk_--oref_htt_fc82a7d8-0d2b-4b8b-a266-310298fad744_0.png" alt=""
+              <img src="https://ezruwstzpncunbjzwdfk.supabase.co/storage/v1/object/public/produkt-bilder/maneri_a_young_woman_wearing_the_exact_same_sweater_from_the__2c0eb302-bda9-44ad-96bf-57a5b9a3d896_1.png" alt=""
                    onerror="this.style.display='none';">
             </div>
             <div class="hero__tile">
@@ -109,81 +110,79 @@
       </div>
     </section>
 
-    <!-- ── 4. Neue Produkte ── -->
+    <!-- ── 4. Beliebte Produkte ── -->
     <section class="section section--soft">
       <div class="container">
         <div class="section-header">
-          <h2>Neue Produkte</h2>
+          <h2>Beliebte Produkte</h2>
           <a class="section-link" href="kategorie.html">Alle ansehen →</a>
         </div>
-        <div class="grid-4" id="produkte">
+        <div class="grid-5" id="produkte">
           <div class="loading">Produkte werden geladen…</div>
         </div>
       </div>
     </section>
 
-    <!-- ── 5. Händler-CTA ── -->
-    <section class="section section--dark cta-dark">
+    <!-- ── 5. Händler-CTA (Banner) ── -->
+    <section class="cta-banner">
       <div class="container">
-        <h2 class="cta-dark__headline">Du hast ein Einzelhandelsgeschäft?</h2>
-        <p class="cta-dark__subtext">Registriere dich jetzt und erreiche neue Kunden in Braunschweig.</p>
-        <a class="btn btn--outline-light" href="haendler-werden.html">Händler werden</a>
-      </div>
-    </section>
-
-    <!-- ── 6. Newsletter-CTA ── -->
-    <section class="section newsletter-cta">
-      <div class="container">
-        <h2 class="newsletter-cta__headline">Verpasse keine neuen Produkte</h2>
-        <p class="newsletter-cta__subtext">Erhalte einmal im Monat die neuesten Produkte lokaler Braunschweiger Händler direkt in dein Postfach.</p>
-        <a class="btn btn--primary" href="newsletter.html">Zum Newsletter anmelden</a>
+        <div class="cta-banner__card">
+          <h2 class="cta-banner__headline">Du hast ein Einzelhandelsgeschäft?</h2>
+          <p class="cta-banner__subtext">Registriere dich jetzt und erreiche neue Kunden in Braunschweig.</p>
+          <a class="btn btn--light" href="haendler-werden.html">Händler werden</a>
+        </div>
       </div>
     </section>
 
   </main>
 
-  <!-- ── 7. Footer ── -->
+  <!-- ── 6. Footer ── -->
   <footer class="site-footer">
     <div class="container">
-      <div class="site-footer__brand">
-        <span class="site-footer__logo">Shoppen in Braunschweig</span>
-        <p class="site-footer__slogan">Lokale Händler. Einzigartige Produkte.</p>
-      </div>
+      <div class="site-footer__top">
+        <div class="site-footer__brand">
+          <span class="site-footer__logo">Shoppen in Braunschweig</span>
+          <p class="site-footer__slogan">Unterstütze lokale Geschäfte in Braunschweig — online shoppen, lokal kaufen.</p>
+        </div>
 
-      <div class="site-footer__grid">
-        <div class="site-footer__col">
-          <p class="site-footer__col-title">Für Käufer</p>
-          <ul>
-            <li><a href="kategorie.html">Alle Produkte</a></li>
-            <li><a href="geschaefte.html">Geschäfte entdecken</a></li>
-            <li><a href="newsletter.html">Newsletter</a></li>
-            <li><a href="ueber-uns.html">Über uns</a></li>
-            <li><a href="faq.html">FAQ</a></li>
-          </ul>
-        </div>
-        <div class="site-footer__col">
-          <p class="site-footer__col-title">Für Verkäufer</p>
-          <ul>
-            <li><a href="haendler-werden.html">Händler werden</a></li>
-            <li><a href="haendler-login.html">Händler Login</a></li>
-            <li><a href="faq.html">FAQ</a></li>
-          </ul>
-        </div>
-        <div class="site-footer__col">
-          <p class="site-footer__col-title">Kontakt</p>
-          <ul>
-            <li><a href="mailto:support@shoppeninbraunschweig.de">support@shoppeninbraunschweig.de</a></li>
-          </ul>
+        <div class="site-footer__grid">
+          <div class="site-footer__col">
+            <p class="site-footer__col-title">Für Käufer</p>
+            <ul>
+              <li><a href="kategorie.html">Alle Produkte</a></li>
+              <li><a href="geschaefte.html">Geschäfte entdecken</a></li>
+              <li><a href="newsletter.html">Newsletter</a></li>
+              <li><a href="ueber-uns.html">Über uns</a></li>
+            </ul>
+          </div>
+          <div class="site-footer__col">
+            <p class="site-footer__col-title">Für Verkäufer</p>
+            <ul>
+              <li><a href="haendler-werden.html">Händler werden</a></li>
+              <li><a href="haendler-login.html">Händler-Login</a></li>
+              <li><a href="faq.html">FAQ</a></li>
+            </ul>
+          </div>
+          <div class="site-footer__col">
+            <p class="site-footer__col-title">Kontakt</p>
+            <ul>
+              <li><a href="mailto:support@shoppeninbraunschweig.de">support@shoppeninbraunschweig.de</a></li>
+            </ul>
+          </div>
         </div>
       </div>
 
       <div class="site-footer__bottom">
         <p>© 2026 Shoppen in Braunschweig</p>
-        <p><a href="datenschutz.html">Datenschutz</a> &nbsp;|&nbsp; <a href="impressum.html">Impressum</a></p>
+        <p>
+          <a href="datenschutz.html">Datenschutz</a> &nbsp;|&nbsp;
+          <a href="impressum.html">Impressum</a> &nbsp;|&nbsp;
+          <a href="datenschutz.html#cookies">EU-Cookie-Richtlinien</a>
+        </p>
       </div>
     </div>
   </footer>
 
-  <script type="module" src="js/index.js?v=3"></script>
+  <script type="module" src="js/index.js?v=4"></script>
 </body>
 </html>

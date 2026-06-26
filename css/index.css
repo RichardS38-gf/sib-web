@@ -1,4 +1,14 @@
-/* index.css — SIB Startseite */
+/* index.css — SIB Startseite (Entwurf-Redesign) */
+
+/* ── Überschriften auf der Startseite: kräftige Sans-Serif (wie Entwurf) ── */
+.hero__headline,
+.section-header h2,
+.cta-banner__headline {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
 
 /* ── Header: Logo-Text-Fallback ── */
 .site-header__logo-text {
@@ -9,10 +19,18 @@
   white-space: nowrap;
 }
 
-/* ── Header: helle Button-Variante (auf dunklem Header sichtbar) ── */
+/* ── Header: helle Pill-Button-Variante (auf dunklem Header sichtbar) ── */
 .btn--light {
   background-color: var(--color-on-dark);
   color: var(--color-ink);
+}
+
+/* ── Header: schlichter Text-Link (Anmelden) ── */
+.site-header__textlink {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-on-dark);
+  white-space: nowrap;
 }
 
 /* ── Header: Suchfeld erst ab Tablet, Burger nur auf Mobile ── */
@@ -63,8 +81,8 @@
 
 .site-header__mobile-search {
   display: flex;
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: #fff;
+  border-radius: var(--radius-pill);
   padding: 0.5rem var(--space-2);
 }
 
@@ -72,12 +90,12 @@
   background: none;
   border: none;
   outline: none;
-  color: var(--color-on-dark);
+  color: var(--color-ink);
   font-size: var(--text-sm);
   width: 100%;
 }
 
-.site-header__mobile-search input::placeholder { color: #666; }
+.site-header__mobile-search input::placeholder { color: var(--color-muted); }
 
 @media (min-width: 640px) {
   .site-header__search { display: flex; }
@@ -102,12 +120,30 @@
   align-items: center;
 }
 
-.hero__eyebrow { margin-bottom: var(--space-3); }
+/* Eyebrow-Badge: weiche graue Pill mit kursivem Serif-Text (wie Entwurf) */
+.hero__eyebrow {
+  display: inline-block;
+  margin-bottom: var(--space-3);
+  padding: 0.35rem 0.9rem;
+  background-color: #ECEEF0;
+  color: var(--color-ink);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: var(--text-sm);
+  text-transform: none;
+  letter-spacing: 0;
+}
 
 .hero__headline {
   font-size: var(--text-4xl);
   margin-bottom: var(--space-3);
 }
+
+/* Akzentwort in der Headline (statt Blau: gedämpftes Grau) */
+.hero__accent { color: var(--color-muted); }
 
 .hero__subtext {
   font-size: var(--text-lg);
@@ -119,42 +155,60 @@
 
 .hero__search {
   display: flex;
-  gap: var(--space-1);
+  gap: var(--space-2);
   max-width: 32rem;
 }
 
 .hero__search-input {
   flex: 1;
-  padding: 0.75rem var(--space-2);
-  border: 1px solid var(--color-ink);
+  padding: 0.75rem var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
   background-color: var(--color-bg);
   font-size: var(--text-base);
   color: var(--color-ink);
   outline: none;
+  transition: border-color var(--transition);
 }
 
+.hero__search-input:focus { border-color: var(--color-ink); }
 .hero__search-input::placeholder { color: var(--color-muted); }
 
+/* Asymmetrische, abgerundete Bild-Collage (wie Entwurf) */
 .hero__collage {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: 1fr;
-  gap: var(--space-2);
+  column-count: 2;
+  column-gap: var(--space-2);
 }
 
 .hero__tile {
-  aspect-ratio: 1 / 1;
+  break-inside: avoid;
+  margin-bottom: var(--space-2);
   overflow: hidden;
+  border-radius: var(--radius-md);
   background-color: var(--color-bg-soft);
 }
 
-.hero__tile img { width: 100%; height: 100%; object-fit: cover; }
-.hero__tile--soft { background-color: var(--color-bg-soft); }
+.hero__tile:nth-child(1) { aspect-ratio: 5 / 4; }
+.hero__tile:nth-child(2) { aspect-ratio: 4 / 5; }
+.hero__tile:nth-child(3) { aspect-ratio: 4 / 5; }
+.hero__tile:nth-child(4) { aspect-ratio: 5 / 4; }
+
+.hero__tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 @media (min-width: 1024px) {
   .hero__grid { grid-template-columns: 1.1fr 0.9fr; }
   .hero__headline { font-size: var(--text-5xl); }
 }
+
+/* ── Section-Header: Link „Alle ansehen" als Pfeil ── */
+.section-header h2 { font-size: var(--text-3xl); }
+
+.section-link {
+  font-weight: 500;
+  color: var(--color-muted);
+  text-decoration: none;
+}
+.section-link:hover { color: var(--color-ink); opacity: 1; }
 
 /* ── 3. Kategorien-Grid ── */
 .category-grid {
@@ -173,38 +227,91 @@
 
 .category-grid .loading { grid-column: 1 / -1; }
 
-/* ── 5. Händler-CTA (dunkel) ── */
-.cta-dark { text-align: center; }
+/* ── 4. Beliebte Produkte: Karten mit Sterne-Bewertung (wie Entwurf) ── */
+#produkte .product-card__image {
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+}
 
-.cta-dark__headline {
+#produkte .product-card__title {
+  font-weight: 600;
+  font-size: var(--text-base);
+  margin-bottom: 0.2rem;
+}
+
+.product-card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin-bottom: 0.3rem;
+}
+
+.product-card__stars { color: #F5A623; line-height: 1; }
+.product-card__rating-val { color: var(--color-ink); font-weight: 600; }
+
+#produkte .product-card__price {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+/* ── 5. Händler-CTA: Banner mit Frosted-Card (wie Entwurf) ── */
+.cta-banner {
+  position: relative;
+  padding-top: var(--space-7);
+  padding-bottom: var(--space-7);
+  /* Optional: Stadt-Foto via --cta-bg-image setzen; sonst sauberes Schwarz */
+  background-color: var(--color-dark);
+  background-image:
+    linear-gradient(rgba(15, 15, 15, 0.6), rgba(15, 15, 15, 0.6)),
+    var(--cta-bg-image, none);
+  background-size: cover;
+  background-position: center;
+}
+
+.cta-banner__card {
+  max-width: 620px;
+  margin: 0 auto;
+  text-align: center;
+  padding: var(--space-5) var(--space-4);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.cta-banner__headline {
   color: var(--color-on-dark);
   font-size: var(--text-3xl);
   margin-bottom: var(--space-2);
 }
 
-.cta-dark__subtext {
-  color: #999;
+.cta-banner__subtext {
+  color: rgba(250, 250, 248, 0.85);
   font-weight: 300;
-  max-width: 38rem;
+  max-width: 30rem;
   margin: 0 auto var(--space-4);
 }
 
-/* ── 6. Newsletter-CTA ── */
-.newsletter-cta { text-align: center; }
-
-.newsletter-cta__headline {
-  font-size: var(--text-3xl);
-  margin-bottom: var(--space-2);
+/* ── 7. Footer: Brand links, Spalten rechts (wie Entwurf) ── */
+.site-footer__top {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
 }
 
-.newsletter-cta__subtext {
-  color: var(--color-muted);
-  font-weight: 300;
-  max-width: 38rem;
-  margin: 0 auto var(--space-4);
+.site-footer__top .site-footer__brand,
+.site-footer__top .site-footer__grid { margin-bottom: 0; }
+
+@media (min-width: 900px) {
+  .site-footer__top { grid-template-columns: 1.1fr 2fr; align-items: start; }
 }
 
-/* ── 7. Footer-Brand ── */
 .site-footer__brand { margin-bottom: var(--space-5); }
 
 .site-footer__logo {
@@ -218,7 +325,14 @@
   font-size: var(--text-sm);
   color: #999;
   margin-top: 0.5rem;
+  max-width: 22rem;
 }
+
+.site-footer__bottom a {
+  font-size: var(--text-xs);
+  color: #888;
+}
+.site-footer__bottom a:hover { color: var(--color-on-dark); opacity: 1; }
 
 /* ── Leerzustand (keine Produkte) ── */
 .empty-state {
