@@ -23,11 +23,16 @@ function preisOf (p) {
 // "Neu"-Badge: nur für verfügbare, freigegebene Produkte < 7 Tage alt
 function neuBadge (p) {
   if (p.verfuegbar === false || p.freigegeben !== true) return ''
-  const t = p.erstellt_am ? new Date(p.erstellt_am).getTime() : NaN
-  if (isNaN(t)) return ''
+  const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
+  if (!t) return ''
   return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
-    ? '<span class="product-card__badge">Neu</span>'
+    ? '<span class="product-card__badge">NEU</span>'
     : ''
+}
+
+function istNeu (p) {
+  const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
+  return t > 0 && (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
 }
 
 // ── Mobile-Menü ──
@@ -62,11 +67,13 @@ const state = {
 // ── Sidebar mit allen Kategorien ──
 function renderSidebar (kategorien, slug) {
   const nav = document.getElementById('kategorie-nav')
+  const isNeu = slug === 'neu'
   const links = [
     `<a class="kategorie-sidebar__link${!slug ? ' is-active' : ''}" href="kategorie.html">Alle Produkte</a>`,
+    `<a class="kategorie-sidebar__link${isNeu ? ' is-active' : ''}" href="kategorie.html?slug=neu">Neu</a>`,
     ...kategorien.map((k) => {
       const ks = encodeURIComponent(k.slug || k.id)
-      const aktiv = slug && k.slug === slug
+      const aktiv = slug && !isNeu && k.slug === slug
       return `<a class="kategorie-sidebar__link${aktiv ? ' is-active' : ''}" href="kategorie.html?slug=${ks}">${esc(k.name)}</a>`
     })
   ]
@@ -76,6 +83,9 @@ function renderSidebar (kategorien, slug) {
 // ── Filter anwenden ──
 function gefilterteListe () {
   let list = alleProdukte.slice()
+
+  // Virtuelle "Neu"-Kategorie: nur Produkte < 7 Tage
+  if (aktiverSlug === 'neu') list = list.filter(istNeu)
 
   if (state.nurVerfuegbar) list = list.filter((p) => p.verfuegbar !== false)
   if (state.haendler) list = list.filter((p) => p.shop_id === state.haendler)
@@ -262,8 +272,10 @@ async function init () {
     let aktiveKat = null
     if (slug) aktiveKat = kategorien.find((k) => k.slug === slug) || null
 
-    titelEl.textContent = aktiveKat ? aktiveKat.name : (slug ? 'Kategorie' : 'Alle Produkte')
-    if (slug && aktiveKat) document.title = `${aktiveKat.name} — Shoppen in Braunschweig`
+    const isNeu = slug === 'neu'
+    titelEl.textContent = isNeu ? 'Neue Produkte' : (aktiveKat ? aktiveKat.name : (slug ? 'Kategorie' : 'Alle Produkte'))
+    if (isNeu) document.title = 'Neue Produkte — Shoppen in Braunschweig'
+    else if (slug && aktiveKat) document.title = `${aktiveKat.name} — Shoppen in Braunschweig`
 
     // Alle freigegebenen Produkte der Kategorie laden (Verfügbarkeit clientseitig)
     let query = supabase
@@ -273,7 +285,8 @@ async function init () {
       .order('erstellt_am', { ascending: false })
 
     if (aktiveKat) query = query.eq('kategorie_id', aktiveKat.id)
-    else if (slug) query = query.eq('kategorie_id', '00000000-0000-0000-0000-000000000000')
+    else if (slug && !isNeu) query = query.eq('kategorie_id', '00000000-0000-0000-0000-000000000000')
+    // isNeu: keine Kategorie-Einschränkung — alle Produkte laden, clientseitig filtern
 
     const { data, error } = await query
     if (error) throw error
