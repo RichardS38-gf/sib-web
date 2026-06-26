@@ -94,24 +94,28 @@
 
 .shop-infobar__left {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: var(--space-3);
   min-width: 0;
 }
 
 .shop-infobar__logo {
-  width: 88px;
-  height: 88px;
+  width: auto;
+  height: auto;
+  align-self: stretch;
+  aspect-ratio: 1 / 1;
   border-radius: 18px;
   object-fit: cover;
   border: 2px solid var(--color-border);
   flex-shrink: 0;
   background: var(--color-bg);
+  min-width: 80px;
+  max-width: 140px;
 }
 
 .shop-infobar__logo--placeholder {
-  width: 88px;
-  height: 88px;
+  align-self: stretch;
+  aspect-ratio: 1 / 1;
   border-radius: 18px;
   border: 2px solid var(--color-border);
   background: var(--color-bg-soft);
@@ -123,6 +127,8 @@
   font-weight: 800;
   font-size: 2rem;
   flex-shrink: 0;
+  min-width: 80px;
+  max-width: 140px;
 }
 
 .shop-infobar__text {
