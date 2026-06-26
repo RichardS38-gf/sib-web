@@ -184,11 +184,16 @@
 .shop-infobar__msg {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 2rem;
-  font-size: var(--text-base);
+  gap: 0.6rem;
+  padding: 0.9rem 2.5rem;
+  font-size: 1.1rem;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.shop-infobar__msg svg {
+  width: 20px;
+  height: 20px;
 }
 
 .shop-infobar__msg svg path {
