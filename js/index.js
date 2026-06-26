@@ -67,12 +67,12 @@ async function ladeKategorien () {
   }
 }
 
-// "Neu"-Badge: Produkte, die jünger als 7 Tage sind
+// "Neu"-Badge: Produkte, die jünger als 7 Tage freigegeben wurden
 function neuBadge (p) {
-  const t = p.erstellt_am ? new Date(p.erstellt_am).getTime() : NaN
-  if (isNaN(t)) return ''
+  const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
+  if (!t) return ''
   return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
-    ? '<span class="product-card__badge">Neu</span>'
+    ? '<span class="product-card__badge">NEU</span>'
     : ''
 }
 
@@ -98,10 +98,11 @@ function produktKarte (p, ratings) {
     </a>`
 }
 
-// ── 4. Produkte: Tabs „Beliebt" (nach Bewertung) und „Neu" (nach Datum) ──
+// ── 4. Produkte: Neue und Beliebte als zwei separate Sektionen ──
 async function ladeProdukte () {
-  const container = document.getElementById('produkte')
-  if (!container) return
+  const neueContainer    = document.getElementById('neue-produkte')
+  const beliebtContainer = document.getElementById('beliebte-produkte')
+  if (!neueContainer && !beliebtContainer) return
 
   try {
     const { data, error } = await supabase
@@ -117,7 +118,9 @@ async function ladeProdukte () {
     const alle = data || []
 
     if (alle.length === 0) {
-      container.innerHTML = '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
+      const msg = '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
+      if (neueContainer)    neueContainer.innerHTML    = msg
+      if (beliebtContainer) beliebtContainer.innerHTML = msg
       return
     }
 
@@ -140,41 +143,35 @@ async function ladeProdukte () {
       return r && r.anzahl > 0 ? r.summe / r.anzahl : null
     }
 
-    // Beliebt: nach Shop-Bewertung sortiert (ohne Bewertung ans Ende), Top 5
+    // Neu: neueste zuerst (freigegeben_am wenn vorhanden, sonst erstellt_am), Top 5
+    const neu = [...alle]
+      .sort((a, b) => new Date(b.freigegeben_am || b.erstellt_am || 0) - new Date(a.freigegeben_am || a.erstellt_am || 0))
+      .slice(0, 5)
+
+    // Beliebt: nach Shop-Bewertung sortiert, Top 5
     const beliebt = [...alle]
       .map((p) => ({ p, avg: avgOf(p.shop_id) }))
       .sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1))
       .slice(0, 5)
       .map((x) => x.p)
 
-    // Neu: nach Erstelldatum sortiert (neueste zuerst), Top 5
-    const neu = [...alle]
-      .sort((a, b) => new Date(b.erstellt_am || 0) - new Date(a.erstellt_am || 0))
-      .slice(0, 5)
-
-    const listen = { beliebt, neu }
-    const render = (key) => {
-      container.innerHTML = (listen[key] || []).map((p) => produktKarte(p, ratings)).join('')
+    if (neueContainer) {
+      neueContainer.innerHTML = neu.length > 0
+        ? neu.map((p) => produktKarte(p, ratings)).join('')
+        : '<p class="empty-state">Noch keine neuen Produkte.</p>'
     }
-    render('beliebt')
 
-    // Tab-Umschaltung
-    const tabs = document.querySelectorAll('.product-tab')
-    tabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        tabs.forEach((t) => {
-          t.classList.remove('is-active')
-          t.setAttribute('aria-selected', 'false')
-        })
-        tab.classList.add('is-active')
-        tab.setAttribute('aria-selected', 'true')
-        render(tab.dataset.tab)
-      })
-    })
+    if (beliebtContainer) {
+      beliebtContainer.innerHTML = beliebt.length > 0
+        ? beliebt.map((p) => produktKarte(p, ratings)).join('')
+        : '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
+    }
+
   } catch (err) {
-    // Stumm scheitern, Platzhalter zeigen
     console.error('Produkte konnten nicht geladen werden:', err)
-    container.innerHTML = '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
+    const msg = '<p class="empty-state">Produkte konnten gerade nicht geladen werden.</p>'
+    if (neueContainer)    neueContainer.innerHTML    = msg
+    if (beliebtContainer) beliebtContainer.innerHTML = msg
   }
 }
 

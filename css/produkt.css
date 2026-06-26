@@ -19,6 +19,10 @@
 }
 
 /* ── Galerie (links) ── */
+.product-gallery {
+  position: relative;
+}
+
 .product-gallery__main {
   width: 100%;
   aspect-ratio: 3 / 4;

@@ -210,40 +210,7 @@
 }
 .section-link:hover { color: var(--color-ink); opacity: 1; }
 
-/* ── Produkt-Tabs (Beliebt / Neu) ── */
-.section-header--tabs { flex-wrap: wrap; gap: var(--space-2) var(--space-3); }
-
-.product-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.product-tab {
-  font-family: var(--font-sans);
-  font-size: var(--text-2xl);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  color: var(--color-muted);
-  background: none;
-  border: none;
-  padding: 0 0 0.3rem;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: color var(--transition);
-}
-
-.product-tab:hover { color: var(--color-ink); }
-
-.product-tab.is-active {
-  color: var(--color-ink);
-  border-bottom-color: var(--color-ink);
-}
-
-@media (min-width: 640px) {
-  .product-tab { font-size: var(--text-3xl); }
-}
+/* Produkt-Tabs entfernt */
 
 /* ── 3. Kategorien-Grid ── */
 .category-grid {
@@ -262,22 +229,16 @@
 
 .category-grid .loading { grid-column: 1 / -1; }
 
-/* ── 4. Beliebte Produkte: Karten mit Sterne-Bewertung (wie Entwurf) ── */
-#produkte .product-card__image {
+/* ── 4+5. Produkt-Karten auf der Startseite (Neue + Beliebte) ── */
+#neue-produkte .product-card__image,
+#beliebte-produkte .product-card__image {
   aspect-ratio: 1 / 1;
   border-radius: var(--radius-md);
   margin-bottom: var(--space-2);
 }
 
-/* „Neu"-Badge als Pill, eingerückt auf dem abgerundeten Bild */
-#produkte .product-card__badge {
-  top: 8px;
-  left: 8px;
-  border-radius: var(--radius-pill);
-  padding: 0.25rem 0.6rem;
-}
-
-#produkte .product-card__title {
+#neue-produkte .product-card__title,
+#beliebte-produkte .product-card__title {
   font-weight: 600;
   font-size: var(--text-base);
   margin-bottom: 0.2rem;
@@ -296,7 +257,8 @@
 .product-card__stars { color: #F5A623; line-height: 1; }
 .product-card__rating-val { color: var(--color-ink); font-weight: 600; }
 
-#produkte .product-card__price {
+#neue-produkte .product-card__price,
+#beliebte-produkte .product-card__price {
   font-size: var(--text-base);
   font-weight: 600;
 }

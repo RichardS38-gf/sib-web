@@ -33,10 +33,10 @@ function esc (value) {
 // "Neu"-Badge: nur für verfügbare, freigegebene Produkte < 7 Tage alt
 function neuBadge (p) {
   if (p.verfuegbar === false || p.freigegeben !== true) return ''
-  const t = p.erstellt_am ? new Date(p.erstellt_am).getTime() : NaN
-  if (isNaN(t)) return ''
+  const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
+  if (!t) return ''
   return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
-    ? '<span class="product-card__badge">Neu</span>'
+    ? '<span class="product-card__badge">NEU</span>'
     : ''
 }
 
@@ -182,6 +182,7 @@ function renderDetail (produkt, varianten = []) {
   el.innerHTML = `
     <div class="product-detail">
       <div class="product-gallery">
+        ${neuBadge(produkt)}
         ${mainImg}
         ${thumbs}
       </div>
