@@ -126,6 +126,10 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
     ? `<span class="shop-infobar__ort">${esc(shop.adresse)}</span>`
     : ''
 
+  const emailZeile = shop.email
+    ? `<span class="shop-infobar__ort"><a href="mailto:${esc(shop.email)}" style="color:inherit">${esc(shop.email)}</a></span>`
+    : ''
+
   const ratingStr = bewertungAnzahl > 0
     ? `<span class="shop-infobar__stat">
          <span class="shop-infobar__star">★</span>
@@ -159,6 +163,7 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
       <div class="shop-infobar__text">
         <h1 class="shop-infobar__name">${esc(shop.name)}</h1>
         ${ort}
+        ${emailZeile}
         <div class="shop-infobar__stats">
           ${ratingStr}
           <span class="shop-infobar__dot" aria-hidden="true">·</span>
