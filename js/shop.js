@@ -82,21 +82,20 @@ function notFound (text) {
 // ─────────────────────────────────────────
 function renderGalerie (shop) {
   const el = document.getElementById('shop-galerie')
-  // galerie = Array von URLs aus DB; Fallback auf banner_url
   const bilder = Array.isArray(shop.galerie) && shop.galerie.length > 0
     ? shop.galerie.filter(Boolean)
     : shop.banner_url ? [shop.banner_url] : []
 
-  if (bilder.length === 0) return
+  // Hero immer einblenden (Infobar ist immer da)
+  document.getElementById('shop-hero').hidden = false
 
-  el.hidden = false
+  if (bilder.length === 0) return
 
   if (bilder.length === 1) {
     el.innerHTML = `<img class="shop-galerie__single" src="${esc(bilder[0])}" alt="${esc(shop.name)}">`
     return
   }
 
-  // bis zu 4 Bilder im Mosaic-Grid
   const show = bilder.slice(0, 4)
   el.setAttribute('data-count', show.length)
   el.innerHTML = show.map((url, i) =>
@@ -110,9 +109,7 @@ function renderGalerie (shop) {
 // 2. INFO-BAR
 // ─────────────────────────────────────────
 function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) {
-  const wrap = document.getElementById('shop-infobar-wrap')
   const el = document.getElementById('shop-infobar')
-  wrap.hidden = false
 
   const logo = shop.logo_url
     ? `<img class="shop-infobar__logo" src="${esc(shop.logo_url)}" alt="${esc(shop.name)}">`
@@ -127,12 +124,12 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
          <span class="shop-infobar__star">★</span>
          ${bewertungSchnitt.toFixed(1)} <span class="shop-infobar__stat-sub">(${bewertungAnzahl})</span>
        </span>`
-    : `<span class="shop-infobar__stat shop-infobar__stat--muted">Noch keine Bewertungen</span>`
+    : `<span class="shop-infobar__stat shop-infobar__stat--muted"><span class="shop-infobar__star">★</span>&nbsp;Noch keine Bewertungen (0)</span>`
 
   const artikelStr = `<span class="shop-infobar__stat">${produktAnzahl} Artikel</span>`
 
   const beigetreten = shop.erstellt_am
-    ? `<span class="shop-infobar__stat shop-infobar__stat--muted">Seit ${formatDatum(shop.erstellt_am, { month: '2-digit', year: 'numeric' })}</span>`
+    ? `<span class="shop-infobar__stat shop-infobar__stat--muted">${formatDatum(shop.erstellt_am, { month: '2-digit', year: 'numeric' }).replace(/\./g, '/')} beigetreten</span>`
     : ''
 
   const kontaktHref = shop.email
@@ -156,8 +153,8 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
     </div>
     <div class="shop-infobar__actions">
       <a class="btn btn--primary shop-infobar__msg" href="${kontaktHref}">
-        <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2z"/></svg>
         Nachricht
+        <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2z"/></svg>
       </a>
     </div>`
 }
@@ -250,11 +247,10 @@ async function ladeProdukte (shop) {
 
     if (alleProdukte.length === 0) {
       container.innerHTML = '<p class="shop-empty">Dieses Geschäft hat aktuell keine Artikel.</p>'
-      return
+      return 0
     }
 
     renderProduktBatch(shop)
-
     document.getElementById('shop-mehr-btn').addEventListener('click', () => renderProduktBatch(shop))
 
     return alleProdukte.length
@@ -308,12 +304,10 @@ async function ladeBewertungen (shop) {
     if (error) throw error
     alleBewertungen = data || []
 
-    // Gesamt-Rating in Infobar aktualisieren — Rückgabe für renderInfoBar
     const schnitt = alleBewertungen.length > 0
       ? alleBewertungen.reduce((s, b) => s + (b.sterne || 0), 0) / alleBewertungen.length
       : 0
 
-    // Rating-Summary
     const summary = document.getElementById('shop-rating-summary')
     if (alleBewertungen.length > 0) {
       summary.innerHTML = `
@@ -415,11 +409,11 @@ function initBewertungForm (shop) {
 // ─────────────────────────────────────────
 function renderInfoTabelle (shop) {
   const felder = [
-    { key: 'agb_datum',    label: 'AGB',                  formatter: v => `Zuletzt aktualisiert am ${formatDatum(v)}` },
-    { key: 'versand',      label: 'Versand',               formatter: v => esc(v) },
-    { key: 'rueckgaben',   label: 'Rückgaben & Umtausch', formatter: v => esc(v) },
-    { key: 'stornierungen',label: 'Stornierungen',         formatter: v => esc(v) },
-    { key: 'oeffnungszeiten', label: 'Öffnungszeiten',    formatter: v => esc(v) },
+    { key: 'agb_datum',       label: 'AGB',                  formatter: v => `Zuletzt aktualisiert am ${formatDatum(v)}` },
+    { key: 'versand',         label: 'Versand',               formatter: v => esc(v) },
+    { key: 'rueckgaben',      label: 'Rückgaben & Umtausch', formatter: v => esc(v) },
+    { key: 'stornierungen',   label: 'Stornierungen',         formatter: v => esc(v) },
+    { key: 'oeffnungszeiten', label: 'Öffnungszeiten',       formatter: v => esc(v) },
   ]
 
   const vorhandene = felder.filter(f => shop[f.key])
@@ -462,7 +456,7 @@ async function init () {
     showLoading(false)
     if (shop.name) document.title = `${shop.name} — Shoppen in Braunschweig`
 
-    // Galerie
+    // Galerie (zeigt auch den Hero-Wrapper)
     renderGalerie(shop)
 
     // Artikel + Bewertungen parallel laden

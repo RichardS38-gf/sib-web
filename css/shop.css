@@ -9,9 +9,20 @@
 }
 
 /* ─────────────────────────────────────────
+   HERO-WRAPPER (Galerie + Info-Bar = 100vh)
+───────────────────────────────────────── */
+.shop-hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─────────────────────────────────────────
    1. BILDERGALERIE
 ───────────────────────────────────────── */
 .shop-galerie {
+  flex: 1;
+  min-height: 0;
   width: calc(100% - 3rem);
   margin: var(--space-4) auto 0;
   overflow: hidden;
@@ -21,18 +32,16 @@
 /* Single Banner */
 .shop-galerie__single {
   width: 100%;
-  height: 520px;
+  height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: var(--radius-md);
 }
 
 /* Mosaic Grid */
 .shop-galerie[data-count] {
   display: grid;
-  height: 520px;
+  height: 100%;
   gap: 3px;
-  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -57,10 +66,12 @@
 }
 
 @media (max-width: 640px) {
+  .shop-hero { min-height: auto; }
   .shop-galerie {
+    flex: none;
     width: calc(100% - 2rem);
+    height: 280px;
   }
-  .shop-galerie__single { height: 280px; }
   .shop-galerie[data-count] { height: 220px; }
   .shop-galerie[data-count="4"] { grid-template-columns: repeat(2, 1fr); height: 300px; }
 }
@@ -78,7 +89,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: var(--space-4) 0;
+  padding: var(--space-5) 0;
 }
 
 .shop-infobar__left {
@@ -89,8 +100,8 @@
 }
 
 .shop-infobar__logo {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--color-border);
@@ -98,8 +109,8 @@
 }
 
 .shop-infobar__logo--placeholder {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   background: var(--color-ink);
   color: var(--color-on-dark);
@@ -108,7 +119,7 @@
   justify-content: center;
   font-family: var(--font-sans);
   font-weight: 800;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   flex-shrink: 0;
 }
 
@@ -119,25 +130,25 @@
 .shop-infobar__name {
   font-family: var(--font-sans);
   font-weight: 800;
-  font-size: var(--text-2xl);
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  margin-bottom: 0.2rem;
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-bottom: 0.3rem;
 }
 
 .shop-infobar__ort {
   display: block;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--color-muted);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
 }
 
 .shop-infobar__stats {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  font-size: var(--text-sm);
+  gap: 0.5rem;
+  font-size: var(--text-base);
 }
 
 .shop-infobar__stat {
@@ -173,7 +184,11 @@
 .shop-infobar__msg {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  font-size: var(--text-base);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .shop-infobar__msg svg path {
