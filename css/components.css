@@ -22,6 +22,11 @@
   color: var(--color-on-dark);
 }
 
+.btn--light {
+  background-color: var(--color-on-dark);
+  color: var(--color-ink);
+}
+
 .btn--outline {
   background-color: transparent;
   color: var(--color-ink);
