@@ -94,29 +94,25 @@
 
 .shop-infobar__left {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: var(--space-3);
   min-width: 0;
 }
 
 .shop-infobar__logo {
-  width: auto;
-  height: auto;
-  align-self: stretch;
-  aspect-ratio: 1 / 1;
-  border-radius: 18px;
+  width: 120px;
+  height: 120px;
+  border-radius: 20px;
   object-fit: cover;
   border: 2px solid var(--color-border);
   flex-shrink: 0;
   background: var(--color-bg);
-  min-width: 80px;
-  max-width: 140px;
 }
 
 .shop-infobar__logo--placeholder {
-  align-self: stretch;
-  aspect-ratio: 1 / 1;
-  border-radius: 18px;
+  width: 120px;
+  height: 120px;
+  border-radius: 20px;
   border: 2px solid var(--color-border);
   background: var(--color-bg-soft);
   color: var(--color-ink);
@@ -125,10 +121,8 @@
   justify-content: center;
   font-family: var(--font-sans);
   font-weight: 800;
-  font-size: 2rem;
+  font-size: 2.5rem;
   flex-shrink: 0;
-  min-width: 80px;
-  max-width: 140px;
 }
 
 .shop-infobar__text {
