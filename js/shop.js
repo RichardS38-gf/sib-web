@@ -1,5 +1,6 @@
-// js/shop.js — SIB Shopseite
-// Lädt ein Geschäft (per slug) live aus Supabase und zeigt Profil + Produkte.
+// js/shop.js — SIB Shopseite v6
+// Lädt ein Geschäft (per slug) aus Supabase.
+// Sektionen: Galerie → Info-Bar → Willkommen → Artikel → Bewertungen → Info-Tabelle
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
@@ -14,57 +15,34 @@ function esc (value) {
     .replace(/"/g, '&quot;')
 }
 
-// "Neu"-Badge: nur für verfügbare, freigegebene Produkte < 7 Tage alt
+function formatDatum (value, opts) {
+  if (!value) return ''
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('de-DE', opts || { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
 function neuBadge (p) {
   if (p.verfuegbar === false || p.freigegeben !== true) return ''
-  const t = p.erstellt_am ? new Date(p.erstellt_am).getTime() : NaN
-  if (isNaN(t)) return ''
+  const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
+  if (!t) return ''
   return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
-    ? '<span class="product-card__badge">Neu</span>'
+    ? '<span class="product-card__badge">NEU</span>'
     : ''
 }
 
-// ── Social-Share ──
-const SHARE_ICONS = {
-  whatsapp: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.11 17.2c-.28-.14-1.65-.81-1.9-.9-.26-.1-.45-.14-.63.14-.19.28-.72.9-.88 1.08-.16.19-.32.21-.6.07-.28-.14-1.18-.43-2.25-1.39-.83-.74-1.39-1.65-1.55-1.93-.16-.28-.02-.43.12-.57.13-.13.28-.32.42-.48.14-.16.19-.28.28-.46.09-.19.05-.35-.02-.49-.07-.14-.63-1.51-.86-2.07-.23-.55-.46-.48-.63-.49h-.54c-.19 0-.49.07-.75.35-.26.28-.98.96-.98 2.33 0 1.37 1 2.7 1.14 2.89.14.19 1.97 3.01 4.78 4.22.67.29 1.19.46 1.6.59.67.21 1.28.18 1.76.11.54-.08 1.65-.67 1.88-1.32.23-.65.23-1.21.16-1.32-.07-.11-.26-.18-.54-.32z M12 2a10 10 0 00-8.6 15.06L2 22l5.06-1.33A10 10 0 1012 2zm0 18.2a8.18 8.18 0 01-4.17-1.14l-.3-.18-3 .79.8-2.92-.2-.31A8.2 8.2 0 1112 20.2z"/></svg>',
-  facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.12 5.32H17V2.14A26.11 26.11 0 0014.26 2c-2.72 0-4.58 1.66-4.58 4.7v2.6H6.6v3.56h3.08V22h3.68v-9.14h3.06l.46-3.56h-3.52V7.05c0-1.03.28-1.73 1.76-1.73z"/></svg>',
-  link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.9 12a3.1 3.1 0 013.1-3.1h4V7H7a5 5 0 000 10h4v-1.9H7A3.1 3.1 0 013.9 12zM8 13h8v-2H8v2zm9-6h-4v1.9h4A3.1 3.1 0 0117 15.1h-4V17h4a5 5 0 000-10z"/></svg>'
+function sterneHtml (n, max = 5) {
+  const v = Math.max(0, Math.min(max, Math.round(n)))
+  const lit = '<span class="stern-on">★</span>'
+  const dim = '<span class="stern-off">★</span>'
+  return lit.repeat(v) + dim.repeat(max - v)
 }
 
-function shareRow (waText, url) {
-  const wa = `https://wa.me/?text=${encodeURIComponent(waText)}`
-  const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
-  return `
-    <div class="share-row">
-      <span class="share-row__label">Teilen:</span>
-      <a class="share-btn" href="${esc(wa)}" target="_blank" rel="noopener" aria-label="Auf WhatsApp teilen" title="WhatsApp">${SHARE_ICONS.whatsapp}</a>
-      <a class="share-btn" href="${esc(fb)}" target="_blank" rel="noopener" aria-label="Auf Facebook teilen" title="Facebook">${SHARE_ICONS.facebook}</a>
-      <button class="share-btn share-btn--copy" type="button" data-copy-url="${esc(url)}" aria-label="Link kopieren" title="Link kopieren">${SHARE_ICONS.link}</button>
-    </div>`
-}
-
-function initCopyButtons (root) {
-  (root || document).querySelectorAll('[data-copy-url]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const url = btn.dataset.copyUrl
-      try {
-        await navigator.clipboard.writeText(url)
-      } catch (e) {
-        const ta = document.createElement('textarea')
-        ta.value = url
-        ta.style.position = 'fixed'
-        ta.style.opacity = '0'
-        document.body.appendChild(ta)
-        ta.select()
-        try { document.execCommand('copy') } catch (e2) { /* ignore */ }
-        document.body.removeChild(ta)
-      }
-      const orig = btn.innerHTML
-      btn.classList.add('is-copied')
-      btn.innerHTML = '<span class="share-btn__copied">Kopiert!</span>'
-      setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('is-copied') }, 1500)
-    })
-  })
+function avatarHtml (name) {
+  const initials = (name || '?').trim().slice(0, 1).toUpperCase()
+  const colors = ['#2D6A4F','#1B4332','#52796F','#354F52','#40916C','#1D3557','#457B9D','#6D4C41']
+  const hue = initials.charCodeAt(0) % colors.length
+  return `<span class="bw-avatar" style="background:${colors[hue]}">${initials}</span>`
 }
 
 // ── Mobile-Menü ──
@@ -84,73 +62,174 @@ function getSlug () {
   return new URLSearchParams(window.location.search).get('slug')
 }
 
+function showLoading (on) {
+  const el = document.getElementById('shop-loading')
+  if (el) el.hidden = !on
+}
+
 function notFound (text) {
-  const el = document.getElementById('shop-profil')
-  el.innerHTML = `
-    <div class="container">
-      <div class="shop-notfound">
-        <h1>Geschäft nicht gefunden</h1>
-        <p>${esc(text || 'Dieses Geschäft existiert nicht oder ist nicht mehr aktiv.')}</p>
-        <p style="margin-top:1.5rem"><a class="btn btn--primary" href="shop.html">Alle Geschäfte ansehen</a></p>
-      </div>
+  showLoading(false)
+  document.getElementById('shop-main').innerHTML = `
+    <div class="container" style="padding-top:4rem;padding-bottom:4rem;text-align:center">
+      <h1>Geschäft nicht gefunden</h1>
+      <p style="margin-top:1rem;color:var(--color-muted)">${esc(text || 'Dieses Geschäft existiert nicht oder ist nicht mehr aktiv.')}</p>
+      <p style="margin-top:2rem"><a class="btn btn--primary" href="geschaefte.html">Alle Geschäfte ansehen</a></p>
     </div>`
 }
 
-// ── Shop-Profil rendern ──
-function renderShop (shop) {
-  const el = document.getElementById('shop-profil')
+// ─────────────────────────────────────────
+// 1. BILDERGALERIE
+// ─────────────────────────────────────────
+function renderGalerie (shop) {
+  const el = document.getElementById('shop-galerie')
+  // galerie = Array von URLs aus DB; Fallback auf banner_url
+  const bilder = Array.isArray(shop.galerie) && shop.galerie.length > 0
+    ? shop.galerie.filter(Boolean)
+    : shop.banner_url ? [shop.banner_url] : []
 
-  const banner = shop.banner_url
-    ? `<img class="shop-banner" src="${esc(shop.banner_url)}" alt="${esc(shop.name)} — Banner">`
-    : '<div class="shop-banner"></div>'
+  if (bilder.length === 0) return
+
+  el.hidden = false
+
+  if (bilder.length === 1) {
+    el.innerHTML = `<img class="shop-galerie__single" src="${esc(bilder[0])}" alt="${esc(shop.name)}">`
+    return
+  }
+
+  // bis zu 4 Bilder im Mosaic-Grid
+  const show = bilder.slice(0, 4)
+  el.setAttribute('data-count', show.length)
+  el.innerHTML = show.map((url, i) =>
+    `<div class="shop-galerie__cell">
+       <img src="${esc(url)}" alt="${esc(shop.name)} — Foto ${i + 1}" loading="${i === 0 ? 'eager' : 'lazy'}">
+     </div>`
+  ).join('')
+}
+
+// ─────────────────────────────────────────
+// 2. INFO-BAR
+// ─────────────────────────────────────────
+function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) {
+  const wrap = document.getElementById('shop-infobar-wrap')
+  const el = document.getElementById('shop-infobar')
+  wrap.hidden = false
 
   const logo = shop.logo_url
-    ? `<img class="shop-head__logo" src="${esc(shop.logo_url)}" alt="${esc(shop.name)} — Logo">`
-    : '<div class="shop-head__logo"></div>'
+    ? `<img class="shop-infobar__logo" src="${esc(shop.logo_url)}" alt="${esc(shop.name)}">`
+    : `<div class="shop-infobar__logo shop-infobar__logo--placeholder">${esc((shop.name || '?').slice(0, 1).toUpperCase())}</div>`
 
-  const meta = []
-  if (shop.adresse) {
-    meta.push(`<span class="shop-head__meta-item"><span class="shop-head__meta-label">Adresse</span>${esc(shop.adresse)}</span>`)
-  }
-  if (shop.oeffnungszeiten) {
-    meta.push(`<span class="shop-head__meta-item"><span class="shop-head__meta-label">Öffnungszeiten</span>${esc(shop.oeffnungszeiten)}</span>`)
-  }
-  const metaBlock = meta.length
-    ? `<div class="shop-head__meta">${meta.join('')}</div>`
+  const ort = shop.adresse
+    ? `<span class="shop-infobar__ort">${esc(shop.adresse)}</span>`
+    : ''
+
+  const ratingStr = bewertungAnzahl > 0
+    ? `<span class="shop-infobar__stat">
+         <span class="shop-infobar__star">★</span>
+         ${bewertungSchnitt.toFixed(1)} <span class="shop-infobar__stat-sub">(${bewertungAnzahl})</span>
+       </span>`
+    : `<span class="shop-infobar__stat shop-infobar__stat--muted">Noch keine Bewertungen</span>`
+
+  const artikelStr = `<span class="shop-infobar__stat">${produktAnzahl} Artikel</span>`
+
+  const beigetreten = shop.erstellt_am
+    ? `<span class="shop-infobar__stat shop-infobar__stat--muted">Seit ${formatDatum(shop.erstellt_am, { month: '2-digit', year: 'numeric' })}</span>`
+    : ''
+
+  const kontaktHref = shop.email
+    ? `mailto:${esc(shop.email)}`
+    : `mailto:support@shoppeninbraunschweig.de?subject=${encodeURIComponent('Nachricht an ' + shop.name)}`
+
+  el.innerHTML = `
+    <div class="shop-infobar__left">
+      ${logo}
+      <div class="shop-infobar__text">
+        <h1 class="shop-infobar__name">${esc(shop.name)}</h1>
+        ${ort}
+        <div class="shop-infobar__stats">
+          ${ratingStr}
+          <span class="shop-infobar__dot" aria-hidden="true">·</span>
+          ${artikelStr}
+          <span class="shop-infobar__dot" aria-hidden="true">·</span>
+          ${beigetreten}
+        </div>
+      </div>
+    </div>
+    <div class="shop-infobar__actions">
+      <a class="btn btn--primary shop-infobar__msg" href="${kontaktHref}">
+        <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2z"/></svg>
+        Nachricht
+      </a>
+    </div>`
+}
+
+// ─────────────────────────────────────────
+// 3. WILLKOMMEN / ABOUT
+// ─────────────────────────────────────────
+function renderAbout (shop) {
+  if (!shop.beschreibung && !shop.bild_url && !shop.banner_url) return
+
+  const section = document.getElementById('shop-about')
+  const inner = document.getElementById('shop-about-inner')
+  section.hidden = false
+
+  const willkommenBild = shop.bild_url || (
+    Array.isArray(shop.galerie) && shop.galerie.length > 1
+      ? shop.galerie[1]
+      : null
+  )
+
+  const bildHtml = willkommenBild
+    ? `<div class="shop-about__bild-wrap">
+         <img class="shop-about__bild" src="${esc(willkommenBild)}" alt="${esc(shop.name)}" loading="lazy">
+       </div>`
     : ''
 
   const beschreibung = shop.beschreibung
-    ? `<div class="container shop-desc"><p>${esc(shop.beschreibung)}</p></div><div class="container"><hr></div>`
+    ? shop.beschreibung.split('\n').filter(Boolean).map(p => `<p>${esc(p)}</p>`).join('')
     : ''
 
-  el.innerHTML = `
-    ${banner}
-    <div class="container">
-      <div class="shop-head">
-        ${logo}
-        <div class="shop-head__main">
-          <h1 class="shop-head__name">${esc(shop.name)}</h1>
-          <div class="shop-rating" id="shop-rating"></div>
-          ${shareRow(`Schau mal dieses Geschäft an: ${shop.name} auf Shoppen in Braunschweig – ${window.location.href}`, window.location.href)}
-        </div>
-        ${metaBlock}
-      </div>
-      <hr>
-    </div>
-    ${beschreibung}`
-
-  if (shop.name) document.title = `${shop.name} — Shoppen in Braunschweig`
-
-  initCopyButtons(el)
+  inner.innerHTML = `
+    <h2 class="shop-about__headline">Willkommen bei ${esc(shop.name)}</h2>
+    ${bildHtml}
+    ${beschreibung ? `<div class="shop-about__text">${beschreibung}</div>` : ''}`
 }
 
-// ── Produkte des Shops ──
+// ─────────────────────────────────────────
+// 4. ARTIKEL
+// ─────────────────────────────────────────
+const PAGE_SIZE = 10
+let alleProdukte = []
+let gezeigte = 0
+
+function renderProduktBatch (shop) {
+  const container = document.getElementById('shop-produkte')
+  const batch = alleProdukte.slice(0, gezeigte + PAGE_SIZE)
+  gezeigte = batch.length
+
+  container.innerHTML = batch.map((p) => {
+    const id = encodeURIComponent(p.id)
+    const bilder = Array.isArray(p.bilder) ? p.bilder.filter(Boolean) : []
+    const bild = bilder[0]
+      ? `<img class="product-card__image" src="${esc(bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
+      : '<div class="product-card__image"></div>'
+    const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
+    return `
+      <a class="product-card" href="produkt.html?id=${id}">
+        ${neuBadge(p)}${bild}
+        <span class="product-card__shop">${esc(shop.name)}</span>
+        <span class="product-card__title">${esc(p.titel)}</span>
+        <span class="product-card__price">${esc(preis)}</span>
+      </a>`
+  }).join('')
+
+  const mehrWrap = document.getElementById('shop-mehr-wrap')
+  mehrWrap.hidden = gezeigte >= alleProdukte.length
+}
+
 async function ladeProdukte (shop) {
   const section = document.getElementById('shop-produkte-section')
   const container = document.getElementById('shop-produkte')
   const titel = document.getElementById('shop-produkte-titel')
-
-  titel.textContent = `Artikel von ${shop.name}`
   section.hidden = false
   container.innerHTML = '<div class="loading">Artikel werden geladen…</div>'
 
@@ -164,46 +243,59 @@ async function ladeProdukte (shop) {
       .order('erstellt_am', { ascending: false })
 
     if (error) throw error
-    const produkte = data || []
+    alleProdukte = data || []
+    gezeigte = 0
 
-    if (produkte.length === 0) {
+    titel.textContent = `Artikel (${alleProdukte.length})`
+
+    if (alleProdukte.length === 0) {
       container.innerHTML = '<p class="shop-empty">Dieses Geschäft hat aktuell keine Artikel.</p>'
       return
     }
 
-    container.innerHTML = produkte.map((p) => {
-      const id = encodeURIComponent(p.id)
-      const bilder = Array.isArray(p.bilder) ? p.bilder.filter(Boolean) : []
-      const bild = bilder[0]
-        ? `<img class="product-card__image" src="${esc(bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
-        : '<div class="product-card__image"></div>'
-      const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
-      return `
-        <a class="product-card" href="produkt.html?id=${id}">
-          ${neuBadge(p)}${bild}
-          <span class="product-card__shop">${esc(shop.name)}</span>
-          <span class="product-card__title">${esc(p.titel)}</span>
-          <span class="product-card__price">${esc(preis)}</span>
-        </a>`
-    }).join('')
+    renderProduktBatch(shop)
+
+    document.getElementById('shop-mehr-btn').addEventListener('click', () => renderProduktBatch(shop))
+
+    return alleProdukte.length
   } catch (err) {
     console.error('Artikel konnten nicht geladen werden:', err)
     container.innerHTML = '<p class="shop-empty">Die Artikel konnten gerade nicht geladen werden.</p>'
+    return 0
   }
 }
 
-// ── Bewertungen ──
+// ─────────────────────────────────────────
+// 5. BEWERTUNGEN
+// ─────────────────────────────────────────
+let alleBewertungen = []
+let gezeigteB = 0
+const BW_PAGE = 6
 let gewaehlteSterne = 0
 
-function sterneIcons (n) {
-  const v = Math.max(0, Math.min(5, Math.round(n)))
-  return '★'.repeat(v) + '☆'.repeat(5 - v)
+function renderBewertungBatch () {
+  const liste = document.getElementById('bewertungen-liste')
+  const batch = alleBewertungen.slice(0, gezeigteB + BW_PAGE)
+  gezeigteB = batch.length
+
+  liste.innerHTML = batch.map((b) => `
+    <article class="bw-karte glass-card">
+      <div class="bw-karte__kopf">
+        ${avatarHtml(b.autor_name)}
+        <div>
+          <span class="bw-karte__autor">${esc(b.autor_name)}</span>
+          <span class="bw-karte__datum">am ${formatDatum(b.erstellt_am)}</span>
+        </div>
+      </div>
+      <div class="bw-karte__sterne" aria-label="${b.sterne} von 5 Sternen">${sterneHtml(b.sterne)}</div>
+      ${b.text ? `<p class="bw-karte__text">${esc(b.text)}</p>` : ''}
+    </article>`).join('')
+
+  document.getElementById('bw-mehr-wrap').hidden = gezeigteB >= alleBewertungen.length
 }
 
 async function ladeBewertungen (shop) {
   const section = document.getElementById('bewertungen-section')
-  const liste = document.getElementById('bewertungen-liste')
-  const rating = document.getElementById('shop-rating')
   section.hidden = false
 
   try {
@@ -212,65 +304,59 @@ async function ladeBewertungen (shop) {
       .select('*')
       .eq('shop_id', shop.id)
       .order('erstellt_am', { ascending: false })
+
     if (error) throw error
-    const bewertungen = data || []
+    alleBewertungen = data || []
 
-    // Durchschnitt + Anzahl
-    if (rating) {
-      if (bewertungen.length === 0) {
-        rating.textContent = 'Noch keine Bewertungen'
-      } else {
-        const schnitt = bewertungen.reduce((s, b) => s + (b.sterne || 0), 0) / bewertungen.length
-        const wort = bewertungen.length === 1 ? 'Bewertung' : 'Bewertungen'
-        rating.innerHTML = `<span class="shop-rating__stars">★</span> ${schnitt.toFixed(1)} <span class="shop-rating__count">(${bewertungen.length} ${wort})</span>`
-      }
+    // Gesamt-Rating in Infobar aktualisieren — Rückgabe für renderInfoBar
+    const schnitt = alleBewertungen.length > 0
+      ? alleBewertungen.reduce((s, b) => s + (b.sterne || 0), 0) / alleBewertungen.length
+      : 0
+
+    // Rating-Summary
+    const summary = document.getElementById('shop-rating-summary')
+    if (alleBewertungen.length > 0) {
+      summary.innerHTML = `
+        <span class="shop-rating-score">${sterneHtml(schnitt)}</span>
+        <span class="shop-rating-zahl">${schnitt.toFixed(1)}/5</span>
+        <span class="shop-rating-anzahl">(${alleBewertungen.length} Bewertung${alleBewertungen.length !== 1 ? 'en' : ''})</span>`
+    } else {
+      summary.innerHTML = '<span class="shop-rating-leer">Noch keine Bewertungen</span>'
     }
 
-    // Letzte 5 anzeigen
-    if (bewertungen.length === 0) {
-      liste.innerHTML = '<p class="shop-empty">Sei die erste Person, die dieses Geschäft bewertet.</p>'
-      return
+    if (alleBewertungen.length === 0) {
+      document.getElementById('bewertungen-liste').innerHTML =
+        '<p class="shop-empty shop-empty--light">Sei die erste Person, die dieses Geschäft bewertet.</p>'
+    } else {
+      gezeigteB = 0
+      renderBewertungBatch()
+      document.getElementById('bw-mehr-btn').addEventListener('click', renderBewertungBatch)
     }
-    liste.innerHTML = bewertungen.slice(0, 5).map((b) => `
-      <article class="bewertung">
-        <div class="bewertung__kopf">
-          <span class="bewertung__autor">${esc(b.autor_name)}</span>
-          <span class="bewertung__datum">${formatDatum(b.erstellt_am)}</span>
-        </div>
-        <div class="bewertung__sterne" aria-label="${b.sterne} von 5 Sternen">${sterneIcons(b.sterne)}</div>
-        ${b.text ? `<p class="bewertung__text">${esc(b.text)}</p>` : ''}
-      </article>`).join('')
+
+    return { schnitt, anzahl: alleBewertungen.length }
   } catch (err) {
     console.error('Bewertungen konnten nicht geladen werden:', err)
-    if (rating) rating.textContent = ''
-    liste.innerHTML = '<p class="shop-empty">Bewertungen konnten gerade nicht geladen werden.</p>'
+    document.getElementById('shop-rating-summary').innerHTML = ''
+    return { schnitt: 0, anzahl: 0 }
   }
-}
-
-function formatDatum (value) {
-  if (!value) return ''
-  const d = new Date(value)
-  if (isNaN(d.getTime())) return ''
-  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function initBewertungForm (shop) {
   const toggle = document.getElementById('toggle-bewertung-form')
   const form = document.getElementById('bewertung-form')
   const feedback = document.getElementById('bewertung-feedback')
-  const sterneEl = document.getElementById('sterne-input')
-  const sternBtns = Array.from(sterneEl.querySelectorAll('.stern'))
+  const sternBtns = Array.from(document.querySelectorAll('#sterne-input .stern'))
 
   function zeichneSterne (wert) {
-    sternBtns.forEach((b) => b.classList.toggle('is-on', Number(b.dataset.wert) <= wert))
+    sternBtns.forEach(b => b.classList.toggle('is-on', Number(b.dataset.wert) <= wert))
   }
 
   toggle.addEventListener('click', () => {
     form.hidden = !form.hidden
-    if (!form.hidden) form.name.focus()
+    if (!form.hidden) form.querySelector('[name="name"]').focus()
   })
 
-  sternBtns.forEach((btn) => {
+  sternBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       gewaehlteSterne = Number(btn.dataset.wert)
       zeichneSterne(gewaehlteSterne)
@@ -281,15 +367,15 @@ function initBewertungForm (shop) {
     e.preventDefault()
     feedback.innerHTML = ''
 
-    const name = form.name.value.trim()
-    const email = form.email.value.trim()
-    const text = form.text.value.trim()
+    const nameVal = form.querySelector('[name="name"]').value.trim()
+    const emailVal = form.querySelector('[name="email"]').value.trim()
+    const textVal = form.querySelector('[name="text"]').value.trim()
 
-    if (!name || !email) {
+    if (!nameVal || !emailVal) {
       feedback.innerHTML = '<div class="error-msg">Bitte Name und E-Mail ausfüllen.</div>'
       return
     }
-    if (gewaehlteSterne < 1 || gewaehlteSterne > 5) {
+    if (gewaehlteSterne < 1) {
       feedback.innerHTML = '<div class="error-msg">Bitte wähle eine Sterne-Bewertung.</div>'
       return
     }
@@ -301,10 +387,10 @@ function initBewertungForm (shop) {
     try {
       const { error } = await supabase.from('bewertungen').insert({
         shop_id: shop.id,
-        autor_name: name,
-        autor_email: email,
+        autor_name: nameVal,
+        autor_email: emailVal,
         sterne: gewaehlteSterne,
-        text: text || null
+        text: textVal || null
       })
       if (error) throw error
 
@@ -312,20 +398,47 @@ function initBewertungForm (shop) {
       form.hidden = true
       gewaehlteSterne = 0
       zeichneSterne(0)
+      alleBewertungen = []
+      gezeigteB = 0
       ladeBewertungen(shop)
-      feedback.innerHTML = ''
-      document.getElementById('bewertungen-liste').insertAdjacentHTML('beforebegin',
-        '<div class="success-msg" id="bewertung-danke">Danke für deine Bewertung!</div>')
     } catch (err) {
       console.error('Bewertung speichern fehlgeschlagen:', err)
-      feedback.innerHTML = '<div class="error-msg">Die Bewertung konnte nicht gespeichert werden. Bitte versuche es später erneut.</div>'
+      feedback.innerHTML = '<div class="error-msg">Konnte nicht gespeichert werden. Bitte später erneut versuchen.</div>'
       submitBtn.disabled = false
       submitBtn.textContent = 'Absenden'
     }
   })
 }
 
-// ── Init ──
+// ─────────────────────────────────────────
+// 6. INFO-TABELLE (AGB, Versand, etc.)
+// ─────────────────────────────────────────
+function renderInfoTabelle (shop) {
+  const felder = [
+    { key: 'agb_datum',    label: 'AGB',                  formatter: v => `Zuletzt aktualisiert am ${formatDatum(v)}` },
+    { key: 'versand',      label: 'Versand',               formatter: v => esc(v) },
+    { key: 'rueckgaben',   label: 'Rückgaben & Umtausch', formatter: v => esc(v) },
+    { key: 'stornierungen',label: 'Stornierungen',         formatter: v => esc(v) },
+    { key: 'oeffnungszeiten', label: 'Öffnungszeiten',    formatter: v => esc(v) },
+  ]
+
+  const vorhandene = felder.filter(f => shop[f.key])
+  if (vorhandene.length === 0) return
+
+  const section = document.getElementById('shop-info-tabelle')
+  const body = document.getElementById('shop-info-tabelle-body')
+  section.hidden = false
+
+  body.innerHTML = vorhandene.map(f => `
+    <div class="shop-info-row">
+      <span class="shop-info-row__label">${f.label}</span>
+      <span class="shop-info-row__value">${f.formatter(shop[f.key])}</span>
+    </div>`).join('')
+}
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
 async function init () {
   initMobileMenu()
   initHeaderSearch()
@@ -337,22 +450,39 @@ async function init () {
   }
 
   try {
-    const { data, error } = await supabase
+    const { data: shop, error } = await supabase
       .from('shops')
       .select('*')
       .eq('slug', slug)
       .maybeSingle()
 
     if (error) throw error
-    if (!data) {
-      notFound()
-      return
-    }
+    if (!shop) { notFound(); return }
 
-    renderShop(data)
-    ladeProdukte(data)
-    ladeBewertungen(data)
-    initBewertungForm(data)
+    showLoading(false)
+    if (shop.name) document.title = `${shop.name} — Shoppen in Braunschweig`
+
+    // Galerie
+    renderGalerie(shop)
+
+    // Artikel + Bewertungen parallel laden
+    const [produktAnzahl, { schnitt, anzahl }] = await Promise.all([
+      ladeProdukte(shop),
+      ladeBewertungen(shop)
+    ])
+
+    // Info-Bar (braucht Produkt- und Bewertungszahlen)
+    renderInfoBar(shop, produktAnzahl || 0, schnitt, anzahl)
+
+    // Willkommen / About
+    renderAbout(shop)
+
+    // AGB-Tabelle
+    renderInfoTabelle(shop)
+
+    // Bewertungsformular
+    initBewertungForm(shop)
+
   } catch (err) {
     console.error('Geschäft konnte nicht geladen werden:', err)
     notFound('Das Geschäft konnte gerade nicht geladen werden.')

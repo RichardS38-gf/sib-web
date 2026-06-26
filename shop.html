@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css?v=3">
   <link rel="stylesheet" href="css/components.css?v=6">
-  <link rel="stylesheet" href="css/shop.css?v=3">
+  <link rel="stylesheet" href="css/shop.css?v=4">
 </head>
 <body>
 
@@ -60,31 +60,54 @@
     </div>
   </header>
 
-  <main>
-    <!-- Shop-Profil (wird per JS gefüllt) -->
-    <div id="shop-profil">
-      <div class="loading">Geschäft wird geladen…</div>
+  <main id="shop-main">
+    <div class="container shop-loading" id="shop-loading">
+      <p class="loading">Geschäft wird geladen…</p>
     </div>
 
-    <!-- Produkte des Shops -->
+    <!-- 1. Bildergalerie (full-width) -->
+    <div class="shop-galerie" id="shop-galerie" hidden></div>
+
+    <!-- 2. Info-Bar -->
+    <div class="shop-infobar-wrap" id="shop-infobar-wrap" hidden>
+      <div class="container">
+        <div class="shop-infobar" id="shop-infobar"></div>
+      </div>
+    </div>
+
+    <!-- 3. Willkommen / About -->
+    <section class="section" id="shop-about" hidden>
+      <div class="container" id="shop-about-inner"></div>
+    </section>
+
+    <!-- 4. Artikel -->
     <section class="section section--soft" id="shop-produkte-section" hidden>
       <div class="container">
         <div class="section-header">
           <h2 id="shop-produkte-titel">Artikel</h2>
         </div>
-        <div class="grid-4" id="shop-produkte"></div>
+        <div class="grid-5" id="shop-produkte"></div>
+        <div class="shop-mehr-wrap" id="shop-mehr-wrap" hidden>
+          <button class="btn btn--outline shop-mehr-btn" id="shop-mehr-btn" type="button">
+            Mehr anzeigen
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18"><path d="M12 15.5l-5-5h10z"/></svg>
+          </button>
+        </div>
       </div>
     </section>
 
-    <!-- Bewertungen -->
-    <section class="section" id="bewertungen-section" hidden>
+    <!-- 5. Bewertungen -->
+    <section class="section section--dark" id="bewertungen-section" hidden>
       <div class="container">
         <div class="section-header">
-          <h2>Bewertungen</h2>
-          <button class="btn btn--outline" id="toggle-bewertung-form" type="button">Bewertung schreiben</button>
+          <div>
+            <h2>Bewertungen</h2>
+            <div class="shop-rating-summary" id="shop-rating-summary"></div>
+          </div>
+          <button class="btn btn--light" id="toggle-bewertung-form" type="button">Bewertung schreiben</button>
         </div>
 
-        <form class="bewertung-form" id="bewertung-form" hidden>
+        <form class="bewertung-form glass-card" id="bewertung-form" hidden>
           <div class="bewertung-form__row">
             <div class="form-group">
               <label class="form-label" for="bw-name">Name</label>
@@ -109,11 +132,26 @@
             <label class="form-label" for="bw-text">Deine Bewertung <span class="bw-optional">(optional)</span></label>
             <textarea class="form-input" id="bw-text" name="text" rows="3"></textarea>
           </div>
-          <button class="btn btn--primary" type="submit">Absenden</button>
+          <button class="btn btn--light" type="submit">Absenden</button>
           <div id="bewertung-feedback" aria-live="polite"></div>
         </form>
 
-        <div id="bewertungen-liste"></div>
+        <div class="bewertungen-grid" id="bewertungen-liste"></div>
+
+        <div class="shop-mehr-wrap" id="bw-mehr-wrap" hidden>
+          <button class="btn btn--outline-light shop-mehr-btn" id="bw-mehr-btn" type="button">
+            Mehr Bewertungen
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18"><path d="M12 15.5l-5-5h10z"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Info-Tabelle (AGB, Versand etc.) -->
+    <section class="section section--soft" id="shop-info-tabelle" hidden>
+      <div class="container">
+        <h2 class="shop-info-tabelle__title">Shopinformationen</h2>
+        <div class="shop-info-tabelle__body" id="shop-info-tabelle-body"></div>
       </div>
     </section>
   </main>
@@ -121,45 +159,48 @@
   <!-- ── Footer ── -->
   <footer class="site-footer">
     <div class="container">
-      <div class="site-footer__brand">
-        <span class="site-footer__logo">Shoppen in Braunschweig</span>
-        <p class="site-footer__slogan">Lokale Händler. Einzigartige Produkte.</p>
+      <div class="site-footer__top">
+        <div class="site-footer__brand">
+          <span class="site-footer__logo">Shoppen in Braunschweig</span>
+          <p class="site-footer__slogan">Unterstütze lokale Geschäfte in Braunschweig — online shoppen, lokal kaufen.</p>
+        </div>
+        <div class="site-footer__grid">
+          <div class="site-footer__col">
+            <p class="site-footer__col-title">Für Käufer</p>
+            <ul>
+              <li><a href="kategorie.html">Alle Produkte</a></li>
+              <li><a href="geschaefte.html">Geschäfte entdecken</a></li>
+              <li><a href="newsletter.html">Newsletter</a></li>
+              <li><a href="ueber-uns.html">Über uns</a></li>
+            </ul>
+          </div>
+          <div class="site-footer__col">
+            <p class="site-footer__col-title">Für Verkäufer</p>
+            <ul>
+              <li><a href="haendler-werden.html">Händler werden</a></li>
+              <li><a href="haendler-login.html">Händler-Login</a></li>
+              <li><a href="faq.html">FAQ</a></li>
+            </ul>
+          </div>
+          <div class="site-footer__col">
+            <p class="site-footer__col-title">Kontakt</p>
+            <ul>
+              <li><a href="mailto:support@shoppeninbraunschweig.de">support@shoppeninbraunschweig.de</a></li>
+            </ul>
+          </div>
+        </div>
       </div>
-
-      <div class="site-footer__grid">
-        <div class="site-footer__col">
-          <p class="site-footer__col-title">Für Käufer</p>
-          <ul>
-            <li><a href="kategorie.html">Alle Produkte</a></li>
-            <li><a href="geschaefte.html">Geschäfte entdecken</a></li>
-            <li><a href="newsletter.html">Newsletter</a></li>
-            <li><a href="ueber-uns.html">Über uns</a></li>
-            <li><a href="faq.html">FAQ</a></li>
-          </ul>
-        </div>
-        <div class="site-footer__col">
-          <p class="site-footer__col-title">Für Verkäufer</p>
-          <ul>
-            <li><a href="haendler-werden.html">Händler werden</a></li>
-            <li><a href="haendler-login.html">Händler Login</a></li>
-            <li><a href="faq.html">FAQ</a></li>
-          </ul>
-        </div>
-        <div class="site-footer__col">
-          <p class="site-footer__col-title">Kontakt</p>
-          <ul>
-            <li><a href="mailto:support@shoppeninbraunschweig.de">support@shoppeninbraunschweig.de</a></li>
-          </ul>
-        </div>
-      </div>
-
       <div class="site-footer__bottom">
         <p>© 2026 Shoppen in Braunschweig</p>
-        <p><a href="datenschutz.html">Datenschutz</a> &nbsp;|&nbsp; <a href="impressum.html">Impressum</a></p>
+        <p>
+          <a href="datenschutz.html">Datenschutz</a> &nbsp;|&nbsp;
+          <a href="impressum.html">Impressum</a> &nbsp;|&nbsp;
+          <a href="datenschutz.html#cookies">EU-Cookie-Richtlinien</a>
+        </p>
       </div>
     </div>
   </footer>
 
-  <script type="module" src="js/shop.js?v=5"></script>
+  <script type="module" src="js/shop.js?v=6"></script>
 </body>
 </html>
