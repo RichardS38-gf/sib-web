@@ -326,7 +326,18 @@ function initChatWidget (shop) {
       // Folge-Nachricht
       const { error } = await supabase.from('chat_nachrichten')
         .insert({ chat_id: session.chat_id, text, von_haendler: false })
-      if (error) throw error
+      if (error) {
+        // FK-Fehler: Chat existiert nicht mehr → Session löschen und neu starten
+        if (error.code === '23503' || error.message?.includes('foreign key')) {
+          localStorage.removeItem(SESSION_KEY)
+          session = null
+          widget.hidden = true
+          messages.innerHTML = '<p class="chat-empty">Schreib uns!</p>'
+          sendBtn.disabled = false
+          return
+        }
+        throw error
+      }
       await supabase.from('chats')
         .update({ aktualisiert_am: new Date().toISOString() }).eq('id', session.chat_id)
       input.value = ''
