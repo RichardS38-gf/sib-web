@@ -30,6 +30,7 @@
   object-fit: cover;
   background-color: var(--color-bg-soft);
   flex-shrink: 0;
+  border-radius: var(--radius-md);
 }
 
 .reservierung__shop {

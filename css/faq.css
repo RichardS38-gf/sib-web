@@ -91,8 +91,18 @@
   text-underline-offset: 3px;
 }
 
-/* ── Noch Fragen? (dunkel) ── */
+/* ── Noch Fragen? (dunkel + Glas) ── */
 .faq-cta { text-align: center; }
+
+.faq-cta .container {
+  max-width: 620px;
+  padding: var(--space-5) var(--space-4);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
 
 .faq-cta__headline {
   color: var(--color-on-dark);
@@ -101,7 +111,7 @@
 }
 
 .faq-cta__text {
-  color: #999;
+  color: rgba(250, 250, 248, 0.75);
   font-weight: 300;
   margin-bottom: var(--space-4);
 }

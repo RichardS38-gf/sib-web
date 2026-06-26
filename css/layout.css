@@ -62,3 +62,25 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* ── Glas-Karte (für dunkle Sektionen) ── */
+.glass-card {
+  max-width: 660px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* ── Dunkle Sektionen: Headlines immer Bold-Sans ── */
+.section--dark h1,
+.section--dark h2,
+.section--dark h3 {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-on-dark);
+}

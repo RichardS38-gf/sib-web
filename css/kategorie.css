@@ -6,6 +6,9 @@
 }
 
 .page-head__title {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.02em;
   font-size: var(--text-4xl);
   margin-bottom: var(--space-1);
 }
@@ -51,7 +54,7 @@
 .kategorie-sidebar__link:hover { opacity: 0.7; }
 
 .kategorie-sidebar__link.is-active {
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -71,6 +74,7 @@
   width: 100%;
   padding: 0.5rem 0.6rem;
   font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
 }
 
 .kat-preis__sep { color: var(--color-muted); }
@@ -101,7 +105,10 @@
   cursor: pointer;
 }
 
-.kategorie-sidebar .form-select { width: 100%; }
+.kategorie-sidebar .form-select {
+  width: 100%;
+  border-radius: var(--radius-sm);
+}
 
 /* ── Filter-Umschalter (Mobile) ── */
 .kat-filter-toggle {
@@ -111,6 +118,7 @@
   margin-bottom: var(--space-3);
   background: none;
   border: 1px solid var(--color-ink);
+  border-radius: var(--radius-pill);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 500;
@@ -132,10 +140,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.3rem 0.7rem;
+  padding: 0.3rem 0.75rem;
   background-color: var(--color-ink);
   color: var(--color-on-dark);
   border: none;
+  border-radius: var(--radius-pill);
   font-family: var(--font-sans);
   font-size: var(--text-xs);
   cursor: pointer;

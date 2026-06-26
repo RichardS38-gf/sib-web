@@ -6,6 +6,9 @@
 }
 
 .page-head__title {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.02em;
   font-size: var(--text-4xl);
   margin-bottom: var(--space-1);
   overflow-wrap: anywhere;

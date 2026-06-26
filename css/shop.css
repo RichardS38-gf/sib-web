@@ -6,6 +6,7 @@
   height: 300px;
   object-fit: cover;
   background-color: var(--color-bg-soft);
+  border-radius: var(--radius-md);
 }
 
 div.shop-banner { display: block; }

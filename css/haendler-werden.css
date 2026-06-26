@@ -3,6 +3,16 @@
 /* ── 1. Hero (dunkel) ── */
 .hw-hero { text-align: center; }
 
+.hw-hero .container {
+  max-width: 680px;
+  padding: var(--space-5) var(--space-4);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
 .hw-hero__headline {
   color: var(--color-on-dark);
   font-size: var(--text-4xl);

@@ -68,6 +68,7 @@
   object-fit: cover;
   background-color: var(--color-bg-soft);
   margin-bottom: var(--space-2);
+  border-radius: var(--radius-md);
   transition: opacity var(--transition);
 }
 
