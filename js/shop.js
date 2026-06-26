@@ -294,20 +294,21 @@ function initChatWidget (shop) {
     try {
       if (!session?.chat_id) {
         // Erste Nachricht: Chat anonym anlegen
-        const { data: chat, error: e1 } = await supabase
+        // ID selbst generieren → kein SELECT nach INSERT nötig (anon hat kein SELECT)
+        const chatId = crypto.randomUUID()
+        const { error: e1 } = await supabase
           .from('chats')
-          .insert({ shop_id: shop.id, sender_name: 'Anonym' })
-          .select('id').single()
+          .insert({ id: chatId, shop_id: shop.id, sender_name: 'Anonym' })
         if (e1) throw e1
 
         const { error: e2 } = await supabase
           .from('chat_nachrichten')
-          .insert({ chat_id: chat.id, text, von_haendler: false })
+          .insert({ chat_id: chatId, text, von_haendler: false })
         if (e2) throw e2
 
         // Session mit Shop-Info speichern (für globalen Widget auf anderen Seiten)
         session = {
-          chat_id: chat.id,
+          chat_id: chatId,
           shop_name: shop.name,
           shop_logo: shop.logo_url || null,
           shop_slug: shop.slug || ''
