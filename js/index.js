@@ -88,7 +88,7 @@ function produktKarte (p, ratings) {
   const r = ratings[p.shop_id]
   const ratingHtml = (r && r.anzahl > 0)
     ? `<span class="product-card__rating"><span class="product-card__stars">★</span> <span class="product-card__rating-val">${(r.summe / r.anzahl).toFixed(1).replace('.', ',')}</span> <span class="product-card__count">(${r.anzahl})</span></span>`
-    : ''
+    : '<span class="product-card__rating"><span class="product-card__stars">★</span> <span class="product-card__count">Noch keine Bewertungen (0)</span></span>'
   return `
     <a class="product-card" href="produkt.html?id=${id}">
       ${neuBadge(p)}${bild}
