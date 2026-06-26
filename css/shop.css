@@ -480,6 +480,11 @@
 /* ─────────────────────────────────────────
    CHAT WIDGET (floating)
 ───────────────────────────────────────── */
+
+/* hidden-Attribut darf NICHT durch display:flex überschrieben werden */
+.chat-panel[hidden],
+.chat-widget[hidden],
+.chat-identity[hidden] { display: none !important; }
 .chat-widget {
   position: fixed;
   bottom: 1.5rem;
