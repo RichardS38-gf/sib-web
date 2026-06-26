@@ -154,6 +154,41 @@
         <div class="shop-info-tabelle__body" id="shop-info-tabelle-body"></div>
       </div>
     </section>
+    <!-- Chat Modal -->
+    <div class="chat-overlay" id="chat-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="chat-modal-title">
+      <div class="chat-modal">
+        <div class="chat-modal__head">
+          <h2 class="chat-modal__title" id="chat-modal-title">Nachricht senden</h2>
+          <button class="chat-modal__close" id="chat-modal-close" type="button" aria-label="Schließen">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div id="chat-success" hidden>
+          <div class="chat-modal__success">
+            <svg viewBox="0 0 24 24" width="48" height="48"><circle cx="12" cy="12" r="10" fill="#22c55e"/><path d="M8 12l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            <p>Nachricht gesendet!</p>
+            <p class="chat-modal__success-sub">Der Händler meldet sich so bald wie möglich bei dir.</p>
+          </div>
+        </div>
+        <form class="chat-form" id="chat-form">
+          <div class="form-group">
+            <label class="form-label" for="chat-name">Dein Name</label>
+            <input class="form-input" type="text" id="chat-name" name="name" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="chat-email">E-Mail-Adresse</label>
+            <input class="form-input" type="email" id="chat-email" name="email" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="chat-text">Nachricht</label>
+            <textarea class="form-input" id="chat-text" name="text" rows="5" required placeholder="Hallo, ich habe eine Frage zu..."></textarea>
+          </div>
+          <button class="btn btn--primary btn--full" type="submit" id="chat-submit">Nachricht senden</button>
+          <div id="chat-feedback" aria-live="polite"></div>
+        </form>
+      </div>
+    </div>
+
   </main>
 
   <!-- ── Footer ── -->

@@ -405,6 +405,117 @@ function initProduktForm () {
   })
 }
 
+// ── TAB 4: Nachrichten ──
+async function ladeNachrichten () {
+  const el = document.getElementById('nachrichten-content')
+  const badge = document.getElementById('nachrichten-badge')
+  try {
+    // Chats + erste Nachricht laden
+    const { data: chats, error } = await supabase
+      .from('chats')
+      .select('*, chat_nachrichten(id, text, von_haendler, erstellt_am)')
+      .eq('shop_id', shop.id)
+      .order('aktualisiert_am', { ascending: false })
+
+    if (error) throw error
+    const alle = chats || []
+
+    // Ungelesene zählen
+    const ungelesen = alle.filter(c => !c.gelesen).length
+    if (badge) {
+      badge.hidden = ungelesen === 0
+      badge.textContent = ungelesen
+    }
+
+    if (alle.length === 0) {
+      el.innerHTML = '<p class="dash-empty">Noch keine Nachrichten.</p>'
+      return
+    }
+
+    el.innerHTML = alle.map((chat) => {
+      const nachrichten = (chat.chat_nachrichten || []).sort((a, b) =>
+        new Date(a.erstellt_am) - new Date(b.erstellt_am))
+      const ersteMsg = nachrichten[0]
+      const unread = !chat.gelesen
+      return `
+        <div class="chat-item ${unread ? 'chat-item--unread' : ''}" data-chat-id="${esc(chat.id)}">
+          <div class="chat-item__head">
+            <div class="chat-item__meta">
+              <span class="chat-item__name">${esc(chat.sender_name)}</span>
+              <span class="chat-item__email">${esc(chat.sender_email)}</span>
+              <span class="chat-item__date">${formatDatum(chat.erstellt_am)}</span>
+            </div>
+            ${unread ? '<span class="chat-item__dot" aria-label="Ungelesen"></span>' : ''}
+          </div>
+          <p class="chat-item__preview">${esc(ersteMsg?.text?.slice(0, 120) || '')}${(ersteMsg?.text?.length || 0) > 120 ? '…' : ''}</p>
+          <div class="chat-thread" id="thread-${esc(chat.id)}" hidden>
+            <div class="chat-thread__nachrichten">
+              ${nachrichten.map(m => `
+                <div class="chat-bubble ${m.von_haendler ? 'chat-bubble--haendler' : 'chat-bubble--kunde'}">
+                  <p>${esc(m.text)}</p>
+                  <span class="chat-bubble__zeit">${formatDatum(m.erstellt_am)}</span>
+                </div>`).join('')}
+            </div>
+            <form class="chat-reply" data-reply-chat="${esc(chat.id)}">
+              <textarea class="form-input chat-reply__input" rows="2" placeholder="Antwort schreiben…" required></textarea>
+              <button class="btn btn--primary" type="submit">Antworten</button>
+              <div class="chat-reply__feedback" aria-live="polite"></div>
+            </form>
+          </div>
+        </div>`
+    }).join('')
+
+    // Toggle Thread + als gelesen markieren
+    el.querySelectorAll('.chat-item').forEach(item => {
+      item.querySelector('.chat-item__head').addEventListener('click', async () => {
+        const id = item.dataset.chatId
+        const thread = document.getElementById(`thread-${id}`)
+        thread.hidden = !thread.hidden
+        if (!thread.hidden && item.classList.contains('chat-item--unread')) {
+          item.classList.remove('chat-item--unread')
+          item.querySelector('.chat-item__dot')?.remove()
+          await supabase.from('chats').update({ gelesen: true }).eq('id', id)
+          const newUnread = document.querySelectorAll('.chat-item--unread').length
+          if (badge) { badge.hidden = newUnread === 0; badge.textContent = newUnread }
+        }
+      })
+    })
+
+    // Antwort abschicken
+    el.querySelectorAll('.chat-reply').forEach(form => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        const chatId = form.dataset.replyChat
+        const textarea = form.querySelector('textarea')
+        const fb = form.querySelector('.chat-reply__feedback')
+        const text = textarea.value.trim()
+        if (!text) return
+        const btn = form.querySelector('button')
+        btn.disabled = true
+        btn.textContent = '…'
+        try {
+          const { error } = await supabase.from('chat_nachrichten')
+            .insert({ chat_id: chatId, text, von_haendler: true })
+          if (error) throw error
+          await supabase.from('chats')
+            .update({ aktualisiert_am: new Date().toISOString() })
+            .eq('id', chatId)
+          textarea.value = ''
+          ladeNachrichten()
+        } catch (err) {
+          fb.innerHTML = '<span class="error-msg">Senden fehlgeschlagen.</span>'
+          btn.disabled = false
+          btn.textContent = 'Antworten'
+        }
+      })
+    })
+
+  } catch (err) {
+    console.error('Nachrichten konnten nicht geladen werden:', err)
+    el.innerHTML = '<p class="dash-empty">Nachrichten konnten nicht geladen werden.</p>'
+  }
+}
+
 // ── TAB 3: Shop-Einstellungen ──
 function fuelleShopForm () {
   const f = document.getElementById('shop-form')
@@ -414,6 +525,8 @@ function fuelleShopForm () {
   f.oeffnungszeiten.value = shop.oeffnungszeiten || ''
   f.logo_url.value = shop.logo_url || ''
   f.banner_url.value = shop.banner_url || ''
+  const msgToggle = document.getElementById('sf-messaging')
+  if (msgToggle) msgToggle.checked = !!shop.messaging_enabled
 }
 
 function initShopForm () {
@@ -430,7 +543,8 @@ function initShopForm () {
       adresse: form.adresse.value.trim() || null,
       oeffnungszeiten: form.oeffnungszeiten.value.trim() || null,
       logo_url: form.logo_url.value.trim() || null,
-      banner_url: form.banner_url.value.trim() || null
+      banner_url: form.banner_url.value.trim() || null,
+      messaging_enabled: document.getElementById('sf-messaging')?.checked ?? false
     }
 
     if (!updates.name) {
@@ -516,6 +630,7 @@ async function init () {
 
   ladeReservierungen()
   ladeProdukte()
+  ladeNachrichten()
   ladeKategorienDropdown()
   fuelleShopForm()
 }

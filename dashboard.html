@@ -82,6 +82,7 @@
           <div class="dash-tabs" role="tablist">
             <button class="dash-tab is-active" data-tab="reservierungen" role="tab">Reservierungen</button>
             <button class="dash-tab" data-tab="produkte" role="tab">Produkte</button>
+            <button class="dash-tab" data-tab="nachrichten" role="tab">Nachrichten <span class="dash-tab__badge" id="nachrichten-badge" hidden></span></button>
             <button class="dash-tab" data-tab="einstellungen" role="tab">Shop-Einstellungen</button>
           </div>
 
@@ -137,6 +138,16 @@
             </div>
           </div>
 
+          <!-- TAB 4: Nachrichten -->
+          <div class="dash-panel" data-panel="nachrichten" hidden>
+            <div class="dash-panel__toolbar">
+              <h2>Nachrichten</h2>
+            </div>
+            <div id="nachrichten-content">
+              <div class="loading">Nachrichten werden geladen…</div>
+            </div>
+          </div>
+
           <!-- TAB 3: Shop-Einstellungen -->
           <div class="dash-panel" data-panel="einstellungen" hidden>
             <h2 class="dash-panel__heading">Shop-Einstellungen</h2>
@@ -164,6 +175,16 @@
               <div class="form-group">
                 <label class="form-label" for="sf-banner">Banner-URL</label>
                 <input class="form-input" type="url" id="sf-banner" name="banner_url" placeholder="https://…">
+              </div>
+              <div class="form-group dash-toggle-row">
+                <div>
+                  <span class="form-label">Direktnachrichten</span>
+                  <p class="dash-toggle-row__desc">Käufer können dir über die Shop-Seite direkt eine Nachricht schicken.</p>
+                </div>
+                <label class="dash-toggle">
+                  <input type="checkbox" id="sf-messaging" name="messaging_enabled">
+                  <span class="dash-toggle__slider"></span>
+                </label>
               </div>
               <div>
                 <button class="btn btn--primary" type="submit">Speichern</button>

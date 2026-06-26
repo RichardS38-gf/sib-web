@@ -1,6 +1,7 @@
-// js/shop.js — SIB Shopseite v6
+// js/shop.js — SIB Shopseite v7
 // Lädt ein Geschäft (per slug) aus Supabase.
 // Sektionen: Galerie → Info-Bar → Willkommen → Artikel → Bewertungen → Info-Tabelle
+// Chat-Modal wenn messaging_enabled = true
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
@@ -45,7 +46,6 @@ function avatarHtml (name) {
   return `<span class="bw-avatar" style="background:${colors[hue]}">${initials}</span>`
 }
 
-// ── Mobile-Menü ──
 function initMobileMenu () {
   const burger = document.querySelector('.site-header__burger')
   const menu = document.getElementById('mobile-menu')
@@ -86,7 +86,6 @@ function renderGalerie (shop) {
     ? shop.galerie.filter(Boolean)
     : shop.banner_url ? [shop.banner_url] : []
 
-  // Hero immer einblenden (Infobar ist immer da)
   document.getElementById('shop-hero').hidden = false
 
   if (bilder.length === 0) return
@@ -136,6 +135,17 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
     ? `mailto:${esc(shop.email)}`
     : `mailto:support@shoppeninbraunschweig.de?subject=${encodeURIComponent('Nachricht an ' + shop.name)}`
 
+  // Chat-Button oder mailto je nach messaging_enabled
+  const msgBtn = shop.messaging_enabled
+    ? `<button class="btn btn--primary shop-infobar__msg" id="chat-open-btn" type="button">
+        Nachricht
+        <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2z"/></svg>
+      </button>`
+    : `<a class="btn btn--primary shop-infobar__msg" href="${kontaktHref}">
+        Nachricht
+        <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2z"/></svg>
+      </a>`
+
   el.innerHTML = `
     <div class="shop-infobar__left">
       ${logo}
@@ -152,11 +162,84 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
       </div>
     </div>
     <div class="shop-infobar__actions">
-      <a class="btn btn--primary shop-infobar__msg" href="${kontaktHref}">
-        Nachricht
-        <svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16"><path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2z"/></svg>
-      </a>
+      ${msgBtn}
     </div>`
+}
+
+// ─────────────────────────────────────────
+// CHAT MODAL
+// ─────────────────────────────────────────
+function initChatModal (shop) {
+  if (!shop.messaging_enabled) return
+
+  const overlay  = document.getElementById('chat-overlay')
+  const openBtn  = document.getElementById('chat-open-btn')
+  const closeBtn = document.getElementById('chat-modal-close')
+  const form     = document.getElementById('chat-form')
+  const feedback = document.getElementById('chat-feedback')
+  const success  = document.getElementById('chat-success')
+  const submitBtn = document.getElementById('chat-submit')
+
+  if (!overlay || !openBtn) return
+
+  // Titel mit Shop-Name befüllen
+  document.getElementById('chat-modal-title').textContent = `Nachricht an ${shop.name}`
+
+  function openModal () {
+    overlay.hidden = false
+    document.body.style.overflow = 'hidden'
+    setTimeout(() => document.getElementById('chat-name')?.focus(), 50)
+  }
+
+  function closeModal () {
+    overlay.hidden = true
+    document.body.style.overflow = ''
+  }
+
+  openBtn.addEventListener('click', openModal)
+  closeBtn.addEventListener('click', closeModal)
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal() })
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.hidden) closeModal() })
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    feedback.innerHTML = ''
+
+    const nameVal  = form.querySelector('[name="name"]').value.trim()
+    const emailVal = form.querySelector('[name="email"]').value.trim()
+    const textVal  = form.querySelector('[name="text"]').value.trim()
+
+    if (!nameVal || !emailVal || !textVal) {
+      feedback.innerHTML = '<div class="error-msg">Bitte alle Felder ausfüllen.</div>'
+      return
+    }
+
+    submitBtn.disabled = true
+    submitBtn.textContent = 'Wird gesendet…'
+
+    try {
+      const { data: chat, error: chatErr } = await supabase
+        .from('chats')
+        .insert({ shop_id: shop.id, sender_name: nameVal, sender_email: emailVal })
+        .select('id')
+        .single()
+      if (chatErr) throw chatErr
+
+      const { error: msgErr } = await supabase
+        .from('chat_nachrichten')
+        .insert({ chat_id: chat.id, text: textVal, von_haendler: false })
+      if (msgErr) throw msgErr
+
+      form.hidden = true
+      success.hidden = false
+      setTimeout(closeModal, 2500)
+    } catch (err) {
+      console.error('Nachricht senden fehlgeschlagen:', err)
+      feedback.innerHTML = '<div class="error-msg">Die Nachricht konnte nicht gesendet werden.</div>'
+      submitBtn.disabled = false
+      submitBtn.textContent = 'Nachricht senden'
+    }
+  })
 }
 
 // ─────────────────────────────────────────
@@ -166,7 +249,7 @@ function renderAbout (shop) {
   if (!shop.beschreibung && !shop.bild_url && !shop.banner_url) return
 
   const section = document.getElementById('shop-about')
-  const inner = document.getElementById('shop-about-inner')
+  const inner   = document.getElementById('shop-about-inner')
   section.hidden = false
 
   const willkommenBild = shop.bild_url || (
@@ -219,14 +302,13 @@ function renderProduktBatch (shop) {
       </a>`
   }).join('')
 
-  const mehrWrap = document.getElementById('shop-mehr-wrap')
-  mehrWrap.hidden = gezeigte >= alleProdukte.length
+  document.getElementById('shop-mehr-wrap').hidden = gezeigte >= alleProdukte.length
 }
 
 async function ladeProdukte (shop) {
-  const section = document.getElementById('shop-produkte-section')
+  const section   = document.getElementById('shop-produkte-section')
   const container = document.getElementById('shop-produkte')
-  const titel = document.getElementById('shop-produkte-titel')
+  const titel     = document.getElementById('shop-produkte-titel')
   section.hidden = false
   container.innerHTML = '<div class="loading">Artikel werden geladen…</div>'
 
@@ -242,7 +324,6 @@ async function ladeProdukte (shop) {
     if (error) throw error
     alleProdukte = data || []
     gezeigte = 0
-
     titel.textContent = `Artikel (${alleProdukte.length})`
 
     if (alleProdukte.length === 0) {
@@ -252,7 +333,6 @@ async function ladeProdukte (shop) {
 
     renderProduktBatch(shop)
     document.getElementById('shop-mehr-btn').addEventListener('click', () => renderProduktBatch(shop))
-
     return alleProdukte.length
   } catch (err) {
     console.error('Artikel konnten nicht geladen werden:', err)
@@ -336,8 +416,8 @@ async function ladeBewertungen (shop) {
 }
 
 function initBewertungForm (shop) {
-  const toggle = document.getElementById('toggle-bewertung-form')
-  const form = document.getElementById('bewertung-form')
+  const toggle   = document.getElementById('toggle-bewertung-form')
+  const form     = document.getElementById('bewertung-form')
   const feedback = document.getElementById('bewertung-feedback')
   const sternBtns = Array.from(document.querySelectorAll('#sterne-input .stern'))
 
@@ -361,9 +441,9 @@ function initBewertungForm (shop) {
     e.preventDefault()
     feedback.innerHTML = ''
 
-    const nameVal = form.querySelector('[name="name"]').value.trim()
+    const nameVal  = form.querySelector('[name="name"]').value.trim()
     const emailVal = form.querySelector('[name="email"]').value.trim()
-    const textVal = form.querySelector('[name="text"]').value.trim()
+    const textVal  = form.querySelector('[name="text"]').value.trim()
 
     if (!nameVal || !emailVal) {
       feedback.innerHTML = '<div class="error-msg">Bitte Name und E-Mail ausfüllen.</div>'
@@ -397,7 +477,7 @@ function initBewertungForm (shop) {
       ladeBewertungen(shop)
     } catch (err) {
       console.error('Bewertung speichern fehlgeschlagen:', err)
-      feedback.innerHTML = '<div class="error-msg">Konnte nicht gespeichert werden. Bitte später erneut versuchen.</div>'
+      feedback.innerHTML = '<div class="error-msg">Konnte nicht gespeichert werden.</div>'
       submitBtn.disabled = false
       submitBtn.textContent = 'Absenden'
     }
@@ -405,7 +485,7 @@ function initBewertungForm (shop) {
 }
 
 // ─────────────────────────────────────────
-// 6. INFO-TABELLE (AGB, Versand, etc.)
+// 6. INFO-TABELLE
 // ─────────────────────────────────────────
 function renderInfoTabelle (shop) {
   const felder = [
@@ -420,7 +500,7 @@ function renderInfoTabelle (shop) {
   if (vorhandene.length === 0) return
 
   const section = document.getElementById('shop-info-tabelle')
-  const body = document.getElementById('shop-info-tabelle-body')
+  const body    = document.getElementById('shop-info-tabelle-body')
   section.hidden = false
 
   body.innerHTML = vorhandene.map(f => `
@@ -438,10 +518,7 @@ async function init () {
   initHeaderSearch()
 
   const slug = getSlug()
-  if (!slug) {
-    notFound('Kein Geschäft angegeben.')
-    return
-  }
+  if (!slug) { notFound('Kein Geschäft angegeben.'); return }
 
   try {
     const { data: shop, error } = await supabase
@@ -456,26 +533,18 @@ async function init () {
     showLoading(false)
     if (shop.name) document.title = `${shop.name} — Shoppen in Braunschweig`
 
-    // Galerie (zeigt auch den Hero-Wrapper)
     renderGalerie(shop)
 
-    // Artikel + Bewertungen parallel laden
     const [produktAnzahl, { schnitt, anzahl }] = await Promise.all([
       ladeProdukte(shop),
       ladeBewertungen(shop)
     ])
 
-    // Info-Bar (braucht Produkt- und Bewertungszahlen)
     renderInfoBar(shop, produktAnzahl || 0, schnitt, anzahl)
-
-    // Willkommen / About
     renderAbout(shop)
-
-    // AGB-Tabelle
     renderInfoTabelle(shop)
-
-    // Bewertungsformular
     initBewertungForm(shop)
+    initChatModal(shop)
 
   } catch (err) {
     console.error('Geschäft konnte nicht geladen werden:', err)
