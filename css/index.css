@@ -273,11 +273,10 @@
   position: relative;
   padding-top: var(--space-7);
   padding-bottom: var(--space-7);
-  /* Optional: Stadt-Foto via --cta-bg-image setzen; sonst sauberes Schwarz */
   background-color: var(--color-dark);
   background-image:
-    linear-gradient(rgba(15, 15, 15, 0.6), rgba(15, 15, 15, 0.6)),
-    var(--cta-bg-image, none);
+    linear-gradient(rgba(15, 15, 15, 0.55), rgba(15, 15, 15, 0.55)),
+    url('../Bilder/anatol-rurac-js0hfo30UwY-unsplash.jpg');
   background-size: cover;
   background-position: center;
 }
