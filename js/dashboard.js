@@ -671,6 +671,20 @@ async function init () {
   ladeNachrichten()
   ladeKategorienDropdown()
   fuelleShopForm()
+
+  // Nachrichten-Badge alle 30s aktualisieren
+  setInterval(async () => {
+    const badge = document.getElementById('nachrichten-badge')
+    if (!badge) return
+    const { data } = await supabase
+      .from('chats')
+      .select('id', { count: 'exact' })
+      .eq('shop_id', shop.id)
+      .eq('gelesen', false)
+    const n = data?.length ?? 0
+    badge.hidden = n === 0
+    badge.textContent = n > 0 ? String(n) : ''
+  }, 30000)
 }
 
 init()
