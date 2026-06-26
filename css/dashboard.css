@@ -314,6 +314,28 @@ textarea.form-input {
 .chat-item__email { color: var(--color-muted); font-size: var(--text-xs); }
 .chat-item__date  { color: var(--color-muted); font-size: var(--text-xs); }
 
+.chat-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.chat-item__del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-muted);
+  padding: 0.2rem;
+  border-radius: 4px;
+  display: flex;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.chat-item:hover .chat-item__del { opacity: 1; }
+.chat-item__del:hover { color: #ef4444; }
+
 .chat-item__dot {
   width: 10px;
   height: 10px;

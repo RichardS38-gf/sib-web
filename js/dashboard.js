@@ -459,7 +459,12 @@ async function ladeNachrichten () {
               <span class="chat-item__email">${esc(chat.sender_email)}</span>
               <span class="chat-item__date">${formatDatum(chat.erstellt_am)}</span>
             </div>
-            ${unread ? '<span class="chat-item__dot" aria-label="Ungelesen"></span>' : ''}
+            <div class="chat-item__actions">
+              ${unread ? '<span class="chat-item__dot" aria-label="Ungelesen"></span>' : ''}
+              <button class="chat-item__del" data-del-chat="${esc(chat.id)}" title="Chat löschen" type="button">
+                <svg viewBox="0 0 24 24" width="14" height="14"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+              </button>
+            </div>
           </div>
           <p class="chat-item__preview">${esc((ersteMsg?.text || '').slice(0, 120))}${(ersteMsg?.text?.length || 0) > 120 ? '…' : ''}</p>
           <div class="chat-thread" id="thread-${esc(chat.id)}" hidden>
@@ -491,6 +496,24 @@ async function ladeNachrichten () {
           await supabase.from('chats').update({ gelesen: true }).eq('id', id)
           const newUnread = el.querySelectorAll('.chat-item--unread').length
           if (badge) { badge.hidden = newUnread === 0; badge.textContent = newUnread > 0 ? String(newUnread) : '' }
+        }
+      })
+    })
+
+    // Chat löschen
+    el.querySelectorAll('.chat-item__del').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation()
+        const chatId = btn.dataset.delChat
+        if (!confirm('Chat wirklich löschen?')) return
+        try {
+          // Nachrichten zuerst (kein CASCADE in DB)
+          await supabase.from('chat_nachrichten').delete().eq('chat_id', chatId)
+          const { error } = await supabase.from('chats').delete().eq('id', chatId)
+          if (error) throw error
+          ladeNachrichten()
+        } catch (err) {
+          alert('Fehler beim Löschen: ' + (err?.message || err))
         }
       })
     })
