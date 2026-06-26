@@ -82,6 +82,7 @@
 .shop-infobar-wrap {
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
+  margin-top: -2rem;
 }
 
 .shop-infobar {
@@ -95,7 +96,7 @@
 .shop-infobar__left {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
 }
 
