@@ -247,6 +247,15 @@
   gap: 0.3rem;
   font-size: var(--text-xs);
   color: var(--color-muted);
+  margin-bottom: 0.1rem;
+}
+
+.product-card__rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
   margin-bottom: 0.3rem;
 }
 

@@ -86,14 +86,15 @@ function produktKarte (p, ratings) {
   const shopName = p.shops?.name || 'Lokaler Händler'
   const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
   const r = ratings[p.shop_id]
-  const meta = (r && r.anzahl > 0)
-    ? `<span class="product-card__stars">★</span> <span class="product-card__rating-val">${(r.summe / r.anzahl).toFixed(1).replace('.', ',')}</span> <span class="product-card__count">(${r.anzahl})</span> von ${esc(shopName)}`
-    : `von ${esc(shopName)}`
+  const ratingHtml = (r && r.anzahl > 0)
+    ? `<span class="product-card__rating"><span class="product-card__stars">★</span> <span class="product-card__rating-val">${(r.summe / r.anzahl).toFixed(1).replace('.', ',')}</span> <span class="product-card__count">(${r.anzahl})</span></span>`
+    : ''
   return `
     <a class="product-card" href="produkt.html?id=${id}">
       ${neuBadge(p)}${bild}
       <span class="product-card__title">${esc(p.titel)}</span>
-      <span class="product-card__meta">${meta}</span>
+      <span class="product-card__meta">von ${esc(shopName)}</span>
+      ${ratingHtml}
       <span class="product-card__price">${esc(preis)}</span>
     </a>`
 }
