@@ -179,72 +179,64 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
 }
 
 // ─────────────────────────────────────────
-// CHAT WIDGET — WhatsApp-Style
-// Panel startet GESCHLOSSEN. Öffnet nur per Trigger oder Nachricht-Button.
-// Name/Email nur beim ersten Senden abgefragt (kompakt inline).
+// CHAT WIDGET
+// Bubble erscheint erst nach erster Nachricht.
+// Kein Name, kein Email — vollständig anonym.
+// Session speichert Shop-Info für globalen Widget auf anderen Seiten.
 // ─────────────────────────────────────────
 function initChatWidget (shop) {
   if (!shop.messaging_enabled) return
 
-  const widget   = document.getElementById('chat-widget')
+  const widget   = document.getElementById('chat-widget')   // bubble
   const trigger  = document.getElementById('chat-trigger')
-  const panel    = document.getElementById('chat-panel')
+  const panel    = document.getElementById('chat-panel')    // panel separat
   const closeBtn = document.getElementById('chat-panel-close')
   const messages = document.getElementById('chat-messages')
-  const identity = document.getElementById('chat-identity')
-  const nameIn   = document.getElementById('chat-id-name')
-  const emailIn  = document.getElementById('chat-id-email')
   const input    = document.getElementById('chat-input')
   const sendBtn  = document.getElementById('chat-send')
   const badge    = document.getElementById('chat-trigger-badge')
-  const iconOpen  = trigger.querySelector('.chat-trigger__icon--open')
-  const iconClose = trigger.querySelector('.chat-trigger__icon--close')
+  const iconOpen  = trigger?.querySelector('.chat-trigger__icon--open')
+  const iconClose = trigger?.querySelector('.chat-trigger__icon--close')
 
-  if (!widget) return
+  if (!widget || !panel) return
 
-  // Widget sichtbar (nur Trigger-Button), Panel GESCHLOSSEN
-  widget.hidden = false
-  panel.hidden  = true
+  // Panel: hidden überschreiben damit CSS nicht interferiert
+  panel.style.display = 'none'
+  widget.hidden = true
 
   // Header
   document.getElementById('chat-panel-name').textContent = shop.name
   const logoEl = document.getElementById('chat-panel-logo')
   if (shop.logo_url) { logoEl.src = shop.logo_url; logoEl.hidden = false }
 
-  // Session aus localStorage
   const SESSION_KEY = `sib_chat_${shop.id}`
   let session = null
   try { session = JSON.parse(localStorage.getItem(SESSION_KEY)) } catch {}
 
   let pollTimer = null
-  let lastHaendlerCount = 0
   let isOpen = false
+  let lastHaendlerCount = 0
 
-  // ── Panel öffnen / schließen ──
+  // Wenn Kunde schon gechattet hat: Bubble sofort zeigen
+  if (session?.chat_id) {
+    widget.hidden = false
+  }
+
+  // ── Panel öffnen/schließen ──
   function openPanel () {
     isOpen = true
-    panel.hidden = false
-    trigger.setAttribute('aria-expanded', 'true')
+    panel.style.display = 'flex'
     if (iconOpen)  iconOpen.style.display  = 'none'
     if (iconClose) iconClose.style.display = 'block'
     badge.hidden = true
-    badge.textContent = ''
-
-    if (session?.chat_id) {
-      identity.hidden = true
-      loadMessages()
-      startPolling()
-    } else {
-      identity.hidden = false
-      messages.innerHTML = '<p class="chat-empty">Schreib uns einfach!</p>'
-    }
-    setTimeout(() => input.focus(), 100)
+    if (session?.chat_id) { loadMessages(); startPolling() }
+    else messages.innerHTML = '<p class="chat-empty">Schreib uns!</p>'
+    setTimeout(() => input.focus(), 80)
   }
 
   function closePanel () {
     isOpen = false
-    panel.hidden = true
-    trigger.setAttribute('aria-expanded', 'false')
+    panel.style.display = 'none'
     if (iconOpen)  iconOpen.style.display  = 'block'
     if (iconClose) iconClose.style.display = 'none'
     stopPolling()
@@ -252,22 +244,20 @@ function initChatWidget (shop) {
 
   trigger.addEventListener('click', () => isOpen ? closePanel() : openPanel())
   closeBtn.addEventListener('click', closePanel)
+
+  // Nachricht-Button in Infobar
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('#chat-open-btn')
-    if (btn) { e.preventDefault(); if (!isOpen) openPanel() }
+    if (btn) { e.preventDefault(); openPanel() }
   })
 
-  // ── Nachrichten rendern ──
+  // ── Nachrichten ──
   function renderMessages (msgs) {
-    if (msgs.length === 0) {
-      messages.innerHTML = '<p class="chat-empty">Noch keine Nachrichten.</p>'
-      return
-    }
+    if (!msgs.length) { messages.innerHTML = '<p class="chat-empty">Noch keine Nachrichten.</p>'; return }
     let lastDay = ''
     messages.innerHTML = msgs.map(m => {
       const day = new Date(m.erstellt_am).toDateString()
-      const sep = day !== lastDay
-        ? `<div class="chat-date-sep">${formatDatum(m.erstellt_am)}</div>` : ''
+      const sep = day !== lastDay ? `<div class="chat-date-sep">${formatDatum(m.erstellt_am)}</div>` : ''
       lastDay = day
       return `${sep}<div class="chat-msg ${m.von_haendler ? 'chat-msg--in' : 'chat-msg--out'}">
         <div class="chat-msg__bubble">${esc(m.text)}</div>
@@ -282,67 +272,66 @@ function initChatWidget (shop) {
     try {
       const { data } = await supabase
         .from('chat_nachrichten').select('*')
-        .eq('chat_id', session.chat_id)
-        .order('erstellt_am', { ascending: true })
+        .eq('chat_id', session.chat_id).order('erstellt_am', { ascending: true })
       const msgs = data || []
       renderMessages(msgs)
-      const haendlerCount = msgs.filter(m => m.von_haendler).length
-      if (!isOpen && haendlerCount > lastHaendlerCount) {
-        badge.hidden = false
-        badge.textContent = haendlerCount - lastHaendlerCount
-      }
-      lastHaendlerCount = haendlerCount
-    } catch (err) { console.error('Chat laden:', err) }
+      const hc = msgs.filter(m => m.von_haendler).length
+      if (!isOpen && hc > lastHaendlerCount) { badge.hidden = false; badge.textContent = hc - lastHaendlerCount }
+      lastHaendlerCount = hc
+    } catch (e) { console.error('Chat laden:', e) }
   }
 
   function startPolling () { stopPolling(); pollTimer = setInterval(loadMessages, 10000) }
   function stopPolling  () { if (pollTimer) { clearInterval(pollTimer); pollTimer = null } }
 
-  // ── Nachricht senden ──
+  // ── Senden (vollständig anonym) ──
   async function sendMessage () {
     const text = input.value.trim()
     if (!text) return
+    sendBtn.disabled = true
 
-    if (!session?.chat_id) {
-      const name  = nameIn?.value.trim()  || ''
-      const email = emailIn?.value.trim() || ''
-      if (!name)  { nameIn?.focus();  return }
-      if (!email) { emailIn?.focus(); return }
-
-      sendBtn.disabled = true
-      try {
+    try {
+      if (!session?.chat_id) {
+        // Erste Nachricht: Chat anonym anlegen
         const { data: chat, error: e1 } = await supabase
           .from('chats')
-          .insert({ shop_id: shop.id, sender_name: name, sender_email: email })
+          .insert({ shop_id: shop.id, sender_name: 'Anonym' })
           .select('id').single()
         if (e1) throw e1
+
         const { error: e2 } = await supabase
           .from('chat_nachrichten')
           .insert({ chat_id: chat.id, text, von_haendler: false })
         if (e2) throw e2
-        session = { chat_id: chat.id, name, email }
+
+        // Session mit Shop-Info speichern (für globalen Widget auf anderen Seiten)
+        session = {
+          chat_id: chat.id,
+          shop_name: shop.name,
+          shop_logo: shop.logo_url || null,
+          shop_slug: shop.slug || ''
+        }
         localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+
         input.value = ''
-        identity.hidden = true
+        input.style.height = 'auto'
+        widget.hidden = false   // Bubble erscheint erstmals
         await loadMessages()
         startPolling()
-      } catch (err) {
-        console.error('Chat starten:', err)
-      } finally { sendBtn.disabled = false }
-      return
-    }
+        return
+      }
 
-    input.value = ''
-    input.style.height = 'auto'
-    sendBtn.disabled = true
-    try {
-      await supabase.from('chat_nachrichten')
+      // Folge-Nachricht
+      const { error } = await supabase.from('chat_nachrichten')
         .insert({ chat_id: session.chat_id, text, von_haendler: false })
+      if (error) throw error
       await supabase.from('chats')
-        .update({ aktualisiert_am: new Date().toISOString() })
-        .eq('id', session.chat_id)
+        .update({ aktualisiert_am: new Date().toISOString() }).eq('id', session.chat_id)
+      input.value = ''
+      input.style.height = 'auto'
       await loadMessages()
-    } catch (err) { console.error('Senden:', err); input.value = text }
+
+    } catch (err) { console.error('Senden:', err) }
     finally { sendBtn.disabled = false; input.focus() }
   }
 

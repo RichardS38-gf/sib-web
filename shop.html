@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css?v=3">
   <link rel="stylesheet" href="css/components.css?v=6">
-  <link rel="stylesheet" href="css/shop.css?v=7">
+  <link rel="stylesheet" href="css/shop.css?v=8">
 </head>
 <body>
 
@@ -154,38 +154,36 @@
         <div class="shop-info-tabelle__body" id="shop-info-tabelle-body"></div>
       </div>
     </section>
-    <!-- Chat Widget -->
+    <!-- Chat Bubble (erscheint erst nach erster Nachricht) -->
     <div class="chat-widget" id="chat-widget" hidden>
       <button class="chat-trigger" id="chat-trigger" type="button" aria-label="Chat öffnen" aria-expanded="false">
         <svg class="chat-trigger__icon--open" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         <svg class="chat-trigger__icon--close" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="display:none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>
         <span class="chat-trigger__badge" id="chat-trigger-badge" hidden></span>
       </button>
-      <div class="chat-panel" id="chat-panel" hidden>
-        <div class="chat-panel__head">
-          <div class="chat-panel__shop">
-            <img class="chat-panel__logo" id="chat-panel-logo" src="" alt="" hidden>
-            <div>
-              <span class="chat-panel__name" id="chat-panel-name"></span>
-              <span class="chat-panel__status">Schreib uns</span>
-            </div>
+    </div>
+
+    <!-- Chat Panel (unabhängig positioniert) -->
+    <div class="chat-panel" id="chat-panel" hidden>
+      <div class="chat-panel__head">
+        <div class="chat-panel__shop">
+          <img class="chat-panel__logo" id="chat-panel-logo" src="" alt="" hidden>
+          <div>
+            <span class="chat-panel__name" id="chat-panel-name"></span>
+            <span class="chat-panel__status">Schreib uns</span>
           </div>
-          <button class="chat-panel__close" id="chat-panel-close" type="button" aria-label="Schließen">
-            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
-          </button>
         </div>
-        <div class="chat-messages" id="chat-messages"></div>
-        <div class="chat-footer">
-          <div class="chat-identity" id="chat-identity" hidden>
-            <input class="chat-identity__input" type="text" id="chat-id-name" placeholder="Dein Name" autocomplete="name">
-            <input class="chat-identity__input" type="email" id="chat-id-email" placeholder="Deine E-Mail" autocomplete="email">
-          </div>
-          <div class="chat-input-wrap">
-            <textarea class="chat-input" id="chat-input" placeholder="Nachricht…" rows="1" aria-label="Nachricht"></textarea>
-            <button class="chat-send" id="chat-send" type="button" aria-label="Senden">
-              <svg viewBox="0 0 24 24" width="18" height="18"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-            </button>
-          </div>
+        <button class="chat-panel__close" id="chat-panel-close" type="button" aria-label="Schließen">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+        </button>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-footer">
+        <div class="chat-input-wrap">
+          <textarea class="chat-input" id="chat-input" placeholder="Nachricht…" rows="1" aria-label="Nachricht"></textarea>
+          <button class="chat-send" id="chat-send" type="button" aria-label="Senden">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -237,6 +235,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/shop.js?v=10"></script>
+  <script type="module" src="js/shop.js?v=11"></script>
 </body>
 </html>

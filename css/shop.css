@@ -543,8 +543,12 @@
   border: 2px solid white;
 }
 
-/* Chat Panel */
+/* Chat Panel — unabhängig von .chat-widget positioniert */
+.chat-panel[hidden] { display: none !important; }
 .chat-panel {
+  position: fixed;
+  bottom: 5rem;
+  right: 1.5rem;
   width: 360px;
   max-height: 520px;
   background: var(--color-bg);
@@ -554,6 +558,7 @@
   flex-direction: column;
   overflow: hidden;
   animation: chatSlideUp 0.2s ease;
+  z-index: 900;
 }
 
 @keyframes chatSlideUp {
