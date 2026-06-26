@@ -124,7 +124,7 @@
 .hero__eyebrow {
   display: inline-block;
   margin-bottom: var(--space-3);
-  padding: 0.35rem 0.9rem;
+  padding: 0.55rem 1.4rem;
   background-color: #ECEEF0;
   color: var(--color-ink);
   border: none;
@@ -132,7 +132,7 @@
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
-  font-size: var(--text-sm);
+  font-size: var(--text-lg);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -174,26 +174,22 @@
 .hero__search-input:focus { border-color: var(--color-ink); }
 .hero__search-input::placeholder { color: var(--color-muted); }
 
+.hero__cta {
+  margin-top: var(--space-2);
+  align-self: flex-start;
+}
+
 /* Asymmetrische, abgerundete Bild-Collage (wie Entwurf) */
 .hero__collage {
-  column-count: 2;
-  column-gap: var(--space-2);
+  display: flex;
+  align-items: flex-start;
 }
 
-.hero__tile {
-  break-inside: avoid;
-  margin-bottom: var(--space-2);
-  overflow: hidden;
-  border-radius: var(--radius-md);
-  background-color: var(--color-bg-soft);
+.hero__collage-img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
-
-.hero__tile:nth-child(1) { aspect-ratio: 5 / 4; }
-.hero__tile:nth-child(2) { aspect-ratio: 4 / 5; }
-.hero__tile:nth-child(3) { aspect-ratio: 4 / 5; }
-.hero__tile:nth-child(4) { aspect-ratio: 5 / 4; }
-
-.hero__tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 @media (min-width: 1024px) {
   .hero__grid { grid-template-columns: 1.1fr 0.9fr; }
