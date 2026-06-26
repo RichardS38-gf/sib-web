@@ -7,13 +7,13 @@
   <meta name="description" content="Impressum und Anbieterkennzeichnung — Shoppen in Braunschweig.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/layout.css">
-  <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/legal.css?v=1">
+  <link rel="stylesheet" href="css/layout.css?v=3">
+  <link rel="stylesheet" href="css/components.css?v=5">
+  <link rel="stylesheet" href="css/legal.css?v=2">
 </head>
 <body>
 
@@ -28,16 +28,17 @@
         </a>
 
         <form class="site-header__search" role="search" action="suche.html" method="get">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 20.3l-5.4-5.4a7.5 7.5 0 1 0-1.4 1.4l5.4 5.4a1 1 0 0 0 1.4-1.4zM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z"/></svg>
           <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
         </form>
 
         <nav class="site-header__nav" aria-label="Hauptnavigation">
+          <a href="kategorie.html">Artikel</a>
           <a href="geschaefte.html">Geschäfte</a>
-          <a href="kategorie.html">Produkte</a>
         </nav>
 
         <div class="site-header__actions">
-          <a class="btn btn--outline-light site-header__desktop-only" href="haendler-login.html">Anmelden</a>
+          <a class="site-header__textlink site-header__desktop-only" href="haendler-login.html">Anmelden</a>
           <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Händler werden</a>
           <button class="site-header__burger" type="button" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
             <span></span><span></span><span></span>
@@ -50,7 +51,7 @@
         <form class="site-header__mobile-search" role="search" action="suche.html" method="get">
           <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
         </form>
-        <a href="kategorie.html">Produkte</a>
+        <a href="kategorie.html">Artikel</a>
         <a href="geschaefte.html">Geschäfte</a>
         <a href="newsletter.html">Newsletter</a>
         <a class="btn btn--outline-light btn--full" href="haendler-login.html">Anmelden</a>
