@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css?v=3">
   <link rel="stylesheet" href="css/components.css?v=6">
-  <link rel="stylesheet" href="css/suche.css?v=2">
+  <link rel="stylesheet" href="css/suche.css?v=3">
 </head>
 <body>
 
@@ -71,7 +71,16 @@
           <p class="page-head__subtext" id="suche-anzahl">Suche läuft…</p>
         </div>
 
-        <!-- Ergebnis-Grid -->
+        <!-- Händler-Ergebnisse (nur wenn Match) -->
+        <div id="haendler-section" hidden>
+          <h2 class="suche-section-title">Händler</h2>
+          <div class="suche-haendler-grid" id="haendler-ergebnisse"></div>
+        </div>
+
+        <!-- Produkt-Header (nur wenn auch Händler gefunden) -->
+        <h2 class="suche-section-title" id="produkte-section-title" hidden>Produkte</h2>
+
+        <!-- Produkt-Ergebnisse -->
         <div class="suche-grid" id="ergebnisse">
           <div class="loading">Suche läuft…</div>
         </div>

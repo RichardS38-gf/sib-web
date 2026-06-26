@@ -1,6 +1,6 @@
 // js/suche.js — SIB Produktsuche
-// Sucht in Produkttitel, Beschreibung und Shop-Name (ilike).
-// Nur Produkte mit verfuegbar=true UND freigegeben=true.
+// Sucht in Produkttitel, Beschreibung, Shop-Name und Shop-Tabelle direkt.
+// Ergebnisse werden in Händler + Produkte aufgeteilt.
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
@@ -15,17 +15,15 @@ function esc (value) {
     .replace(/"/g, '&quot;')
 }
 
-// "Neu"-Badge: nur für verfügbare, freigegebene Produkte < 7 Tage alt
 function neuBadge (p) {
   if (p.verfuegbar === false || p.freigegeben !== true) return ''
-  const t = p.erstellt_am ? new Date(p.erstellt_am).getTime() : NaN
-  if (isNaN(t)) return ''
+  const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
+  if (!t) return ''
   return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
-    ? '<span class="product-card__badge">Neu</span>'
+    ? '<span class="product-card__badge">NEU</span>'
     : ''
 }
 
-// ── Mobile-Menü ──
 function initMobileMenu () {
   const burger = document.querySelector('.site-header__burger')
   const menu = document.getElementById('mobile-menu')
@@ -42,11 +40,52 @@ function getQuery () {
   return (new URLSearchParams(window.location.search).get('q') || '').trim()
 }
 
-function renderProdukte (produkte) {
+// ── Händler-Karten rendern ──
+function renderHaendler (shops) {
+  const section = document.getElementById('haendler-section')
+  const container = document.getElementById('haendler-ergebnisse')
+  const produkteTitle = document.getElementById('produkte-section-title')
+
+  if (!shops || shops.length === 0) {
+    section.hidden = true
+    produkteTitle.hidden = true
+    return
+  }
+
+  section.hidden = false
+  produkteTitle.hidden = false
+
+  container.innerHTML = shops.map((s) => {
+    const slug = encodeURIComponent(s.slug || s.id)
+    const banner = s.banner_url
+      ? `<img class="suche-haendler-card__banner" src="${esc(s.banner_url)}" alt="${esc(s.name)}" loading="lazy">`
+      : '<div class="suche-haendler-card__banner"></div>'
+    const logo = s.logo_url
+      ? `<img class="suche-haendler-card__logo" src="${esc(s.logo_url)}" alt="" loading="lazy">`
+      : '<div class="suche-haendler-card__logo"></div>'
+    const adresse = s.adresse
+      ? `<span class="suche-haendler-card__adresse">${esc(s.adresse)}</span>`
+      : ''
+    return `
+      <a class="suche-haendler-card" href="shop.html?slug=${slug}">
+        ${banner}
+        <div class="suche-haendler-card__body">
+          <div class="suche-haendler-card__head">
+            ${logo}
+            <span class="suche-haendler-card__name">${esc(s.name)}</span>
+          </div>
+          ${adresse}
+        </div>
+      </a>`
+  }).join('')
+}
+
+// ── Produkt-Karten rendern ──
+function renderProdukte (produkte, q) {
   const container = document.getElementById('ergebnisse')
 
   if (produkte.length === 0) {
-    container.innerHTML = `<p class="suche-empty">Keine Produkte für „${esc(getQuery())}" gefunden.</p>`
+    container.innerHTML = `<p class="suche-empty">Keine Produkte für „${esc(q)}" gefunden.</p>`
     return
   }
 
@@ -87,14 +126,12 @@ async function init () {
     return
   }
 
-  // Begriff für den or-Filter entschärfen (Komma/Klammern/Stern brechen die Syntax)
   const safe = q.replace(/[,()*]/g, ' ').trim()
   const ilikePattern = `%${q}%`
 
   try {
-    // 1) Treffer in Titel/Beschreibung (eigene Spalten)
-    // 2) Treffer im Shop-Namen (referenzierte Tabelle, inner join)
-    const [textRes, shopRes] = await Promise.all([
+    const [textRes, shopNameProductRes, shopRes] = await Promise.all([
+      // Produkte: Treffer in Titel oder Beschreibung
       supabase
         .from('produkte')
         .select('*, shops(name, slug)')
@@ -102,29 +139,52 @@ async function init () {
         .eq('freigegeben', true)
         .or(`titel.ilike.*${safe}*,beschreibung.ilike.*${safe}*`)
         .order('erstellt_am', { ascending: false }),
+
+      // Produkte: Treffer im Shop-Namen
       supabase
         .from('produkte')
         .select('*, shops!inner(name, slug)')
         .eq('verfuegbar', true)
         .eq('freigegeben', true)
         .ilike('shops.name', ilikePattern)
-        .order('erstellt_am', { ascending: false })
+        .order('erstellt_am', { ascending: false }),
+
+      // Händler: direkt in der shops-Tabelle suchen
+      supabase
+        .from('shops')
+        .select('id, name, slug, adresse, logo_url, banner_url')
+        .ilike('name', ilikePattern)
+        .order('name')
     ])
 
     if (textRes.error) throw textRes.error
-    if (shopRes.error) throw shopRes.error
+    if (shopNameProductRes.error) throw shopNameProductRes.error
 
-    // Zusammenführen + nach id deduplizieren
+    // Produkte zusammenführen + deduplizieren
     const map = new Map()
-    ;[...(textRes.data || []), ...(shopRes.data || [])].forEach((p) => {
+    ;[...(textRes.data || []), ...(shopNameProductRes.data || [])].forEach((p) => {
       if (!map.has(p.id)) map.set(p.id, p)
     })
     const produkte = [...map.values()].sort((a, b) =>
       String(b.erstellt_am || '').localeCompare(String(a.erstellt_am || ''))
     )
 
-    anzahlEl.textContent = `${produkte.length} ${produkte.length === 1 ? 'Treffer' : 'Treffer'}`
-    renderProdukte(produkte)
+    const shops = shopRes?.data || []
+    const total = produkte.length + shops.length
+    anzahlEl.textContent = `${total} ${total === 1 ? 'Treffer' : 'Treffer'}`
+
+    // Händler rendern (zeigt/versteckt Sektion automatisch)
+    renderHaendler(shops)
+
+    // Produkte rendern
+    if (produkte.length === 0 && shops.length > 0) {
+      // Nur Händler gefunden — Produkte-Sektion leer lassen
+      container.innerHTML = ''
+      document.getElementById('produkte-section-title').hidden = true
+    } else {
+      renderProdukte(produkte, q)
+    }
+
   } catch (err) {
     console.error('Suche fehlgeschlagen:', err)
     anzahlEl.textContent = ''
