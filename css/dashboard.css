@@ -261,6 +261,9 @@ textarea.form-input {
   font-size: var(--text-sm);
 }
 
+/* hidden-Attribut sichern (CSS display überschreibt sonst [hidden]) */
+.dash-tab__badge[hidden] { display: none !important; }
+
 /* ── Nachrichten-Tab ── */
 .dash-tab__badge {
   display: inline-flex;

@@ -410,21 +410,36 @@ async function ladeNachrichten () {
   const el = document.getElementById('nachrichten-content')
   const badge = document.getElementById('nachrichten-badge')
   try {
-    // Chats + erste Nachricht laden
-    const { data: chats, error } = await supabase
+    // 1) Chats des Shops laden
+    const { data: chats, error: e1 } = await supabase
       .from('chats')
-      .select('*, chat_nachrichten(id, text, von_haendler, erstellt_am)')
+      .select('id, sender_name, sender_email, gelesen, erstellt_am, aktualisiert_am')
       .eq('shop_id', shop.id)
       .order('aktualisiert_am', { ascending: false })
-
-    if (error) throw error
+    if (e1) throw e1
     const alle = chats || []
 
-    // Ungelesene zählen
+    // 2) Alle Nachrichten dieser Chats laden (separate Query = zuverlässiger)
+    let msgByChat = {}
+    if (alle.length > 0) {
+      const { data: nachrichten, error: e2 } = await supabase
+        .from('chat_nachrichten')
+        .select('id, chat_id, text, von_haendler, erstellt_am')
+        .in('chat_id', alle.map(c => c.id))
+        .order('erstellt_am', { ascending: true })
+      if (!e2) {
+        ;(nachrichten || []).forEach(m => {
+          if (!msgByChat[m.chat_id]) msgByChat[m.chat_id] = []
+          msgByChat[m.chat_id].push(m)
+        })
+      }
+    }
+
+    // Badge: nur bei ungelesenen Nachrichten
     const ungelesen = alle.filter(c => !c.gelesen).length
     if (badge) {
       badge.hidden = ungelesen === 0
-      badge.textContent = ungelesen
+      badge.textContent = ungelesen > 0 ? String(ungelesen) : ''
     }
 
     if (alle.length === 0) {
@@ -433,9 +448,8 @@ async function ladeNachrichten () {
     }
 
     el.innerHTML = alle.map((chat) => {
-      const nachrichten = (chat.chat_nachrichten || []).sort((a, b) =>
-        new Date(a.erstellt_am) - new Date(b.erstellt_am))
-      const ersteMsg = nachrichten[0]
+      const msgs = msgByChat[chat.id] || []
+      const ersteMsg = msgs[0]
       const unread = !chat.gelesen
       return `
         <div class="chat-item ${unread ? 'chat-item--unread' : ''}" data-chat-id="${esc(chat.id)}">
@@ -447,10 +461,10 @@ async function ladeNachrichten () {
             </div>
             ${unread ? '<span class="chat-item__dot" aria-label="Ungelesen"></span>' : ''}
           </div>
-          <p class="chat-item__preview">${esc(ersteMsg?.text?.slice(0, 120) || '')}${(ersteMsg?.text?.length || 0) > 120 ? '…' : ''}</p>
+          <p class="chat-item__preview">${esc((ersteMsg?.text || '').slice(0, 120))}${(ersteMsg?.text?.length || 0) > 120 ? '…' : ''}</p>
           <div class="chat-thread" id="thread-${esc(chat.id)}" hidden>
             <div class="chat-thread__nachrichten">
-              ${nachrichten.map(m => `
+              ${msgs.map(m => `
                 <div class="chat-bubble ${m.von_haendler ? 'chat-bubble--haendler' : 'chat-bubble--kunde'}">
                   <p>${esc(m.text)}</p>
                   <span class="chat-bubble__zeit">${formatDatum(m.erstellt_am)}</span>
@@ -465,7 +479,7 @@ async function ladeNachrichten () {
         </div>`
     }).join('')
 
-    // Toggle Thread + als gelesen markieren
+    // Thread aufklappen + als gelesen markieren
     el.querySelectorAll('.chat-item').forEach(item => {
       item.querySelector('.chat-item__head').addEventListener('click', async () => {
         const id = item.dataset.chatId
@@ -475,8 +489,8 @@ async function ladeNachrichten () {
           item.classList.remove('chat-item--unread')
           item.querySelector('.chat-item__dot')?.remove()
           await supabase.from('chats').update({ gelesen: true }).eq('id', id)
-          const newUnread = document.querySelectorAll('.chat-item--unread').length
-          if (badge) { badge.hidden = newUnread === 0; badge.textContent = newUnread }
+          const newUnread = el.querySelectorAll('.chat-item--unread').length
+          if (badge) { badge.hidden = newUnread === 0; badge.textContent = newUnread > 0 ? String(newUnread) : '' }
         }
       })
     })
@@ -491,8 +505,7 @@ async function ladeNachrichten () {
         const text = textarea.value.trim()
         if (!text) return
         const btn = form.querySelector('button')
-        btn.disabled = true
-        btn.textContent = '…'
+        btn.disabled = true; btn.textContent = '…'
         try {
           const { error } = await supabase.from('chat_nachrichten')
             .insert({ chat_id: chatId, text, von_haendler: true })
@@ -504,14 +517,13 @@ async function ladeNachrichten () {
           ladeNachrichten()
         } catch (err) {
           fb.innerHTML = '<span class="error-msg">Senden fehlgeschlagen.</span>'
-          btn.disabled = false
-          btn.textContent = 'Antworten'
+          btn.disabled = false; btn.textContent = 'Antworten'
         }
       })
     })
 
   } catch (err) {
-    console.error('Nachrichten konnten nicht geladen werden:', err)
+    console.error('Nachrichten laden:', err)
     el.innerHTML = '<p class="dash-empty">Nachrichten konnten nicht geladen werden.</p>'
   }
 }
