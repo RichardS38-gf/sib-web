@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard } from './product-card.js'
+import { renderProductCard, fetchShopRatings } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -334,7 +334,10 @@ async function ladeWeitere (produkt) {
     const shopName = produkt.shops?.name || 'diesem Geschäft'
     titel.textContent = `Weitere Artikel von ${shopName}`
 
-    container.innerHTML = weitere.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler')).join('')
+    const shopIdsW = [...new Set(weitere.map(p => p.shop_id).filter(Boolean))]
+    const shopRatingW = await fetchShopRatings(supabase, shopIdsW)
+
+    container.innerHTML = weitere.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler', shopRatingW[p.shop_id] || null)).join('')
 
     section.hidden = false
   } catch (err) {
@@ -378,7 +381,10 @@ async function ladeAehnliche (produkt) {
 
     const auswahl = mischen(kandidaten).slice(0, 4)
 
-    container.innerHTML = auswahl.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler')).join('')
+    const shopIdsA = [...new Set(auswahl.map(p => p.shop_id).filter(Boolean))]
+    const shopRatingA = await fetchShopRatings(supabase, shopIdsA)
+
+    container.innerHTML = auswahl.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler', shopRatingA[p.shop_id] || null)).join('')
 
     section.hidden = false
   } catch (err) {

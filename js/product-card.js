@@ -22,6 +22,29 @@ function neuBadge (p) {
 }
 
 /**
+ * Lädt Shop-Bewertungen für eine Liste von shop_ids.
+ * @param {object} supabase  - Supabase-Client
+ * @param {string[]} shopIds - Array von UUIDs
+ * @returns {object} ratings - { [shop_id]: { summe, anzahl } }
+ */
+export async function fetchShopRatings (supabase, shopIds) {
+  const ratings = {}
+  if (!shopIds?.length) return ratings
+  try {
+    const { data } = await supabase
+      .from('bewertungen')
+      .select('shop_id, sterne')
+      .in('shop_id', shopIds)
+    ;(data || []).forEach(b => {
+      const r = ratings[b.shop_id] || (ratings[b.shop_id] = { summe: 0, anzahl: 0 })
+      r.summe += (b.sterne || 0)
+      r.anzahl += 1
+    })
+  } catch (e) { console.error('Ratings laden:', e) }
+  return ratings
+}
+
+/**
  * @param {object} p           - Produkt-Objekt aus Supabase
  * @param {string} shopName    - Anzeigename des Shops
  * @param {object|null} rating - Optional: { summe, anzahl } vom Shop
@@ -40,14 +63,17 @@ export function renderProductCard (p, shopName, rating = null) {
     : `<span class="product-card__price">${esc(preis)}</span>`
   const shop = shopName || p.shops?.name || 'Lokaler Händler'
 
-  // Sterne-Bewertung (nur wenn Daten vorhanden)
+  // Sterne — immer anzeigen, Platzhalter wenn keine Daten
   const ratingHtml = (rating && rating.anzahl > 0)
     ? `<div class="product-card__rating">
         <span class="product-card__stars">★</span>
         <span class="product-card__rating-val">${(rating.summe / rating.anzahl).toFixed(1).replace('.', ',')}</span>
         <span class="product-card__rating-count">(${rating.anzahl})</span>
        </div>`
-    : ''
+    : `<div class="product-card__rating">
+        <span class="product-card__stars">★</span>
+        <span class="product-card__rating-count">Noch keine Bewertungen (0)</span>
+       </div>`
 
   return `
     <div class="product-card">

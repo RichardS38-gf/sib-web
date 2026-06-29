@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard } from './product-card.js'
+import { renderProductCard, fetchShopRatings } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -90,7 +90,13 @@ function renderProdukte (produkte, q) {
     return
   }
 
-  container.innerHTML = produkte.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler')).join('')
+  const shopIds = [...new Set(produkte.map(p => p.shop_id).filter(Boolean))]
+  const ratings = await fetchShopRatings(supabase, shopIds)
+  container.innerHTML = produkte.map((p) => renderProductCard(
+    p,
+    p.shops?.name || 'Lokaler Händler',
+    ratings[p.shop_id] || null
+  )).join('')
 }
 
 // ── Init ──

@@ -3,7 +3,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard } from './product-card.js'
+import { renderProductCard, fetchShopRatings } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -100,24 +100,8 @@ async function ladeProdukte () {
       return
     }
 
-    // Shop-Bewertungen (Durchschnitt + Anzahl) für die geladenen Shops holen
-    const shopIds = [...new Set(alle.map((p) => p.shop_id).filter(Boolean))]
-    const ratings = {}
-    if (shopIds.length > 0) {
-      const { data: bew } = await supabase
-        .from('bewertungen')
-        .select('shop_id, sterne')
-        .in('shop_id', shopIds)
-      ;(bew || []).forEach((b) => {
-        const r = ratings[b.shop_id] || (ratings[b.shop_id] = { summe: 0, anzahl: 0 })
-        r.summe += (b.sterne || 0)
-        r.anzahl += 1
-      })
-    }
-    const avgOf = (id) => {
-      const r = ratings[id]
-      return r && r.anzahl > 0 ? r.summe / r.anzahl : null
-    }
+    const shopIds = [...new Set(alle.map(p => p.shop_id).filter(Boolean))]
+    const ratings = await fetchShopRatings(supabase, shopIds)
 
     // Neu: neueste zuerst (freigegeben_am wenn vorhanden, sonst erstellt_am), Top 5
     const neu = [...alle]

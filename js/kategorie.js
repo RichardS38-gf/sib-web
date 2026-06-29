@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard } from './product-card.js'
+import { renderProductCard, fetchShopRatings } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -48,7 +48,8 @@ function getParams () {
 // Zustand
 let alleProdukte = []
 let aktiverSlug = null
-let haendlerById = {} // shop_id -> name
+let haendlerById = {}
+let shopRatings = {}  // shop_id -> { summe, anzahl }
 const state = {
   min: null,
   max: null,
@@ -98,7 +99,11 @@ function renderProdukte (produkte) {
     container.innerHTML = '<p class="kategorie-empty">Keine Produkte für diese Auswahl gefunden.</p>'
     return
   }
-  container.innerHTML = produkte.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler')).join('')
+  container.innerHTML = produkte.map((p) => renderProductCard(
+    p,
+    p.shops?.name || 'Lokaler Händler',
+    shopRatings[p.shop_id] || null
+  )).join('')
 }
 
 function renderTags () {
@@ -266,6 +271,10 @@ async function init () {
     const { data, error } = await query
     if (error) throw error
     alleProdukte = data || []
+
+    // Ratings für alle geladenen Shops holen
+    const shopIds = [...new Set(alleProdukte.map(p => p.shop_id).filter(Boolean))]
+    shopRatings = await fetchShopRatings(supabase, shopIds)
 
     fuelleHaendler()
     anwenden()
