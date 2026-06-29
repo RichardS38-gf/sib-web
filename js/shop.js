@@ -123,11 +123,11 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
     : `<div class="shop-infobar__logo shop-infobar__logo--placeholder">${esc((shop.name || '?').slice(0, 1).toUpperCase())}</div>`
 
   const ort = shop.adresse
-    ? `<span class="shop-infobar__ort"><svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:4px;vertical-align:-2px;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(shop.adresse)}</span>`
+    ? `<span class="shop-infobar__ort"><svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:4px;vertical-align:-2px;flex-shrink:0;color:#0D0D0D" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(shop.adresse)}</span>`
     : ''
 
   const emailZeile = shop.email
-    ? `<span class="shop-infobar__ort"><svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:4px;vertical-align:-2px;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><a href="mailto:${esc(shop.email)}" style="color:inherit">${esc(shop.email)}</a></span>`
+    ? `<span class="shop-infobar__ort"><svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:4px;vertical-align:-2px;flex-shrink:0;color:#0D0D0D" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><a href="mailto:${esc(shop.email)}" style="color:inherit;text-decoration:underline">${esc(shop.email)}</a></span>`
     : ''
 
   const ratingStr = bewertungAnzahl > 0
