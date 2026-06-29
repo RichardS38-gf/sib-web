@@ -33,29 +33,22 @@
   background: var(--color-bg-soft);
 }
 
-.pdp-gallery__thumbs {
+.pdp-gallery__thumbs,
+.pdp-gallery__thumb { display: none; } /* nicht mehr genutzt */
+
+.pdp-gallery__grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
 
-.pdp-gallery__thumb {
-  aspect-ratio: 1 / 1;
+.pdp-gallery__grid-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
   object-fit: cover;
   border-radius: var(--radius-sm);
-  cursor: pointer;
-  opacity: 0.55;
-  border: 2px solid transparent;
-  transition: opacity 0.2s, border-color 0.2s;
   display: block;
-  width: 100%;
-}
-
-.pdp-gallery__thumb:hover { opacity: 0.85; }
-.pdp-gallery__thumb.is-active {
-  opacity: 1;
-  border-color: var(--color-ink);
 }
 
 /* ─── Info-Box ─── */

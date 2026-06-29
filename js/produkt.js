@@ -121,8 +121,8 @@ function renderDetail (produkt, varianten = []) {
     : '<div class="pdp-gallery__main" id="gallery-main"></div>'
 
   const thumbsHtml = bilder.length > 1
-    ? `<div class="pdp-gallery__thumbs">${bilder.map((b, i) =>
-        `<img class="pdp-gallery__thumb${i === 0 ? ' is-active' : ''}" src="${esc(b)}" alt="${esc(produkt.titel)} ${i + 1}" data-src="${esc(b)}" loading="lazy">`
+    ? `<div class="pdp-gallery__grid">${bilder.slice(1).map((b, i) =>
+        `<img class="pdp-gallery__grid-img" src="${esc(b)}" alt="${esc(produkt.titel)} ${i + 2}" loading="lazy">`
       ).join('')}</div>`
     : ''
 
