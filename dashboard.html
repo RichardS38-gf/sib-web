@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/dashboard.css?v=8">
+  <link rel="stylesheet" href="css/dashboard.css?v=9">
 </head>
 <body>
 
@@ -145,6 +145,17 @@
             </div>
             <div id="nachrichten-content">
               <div class="loading">Nachrichten werden geladen…</div>
+            </div>
+            <!-- Chat-Fenster (wird per JS befüllt) -->
+            <div class="dash-chat" id="dash-chat" hidden>
+              <div class="dash-chat__tabs" id="dash-chat-tabs"></div>
+              <div class="dash-chat__messages" id="dash-chat-messages"></div>
+              <div class="dash-chat__footer">
+                <textarea class="dash-chat__input" id="dash-chat-input" placeholder="Antwort schreiben…" rows="1"></textarea>
+                <button class="dash-chat__send" id="dash-chat-send" type="button">
+                  <svg viewBox="0 0 24 24" width="18" height="18"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                </button>
+              </div>
             </div>
           </div>
 

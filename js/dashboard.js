@@ -407,10 +407,16 @@ function initProduktForm () {
 
 // ── TAB 4: Nachrichten ──
 async function ladeNachrichten () {
-  const el = document.getElementById('nachrichten-content')
-  const badge = document.getElementById('nachrichten-badge')
+  const statusEl = document.getElementById('nachrichten-content')
+  const chatEl   = document.getElementById('dash-chat')
+  const tabsEl   = document.getElementById('dash-chat-tabs')
+  const msgsEl   = document.getElementById('dash-chat-messages')
+  const input    = document.getElementById('dash-chat-input')
+  const sendBtn  = document.getElementById('dash-chat-send')
+  const badge    = document.getElementById('nachrichten-badge')
+
   try {
-    // 1) Chats des Shops laden
+    // 1) Chats laden
     const { data: chats, error: e1 } = await supabase
       .from('chats')
       .select('id, sender_name, sender_email, gelesen, erstellt_am, aktualisiert_am')
@@ -419,138 +425,131 @@ async function ladeNachrichten () {
     if (e1) throw e1
     const alle = chats || []
 
-    // 2) Alle Nachrichten dieser Chats laden (separate Query = zuverlässiger)
+    // 2) Alle Nachrichten laden
     let msgByChat = {}
     if (alle.length > 0) {
-      const { data: nachrichten, error: e2 } = await supabase
+      const { data: nachrichten } = await supabase
         .from('chat_nachrichten')
         .select('id, chat_id, text, von_haendler, erstellt_am')
         .in('chat_id', alle.map(c => c.id))
         .order('erstellt_am', { ascending: true })
-      if (!e2) {
-        ;(nachrichten || []).forEach(m => {
-          if (!msgByChat[m.chat_id]) msgByChat[m.chat_id] = []
-          msgByChat[m.chat_id].push(m)
-        })
-      }
+      ;(nachrichten || []).forEach(m => {
+        if (!msgByChat[m.chat_id]) msgByChat[m.chat_id] = []
+        msgByChat[m.chat_id].push(m)
+      })
     }
 
-    // Badge: nur bei ungelesenen Nachrichten
+    // Badge
     const ungelesen = alle.filter(c => !c.gelesen).length
-    if (badge) {
-      badge.hidden = ungelesen === 0
-      badge.textContent = ungelesen > 0 ? String(ungelesen) : ''
-    }
+    if (badge) { badge.hidden = ungelesen === 0; badge.textContent = ungelesen > 0 ? String(ungelesen) : '' }
 
     if (alle.length === 0) {
-      el.innerHTML = '<p class="dash-empty">Noch keine Nachrichten.</p>'
+      statusEl.innerHTML = '<p class="dash-empty">Noch keine Nachrichten.</p>'
+      chatEl.hidden = true
       return
     }
 
-    el.innerHTML = alle.map((chat) => {
-      const msgs = msgByChat[chat.id] || []
-      const ersteMsg = msgs[0]
-      const unread = !chat.gelesen
-      return `
-        <div class="chat-item ${unread ? 'chat-item--unread' : ''}" data-chat-id="${esc(chat.id)}">
-          <div class="chat-item__head">
-            <div class="chat-item__meta">
-              <span class="chat-item__name">${esc(chat.sender_name)}</span>
-              <span class="chat-item__email">${esc(chat.sender_email)}</span>
-              <span class="chat-item__date">${formatDatum(chat.erstellt_am)}</span>
-            </div>
-            <div class="chat-item__actions">
-              ${unread ? '<span class="chat-item__dot" aria-label="Ungelesen"></span>' : ''}
-              <button class="chat-item__del" data-del-chat="${esc(chat.id)}" title="Chat löschen" type="button">
-                <svg viewBox="0 0 24 24" width="14" height="14"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-              </button>
-            </div>
-          </div>
-          <p class="chat-item__preview">${esc((ersteMsg?.text || '').slice(0, 120))}${(ersteMsg?.text?.length || 0) > 120 ? '…' : ''}</p>
-          <div class="chat-thread" id="thread-${esc(chat.id)}" hidden>
-            <div class="chat-thread__nachrichten">
-              ${msgs.map(m => `
-                <div class="chat-bubble ${m.von_haendler ? 'chat-bubble--haendler' : 'chat-bubble--kunde'}">
-                  <p>${esc(m.text)}</p>
-                  <span class="chat-bubble__zeit">${formatDatum(m.erstellt_am)}</span>
-                </div>`).join('')}
-            </div>
-            <form class="chat-reply" data-reply-chat="${esc(chat.id)}">
-              <textarea class="form-input chat-reply__input" rows="2" placeholder="Antwort schreiben…" required></textarea>
-              <button class="btn btn--primary" type="submit">Antworten</button>
-              <div class="chat-reply__feedback" aria-live="polite"></div>
-            </form>
-          </div>
-        </div>`
-    }).join('')
+    statusEl.innerHTML = ''
+    chatEl.hidden = false
 
-    // Thread aufklappen + als gelesen markieren
-    el.querySelectorAll('.chat-item').forEach(item => {
-      item.querySelector('.chat-item__head').addEventListener('click', async () => {
-        const id = item.dataset.chatId
-        const thread = document.getElementById(`thread-${id}`)
-        thread.hidden = !thread.hidden
-        if (!thread.hidden && item.classList.contains('chat-item--unread')) {
-          item.classList.remove('chat-item--unread')
-          item.querySelector('.chat-item__dot')?.remove()
-          await supabase.from('chats').update({ gelesen: true }).eq('id', id)
-          const newUnread = el.querySelectorAll('.chat-item--unread').length
-          if (badge) { badge.hidden = newUnread === 0; badge.textContent = newUnread > 0 ? String(newUnread) : '' }
-        }
+    let aktiveChat = alle[0]
+
+    // Reiter bauen
+    function buildTabs () {
+      tabsEl.innerHTML = alle.map((chat, i) => {
+        const preview = (msgByChat[chat.id]?.[0]?.text || '').slice(0, 22)
+        const unread  = !chat.gelesen
+        return `<button class="dash-chat__tab${chat.id === aktiveChat.id ? ' active' : ''}" data-chat-id="${esc(chat.id)}">
+          ${unread ? '<span class="dash-chat__tab-dot"></span>' : ''}
+          Chat ${i + 1}${preview ? ' · ' + esc(preview) + '…' : ''}
+          <button class="dash-chat__tab-del" data-del="${esc(chat.id)}" type="button" title="Löschen">×</button>
+        </button>`
+      }).join('')
+
+      tabsEl.querySelectorAll('.dash-chat__tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+          if (e.target.closest('.dash-chat__tab-del')) return
+          const id = tab.dataset.chatId
+          aktiveChat = alle.find(c => c.id === id)
+          // als gelesen markieren
+          if (!aktiveChat.gelesen) {
+            aktiveChat.gelesen = true
+            supabase.from('chats').update({ gelesen: true }).eq('id', id)
+            const nu = alle.filter(c => !c.gelesen).length
+            if (badge) { badge.hidden = nu === 0; badge.textContent = nu > 0 ? String(nu) : '' }
+          }
+          tabsEl.querySelectorAll('.dash-chat__tab').forEach(t =>
+            t.classList.toggle('active', t.dataset.chatId === id))
+          renderMessages(msgByChat[id] || [])
+        })
       })
-    })
 
-    // Chat löschen
-    el.querySelectorAll('.chat-item__del').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation()
-        const chatId = btn.dataset.delChat
-        if (!confirm('Chat wirklich löschen?')) return
-        try {
-          // Nachrichten zuerst (kein CASCADE in DB)
-          await supabase.from('chat_nachrichten').delete().eq('chat_id', chatId)
-          const { error } = await supabase.from('chats').delete().eq('id', chatId)
-          if (error) throw error
+      tabsEl.querySelectorAll('.dash-chat__tab-del').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation()
+          const id = btn.dataset.del
+          if (!confirm('Chat löschen?')) return
+          await supabase.from('chat_nachrichten').delete().eq('chat_id', id)
+          await supabase.from('chats').delete().eq('id', id)
           ladeNachrichten()
-        } catch (err) {
-          alert('Fehler beim Löschen: ' + (err?.message || err))
-        }
+        })
       })
-    })
+    }
 
-    // Antwort abschicken
-    el.querySelectorAll('.chat-reply').forEach(form => {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault()
-        const chatId = form.dataset.replyChat
-        const textarea = form.querySelector('textarea')
-        const fb = form.querySelector('.chat-reply__feedback')
-        const text = textarea.value.trim()
-        if (!text) return
-        const btn = form.querySelector('button')
-        btn.disabled = true; btn.textContent = '…'
-        try {
-          const { error } = await supabase.from('chat_nachrichten')
-            .insert({ chat_id: chatId, text, von_haendler: true })
-          if (error) throw error
-          await supabase.from('chats')
-            .update({ aktualisiert_am: new Date().toISOString() })
-            .eq('id', chatId)
-          textarea.value = ''
-          // Thread nach Reload wieder öffnen
-          await ladeNachrichten()
-          const reopened = document.getElementById(`thread-${chatId}`)
-          if (reopened) reopened.hidden = false
-        } catch (err) {
-          fb.innerHTML = `<span class="error-msg">${err?.message || 'Fehler'}</span>`
-          btn.disabled = false; btn.textContent = 'Antworten'
-        }
-      })
-    })
+    // Nachrichten rendern
+    function renderMessages (msgs) {
+      if (!msgs.length) {
+        msgsEl.innerHTML = '<p class="dash-empty" style="text-align:center;padding:2rem 0">Noch keine Nachrichten.</p>'
+        return
+      }
+      let lastDay = ''
+      msgsEl.innerHTML = msgs.map(m => {
+        const day = new Date(m.erstellt_am).toDateString()
+        const sep = day !== lastDay ? `<div class="dash-chat__date">${formatDatum(m.erstellt_am)}</div>` : ''
+        lastDay = day
+        return `${sep}<div class="dash-chat__msg ${m.von_haendler ? 'out' : 'in'}">
+          <div class="dash-chat__bubble">${esc(m.text)}</div>
+          <span class="dash-chat__time">${formatDatum(m.erstellt_am, { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>`
+      }).join('')
+      msgsEl.scrollTop = msgsEl.scrollHeight
+    }
+
+    buildTabs()
+    renderMessages(msgByChat[aktiveChat.id] || [])
+
+    // Senden
+    sendBtn.onclick = null
+    sendBtn.onclick = async () => {
+      const text = input.value.trim()
+      if (!text) return
+      sendBtn.disabled = true
+      try {
+        const { error } = await supabase.from('chat_nachrichten')
+          .insert({ chat_id: aktiveChat.id, text, von_haendler: true })
+        if (error) throw error
+        await supabase.from('chats')
+          .update({ aktualisiert_am: new Date().toISOString() }).eq('id', aktiveChat.id)
+        input.value = ''
+        if (!msgByChat[aktiveChat.id]) msgByChat[aktiveChat.id] = []
+        msgByChat[aktiveChat.id].push({ text, von_haendler: true, erstellt_am: new Date().toISOString() })
+        renderMessages(msgByChat[aktiveChat.id])
+      } catch (err) { alert(err?.message || 'Fehler') }
+      finally { sendBtn.disabled = false; input.focus() }
+    }
+
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendBtn.click() }
+    }
+    input.oninput = () => {
+      input.style.height = 'auto'
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px'
+    }
 
   } catch (err) {
     console.error('Nachrichten laden:', err)
-    el.innerHTML = `<p class="dash-empty" style="color:red">${err?.message || JSON.stringify(err)}</p>`
+    document.getElementById('nachrichten-content').innerHTML =
+      `<p class="dash-empty" style="color:red">${err?.message || JSON.stringify(err)}</p>`
   }
 }
 
