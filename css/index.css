@@ -196,8 +196,7 @@
   .hero__headline { font-size: var(--text-5xl); }
 }
 
-/* ── Section-Header: Link „Alle ansehen" als Pfeil ── */
-.section-header h2 { font-size: var(--text-3xl); }
+/* section-header h2 erbt Größe von base.css global */
 
 .section-link {
   font-weight: 500;
