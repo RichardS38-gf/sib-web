@@ -373,25 +373,29 @@ function initChatWidget (shop) {
 // 3. WILLKOMMEN / ABOUT
 // ─────────────────────────────────────────
 function renderAbout (shop) {
-  if (!shop.beschreibung && !shop.bild_url && !shop.banner_url) return
   const section = document.getElementById('shop-about')
   const inner   = document.getElementById('shop-about-inner')
   section.hidden = false
 
-  const willkommenBild = shop.bild_url || (
+  const bildUrl = shop.bild_url || (
     Array.isArray(shop.galerie) && shop.galerie.length > 1 ? shop.galerie[1] : null
   )
-  const bildHtml = willkommenBild
-    ? `<div class="shop-about__bild-wrap"><img class="shop-about__bild" src="${esc(willkommenBild)}" alt="${esc(shop.name)}" loading="lazy"></div>`
+  const bildHtml = bildUrl
+    ? `<div class="shop-about__bild-wrap">
+         <img class="shop-about__bild" src="${esc(bildUrl)}" alt="${esc(shop.name)}" loading="lazy">
+       </div>`
     : ''
+
   const beschreibung = shop.beschreibung
     ? shop.beschreibung.split('\n').filter(Boolean).map(p => `<p>${esc(p)}</p>`).join('')
     : ''
 
   inner.innerHTML = `
-    <h2 class="shop-about__headline">Willkommen bei ${esc(shop.name)}</h2>
-    ${bildHtml}
-    ${beschreibung ? `<div class="shop-about__text">${beschreibung}</div>` : ''}`
+    <div class="shop-about__inner-card">
+      <h2 class="shop-about__headline">Willkommen bei ${esc(shop.name)} ✨</h2>
+      ${bildHtml}
+      ${beschreibung ? `<div class="shop-about__text">${beschreibung}</div>` : ''}
+    </div>`
 }
 
 // ─────────────────────────────────────────
