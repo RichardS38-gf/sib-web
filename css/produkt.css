@@ -51,6 +51,12 @@
   display: block;
 }
 
+/* Erstes Bild im Grid = volle Breite (das breite Lifestyle-Bild) */
+.pdp-gallery__grid-img:first-child {
+  grid-column: 1 / -1;
+  aspect-ratio: 16 / 9;
+}
+
 /* Letztes Bild alleine in der Reihe → volle Breite */
 .pdp-gallery__grid-img:last-child:nth-child(odd) {
   grid-column: 1 / -1;
