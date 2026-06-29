@@ -69,8 +69,9 @@ async function ladeKategorien () {
 }
 
 // "Neu"-Badge und Karte werden jetzt von product-card.js geliefert
-function produktKarte (p) {
-  return renderProductCard(p, p.shops?.name || 'Lokaler Händler')
+function produktKarte (p, ratings) {
+  const rating = ratings?.[p.shop_id] || null
+  return renderProductCard(p, p.shops?.name || 'Lokaler Händler', rating)
 }
 
 // ── 4. Produkte: Neue und Beliebte als zwei separate Sektionen ──
@@ -132,13 +133,13 @@ async function ladeProdukte () {
 
     if (neueContainer) {
       neueContainer.innerHTML = neu.length > 0
-        ? neu.map((p) => produktKarte(p)).join('')
+        ? neu.map((p) => produktKarte(p, ratings)).join('')
         : '<p class="empty-state">Noch keine neuen Produkte.</p>'
     }
 
     if (beliebtContainer) {
       beliebtContainer.innerHTML = beliebt.length > 0
-        ? beliebt.map((p) => produktKarte(p)).join('')
+        ? beliebt.map((p) => produktKarte(p, ratings)).join('')
         : '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
     }
 

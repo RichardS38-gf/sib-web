@@ -408,13 +408,14 @@ function renderAbout (shop) {
 const PAGE_SIZE = 10
 let alleProdukte = []
 let gezeigte = 0
+let shopBewertungRating = null  // wird nach ladeBewertungen gesetzt
 
 function renderProduktBatch (shop) {
   const container = document.getElementById('shop-produkte')
   const batch = alleProdukte.slice(0, gezeigte + PAGE_SIZE)
   gezeigte = batch.length
 
-  container.innerHTML = batch.map((p) => renderProductCard(p, shop.name)).join('')
+  container.innerHTML = batch.map((p) => renderProductCard(p, shop.name, shopBewertungRating)).join('')
 
   document.getElementById('shop-mehr-wrap').hidden = gezeigte >= alleProdukte.length
 }
@@ -619,6 +620,12 @@ async function init () {
       ladeProdukte(shop),
       ladeBewertungen(shop)
     ])
+
+    // Bewertungsdaten für Produktkarten setzen + Karten neu rendern
+    if (anzahl > 0) {
+      shopBewertungRating = { summe: schnitt * anzahl, anzahl }
+      renderProduktBatch(shop)
+    }
 
     renderInfoBar(shop, produktAnzahl || 0, schnitt, anzahl)
     renderAbout(shop)

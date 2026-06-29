@@ -21,7 +21,12 @@ function neuBadge (p) {
     : ''
 }
 
-export function renderProductCard (p, shopName) {
+/**
+ * @param {object} p           - Produkt-Objekt aus Supabase
+ * @param {string} shopName    - Anzeigename des Shops
+ * @param {object|null} rating - Optional: { summe, anzahl } vom Shop
+ */
+export function renderProductCard (p, shopName, rating = null) {
   const id = encodeURIComponent(p.id)
   const bilder = Array.isArray(p.bilder) ? p.bilder.filter(Boolean) : []
   const bild = bilder[0]
@@ -35,6 +40,15 @@ export function renderProductCard (p, shopName) {
     : `<span class="product-card__price">${esc(preis)}</span>`
   const shop = shopName || p.shops?.name || 'Lokaler Händler'
 
+  // Sterne-Bewertung (nur wenn Daten vorhanden)
+  const ratingHtml = (rating && rating.anzahl > 0)
+    ? `<div class="product-card__rating">
+        <span class="product-card__stars">★</span>
+        <span class="product-card__rating-val">${(rating.summe / rating.anzahl).toFixed(1).replace('.', ',')}</span>
+        <span class="product-card__rating-count">(${rating.anzahl})</span>
+       </div>`
+    : ''
+
   return `
     <div class="product-card">
       <a class="product-card__img-link" href="produkt.html?id=${id}">
@@ -47,16 +61,9 @@ export function renderProductCard (p, shopName) {
         <a class="product-card__content" href="produkt.html?id=${id}">
           <span class="product-card__shop">${esc(shop)}</span>
           <span class="product-card__title">${esc(p.titel)}</span>
+          ${ratingHtml}
         </a>
-        <div class="product-card__footer">
-          <div class="product-card__prices">${preisHtml}</div>
-          <a class="product-card__cart" href="reservierung.html?id=${id}" aria-label="Reservieren">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
-            </svg>
-          </a>
-        </div>
+        <div class="product-card__prices">${preisHtml}</div>
       </div>
     </div>`
 }
