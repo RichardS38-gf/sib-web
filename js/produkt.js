@@ -390,6 +390,8 @@ function mischen (arr) {
 async function ladeAehnliche (produkt) {
   const section = document.getElementById('aehnliche-section')
   const container = document.getElementById('aehnliche')
+  section.hidden = false  // immer anzeigen
+
   if (!produkt.kategorie_id) return
 
   try {
