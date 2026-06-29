@@ -337,23 +337,38 @@
   letter-spacing: 2px;
 }
 
+/* Bewertungs-Summary */
+.shop-rating-summary__row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.shop-rating-star {
+  color: #f5a623;
+  font-size: 1.1rem;
+}
+
 .shop-rating-zahl {
   font-weight: 700;
-  color: var(--color-on-dark);
+  font-size: 1rem;
+  color: var(--color-ink);
 }
 
 .shop-rating-anzahl {
-  color: rgba(255,255,255,0.6);
+  color: var(--color-muted);
   font-size: var(--text-sm);
 }
 
 .shop-rating-leer {
-  color: rgba(255,255,255,0.5);
+  color: var(--color-muted);
   font-size: var(--text-sm);
 }
 
 .stern-on { color: #f5a623; }
-.stern-off { color: rgba(255,255,255,0.25); }
+.stern-off { color: #ddd; }
 
 /* Sektions-Header im Dark-Bereich */
 .section--dark .section-header h2 {
@@ -417,10 +432,14 @@
 
 /* Einzelne Bewertungskarte */
 .bw-karte {
+  background: var(--color-bg);
+  border: 0.5px solid var(--color-line);
+  border-radius: var(--radius-md);
   padding: var(--space-3);
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .bw-karte__kopf {
@@ -429,31 +448,16 @@
   gap: var(--space-2);
 }
 
-.bw-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 1rem;
-  color: #fff;
-  flex-shrink: 0;
-}
-
-.bw-karte__autor {
+.bw-karte__autor-datum {
   display: block;
   font-weight: 600;
   font-size: var(--text-sm);
-  color: var(--color-on-dark);
+  color: var(--color-ink);
 }
 
 .bw-karte__datum {
-  display: block;
-  font-size: var(--text-xs);
-  color: rgba(255,255,255,0.5);
+  font-weight: 400;
+  color: var(--color-muted);
 }
 
 .bw-karte__sterne {
@@ -464,7 +468,7 @@
 .bw-karte__text {
   font-size: var(--text-sm);
   line-height: 1.6;
-  color: rgba(255,255,255,0.8);
+  color: var(--color-ink);
 }
 
 .error-msg {

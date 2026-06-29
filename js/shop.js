@@ -466,12 +466,11 @@ function renderBewertungBatch () {
   gezeigteB = batch.length
 
   liste.innerHTML = batch.map((b) => `
-    <article class="bw-karte glass-card">
+    <article class="bw-karte">
       <div class="bw-karte__kopf">
         ${avatarHtml(b.autor_name)}
         <div>
-          <span class="bw-karte__autor">${esc(b.autor_name)}</span>
-          <span class="bw-karte__datum">am ${formatDatum(b.erstellt_am)}</span>
+          <span class="bw-karte__autor-datum">${esc(b.autor_name)} <span class="bw-karte__datum">am ${formatDatum(b.erstellt_am)}</span></span>
         </div>
       </div>
       <div class="bw-karte__sterne">${sterneHtml(b.sterne)}</div>
@@ -498,11 +497,13 @@ async function ladeBewertungen (shop) {
     const summary = document.getElementById('shop-rating-summary')
     if (alleBewertungen.length > 0) {
       summary.innerHTML = `
-        <span class="shop-rating-score">${sterneHtml(schnitt)}</span>
-        <span class="shop-rating-zahl">${schnitt.toFixed(1)}/5</span>
-        <span class="shop-rating-anzahl">(${alleBewertungen.length} Bewertung${alleBewertungen.length !== 1 ? 'en' : ''})</span>`
+        <div class="shop-rating-summary__row">
+          <span class="shop-rating-star">★</span>
+          <span class="shop-rating-zahl">${schnitt.toFixed(1)}/5</span>
+          <span class="shop-rating-anzahl">(${alleBewertungen.length} Bewertung${alleBewertungen.length !== 1 ? 'en' : ''})</span>
+        </div>`
     } else {
-      summary.innerHTML = '<span class="shop-rating-leer">Noch keine Bewertungen</span>'
+      summary.innerHTML = '<div class="shop-rating-summary__row"><span class="shop-rating-star">★</span><span class="shop-rating-leer">Noch keine Bewertungen (0)</span></div>'
     }
 
     if (alleBewertungen.length === 0) {
