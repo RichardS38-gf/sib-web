@@ -1,149 +1,168 @@
-/* produkt.css — SIB Produktseite */
+/* produkt.css — SIB Produktdetailseite */
 
-/* ── Zurück-Link ── */
 .product-back {
   display: inline-block;
   margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
 }
 
-/* ── Detail-Layout ── */
-.product-detail {
+/* ─── Layout: 2 Spalten ─── */
+.pdp-layout {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-5);
   align-items: start;
 }
 
-@media (min-width: 1024px) {
-  .product-detail { grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+@media (max-width: 768px) {
+  .pdp-layout { grid-template-columns: 1fr; }
 }
 
-/* ── Galerie (links) ── */
-.product-gallery {
+/* ─── Galerie ─── */
+.pdp-gallery {
   position: relative;
 }
 
-.product-gallery__main {
+.pdp-gallery__main {
   width: 100%;
   aspect-ratio: 3 / 4;
   object-fit: cover;
-  background-color: var(--color-bg-soft);
+  border-radius: var(--radius-md);
+  display: block;
+  background: var(--color-bg-soft);
 }
 
-.product-gallery__thumbs {
+.pdp-gallery__thumbs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.pdp-gallery__thumb {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0.55;
+  border: 2px solid transparent;
+  transition: opacity 0.2s, border-color 0.2s;
+  display: block;
+  width: 100%;
+}
+
+.pdp-gallery__thumb:hover { opacity: 0.85; }
+.pdp-gallery__thumb.is-active {
+  opacity: 1;
+  border-color: var(--color-ink);
+}
+
+/* ─── Info-Box ─── */
+.pdp-info {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--color-bg);
+  position: sticky;
+  top: 80px;
+}
+
+.pdp-info__title {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 0.4rem;
+}
+
+.pdp-info__shop {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  text-decoration: none;
+  margin-bottom: var(--space-2);
+}
+.pdp-info__shop:hover { color: var(--color-ink); }
+
+.pdp-info__price {
+  font-family: var(--font-sans);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin-bottom: 0;
+}
+
+/* Schwarzer Trenner */
+.pdp-divider {
+  border: none;
+  border-top: 2px solid var(--color-ink);
+  margin: var(--space-3) 0;
+}
+
+/* Kategorie */
+.pdp-meta-row {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+}
+.pdp-meta-label { color: var(--color-muted); min-width: 80px; }
+.pdp-meta-value { font-weight: 500; color: var(--color-ink); }
+
+/* Größe */
+.pdp-field { margin-bottom: var(--space-3); }
+.pdp-field__label {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin-bottom: 0.4rem;
+}
+
+/* Artikel reservieren */
+.pdp-section-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--text-base);
+  color: var(--color-ink);
+  margin-bottom: var(--space-2);
   margin-top: var(--space-2);
 }
 
-.product-gallery__thumb {
-  width: 72px;
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
-  background-color: var(--color-bg-soft);
-  cursor: pointer;
-  border: 1px solid var(--color-line);
-  transition: border-color var(--transition), opacity var(--transition);
+.pdp-form .form-group { margin-bottom: var(--space-2); }
+
+.pdp-cta {
+  margin-top: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
+.pdp-cta svg path { stroke: currentColor; }
 
-.product-gallery__thumb:hover { opacity: 0.85; }
-.product-gallery__thumb.is-active { border-color: var(--color-ink); }
-
-/* ── Info (rechts) ── */
-.product-info__shop {
-  display: inline-block;
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-muted);
-  margin-bottom: var(--space-2);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+/* Teilen */
+.pdp-share {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-line);
 }
-
-.product-info__title {
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: var(--text-4xl);
-  line-height: 1.15;
-  margin-bottom: var(--space-3);
-}
-
-.product-info__price {
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: var(--text-2xl);
-  margin-bottom: var(--space-3);
-}
-
-.product-info__desc {
-  font-weight: 300;
-  color: var(--color-ink);
-  margin-bottom: var(--space-4);
-  white-space: pre-line;
-}
-
-.product-info hr {
-  margin: var(--space-4) 0;
-}
-
-/* ── Größen-Auswahl (Dropdown) ── */
-.product-groessen {
-  margin-bottom: var(--space-4);
-}
-
-.product-groessen__label {
-  display: block;
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-muted);
-  margin-bottom: var(--space-2);
-}
-
-.product-groessen__select {
-  width: 100%;
-  max-width: 16rem;
-}
-
-/* ── Reservierungsformular ── */
-.reservierung__title {
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  font-weight: 500;
-  margin-bottom: var(--space-1);
-}
-
-.reservierung__hint {
+.pdp-share__label {
   font-size: var(--text-sm);
   color: var(--color-muted);
-  margin-bottom: var(--space-3);
+  margin-right: 0.25rem;
 }
 
-.reservierung-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
+/* Feedback */
+.reservierung-feedback { margin-top: var(--space-2); }
 
-.reservierung-form .form-group { gap: 0.4rem; }
-
-/* ── Status (nicht verfügbar) ── */
-.product-info__soldout {
-  display: inline-block;
-  margin-bottom: var(--space-3);
-}
-
-/* ── Nicht gefunden ── */
+/* Not found */
 .product-notfound {
-  padding: var(--space-6) 0;
   text-align: center;
-  color: var(--color-muted);
+  padding: var(--space-6) 0;
 }
-
-.product-notfound h1 {
-  font-size: var(--text-3xl);
-  color: var(--color-ink);
-  margin-bottom: var(--space-2);
-}
+.product-notfound h1 { margin-bottom: var(--space-2); }

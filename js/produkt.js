@@ -31,33 +31,21 @@ function esc (value) {
     .replace(/"/g, '&quot;')
 }
 
-// "Neu"-Badge: nur für verfügbare, freigegebene Produkte < 7 Tage alt
+// "Neu"-Badge
 function neuBadge (p) {
   if (p.verfuegbar === false || p.freigegeben !== true) return ''
   const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
   if (!t) return ''
   return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
-    ? '<span class="product-card__badge">NEU</span>'
+    ? '<span class="product-card__badge product-card__badge--neu">NEU</span>'
     : ''
 }
 
-// ── Social-Share ──
+// ── Social-Share Icons ──
 const SHARE_ICONS = {
   whatsapp: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.11 17.2c-.28-.14-1.65-.81-1.9-.9-.26-.1-.45-.14-.63.14-.19.28-.72.9-.88 1.08-.16.19-.32.21-.6.07-.28-.14-1.18-.43-2.25-1.39-.83-.74-1.39-1.65-1.55-1.93-.16-.28-.02-.43.12-.57.13-.13.28-.32.42-.48.14-.16.19-.28.28-.46.09-.19.05-.35-.02-.49-.07-.14-.63-1.51-.86-2.07-.23-.55-.46-.48-.63-.49h-.54c-.19 0-.49.07-.75.35-.26.28-.98.96-.98 2.33 0 1.37 1 2.7 1.14 2.89.14.19 1.97 3.01 4.78 4.22.67.29 1.19.46 1.6.59.67.21 1.28.18 1.76.11.54-.08 1.65-.67 1.88-1.32.23-.65.23-1.21.16-1.32-.07-.11-.26-.18-.54-.32z M12 2a10 10 0 00-8.6 15.06L2 22l5.06-1.33A10 10 0 1012 2zm0 18.2a8.18 8.18 0 01-4.17-1.14l-.3-.18-3 .79.8-2.92-.2-.31A8.2 8.2 0 1112 20.2z"/></svg>',
   facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.12 5.32H17V2.14A26.11 26.11 0 0014.26 2c-2.72 0-4.58 1.66-4.58 4.7v2.6H6.6v3.56h3.08V22h3.68v-9.14h3.06l.46-3.56h-3.52V7.05c0-1.03.28-1.73 1.76-1.73z"/></svg>',
   link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.9 12a3.1 3.1 0 013.1-3.1h4V7H7a5 5 0 000 10h4v-1.9H7A3.1 3.1 0 013.9 12zM8 13h8v-2H8v2zm9-6h-4v1.9h4A3.1 3.1 0 0117 15.1h-4V17h4a5 5 0 000-10z"/></svg>'
-}
-
-function shareRow (waText, url) {
-  const wa = `https://wa.me/?text=${encodeURIComponent(waText)}`
-  const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
-  return `
-    <div class="share-row">
-      <span class="share-row__label">Teilen:</span>
-      <a class="share-btn" href="${esc(wa)}" target="_blank" rel="noopener" aria-label="Auf WhatsApp teilen" title="WhatsApp">${SHARE_ICONS.whatsapp}</a>
-      <a class="share-btn" href="${esc(fb)}" target="_blank" rel="noopener" aria-label="Auf Facebook teilen" title="Facebook">${SHARE_ICONS.facebook}</a>
-      <button class="share-btn share-btn--copy" type="button" data-copy-url="${esc(url)}" aria-label="Link kopieren" title="Link kopieren">${SHARE_ICONS.link}</button>
-    </div>`
 }
 
 function initCopyButtons (root) {
@@ -84,7 +72,6 @@ function initCopyButtons (root) {
   })
 }
 
-// ── Mobile-Menü (wie auf der Startseite) ──
 function initMobileMenu () {
   const burger = document.querySelector('.site-header__burger')
   const menu = document.getElementById('mobile-menu')
@@ -97,7 +84,6 @@ function initMobileMenu () {
   })
 }
 
-// ── Produkt-ID aus URL ──
 function getProduktId () {
   return new URLSearchParams(window.location.search).get('id')
 }
@@ -124,16 +110,37 @@ function renderDetail (produkt, varianten = []) {
   const shopName = shop?.name || 'Lokaler Händler'
   const preis = (produkt.preis !== null && produkt.preis !== undefined) ? euro.format(produkt.preis) : ''
   const verfuegbar = produkt.verfuegbar !== false
+  const kategorieName = produkt.kategorien?.name || ''
 
-  // Status für Reservierung zurücksetzen
   selectedGroesse = null
   hatVarianten = varianten.length > 0
 
-  const groessenBlock = hatVarianten
-    ? `
-      <div class="product-groessen">
-        <label class="product-groessen__label" for="groesse-select">Größe wählen</label>
-        <select class="form-select product-groessen__select" id="groesse-select">
+  // Galerie
+  const mainImg = bilder[0]
+    ? `<img class="pdp-gallery__main" id="gallery-main" src="${esc(bilder[0])}" alt="${esc(produkt.titel)}">`
+    : '<div class="pdp-gallery__main" id="gallery-main"></div>'
+
+  const thumbsHtml = bilder.length > 1
+    ? `<div class="pdp-gallery__thumbs">${bilder.map((b, i) =>
+        `<img class="pdp-gallery__thumb${i === 0 ? ' is-active' : ''}" src="${esc(b)}" alt="${esc(produkt.titel)} ${i + 1}" data-src="${esc(b)}" loading="lazy">`
+      ).join('')}</div>`
+    : ''
+
+  // Shop-Link
+  const shopLink = shop?.slug
+    ? `<a class="pdp-info__shop" href="shop.html?slug=${encodeURIComponent(shop.slug)}">${esc(shopName)}</a>`
+    : `<span class="pdp-info__shop">${esc(shopName)}</span>`
+
+  // Kategorie
+  const kategorieHtml = kategorieName
+    ? `<div class="pdp-meta-row"><span class="pdp-meta-label">Kategorie</span><span class="pdp-meta-value">${esc(kategorieName)}</span></div>`
+    : ''
+
+  // Größe
+  const groesseHtml = hatVarianten
+    ? `<div class="pdp-field">
+        <label class="pdp-field__label" for="groesse-select">Größe</label>
+        <select class="form-select" id="groesse-select">
           <option value="">Bitte wählen…</option>
           ${sortiereVarianten(varianten).map((v) => {
             const ausverkauft = !(v.stueckzahl > 0)
@@ -141,60 +148,58 @@ function renderDetail (produkt, varianten = []) {
           }).join('')}
         </select>
       </div>`
-    : ''
+    : `<div class="pdp-field">
+        <label class="pdp-field__label" for="groesse-input">Größe</label>
+        <input class="form-input" type="text" id="groesse-input" name="groesse" placeholder="z.B. M, L, XL …">
+      </div>`
 
-  const mainImg = bilder[0]
-    ? `<img class="product-gallery__main" id="gallery-main" src="${esc(bilder[0])}" alt="${esc(produkt.titel)}">`
-    : '<div class="product-gallery__main" id="gallery-main"></div>'
+  // Reservierungsformular
+  const formularHtml = verfuegbar
+    ? `<p class="pdp-section-title">Artikel reservieren</p>
+      <div class="form-group">
+        <label class="form-label" for="kunde-name">Name</label>
+        <input class="form-input" type="text" id="kunde-name" name="name" required autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="kunde-email">E-Mail</label>
+        <input class="form-input" type="email" id="kunde-email" name="email" required autocomplete="email">
+      </div>
+      <button class="btn btn--primary btn--full pdp-cta" type="submit">
+        Reservieren
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>
+      </button>
+      <div id="reservierung-feedback" aria-live="polite"></div>`
+    : '<p class="badge badge--outline">Aktuell nicht verfügbar</p>'
 
-  const thumbs = bilder.length > 1
-    ? `<div class="product-gallery__thumbs">${bilder.map((b, i) =>
-        `<img class="product-gallery__thumb${i === 0 ? ' is-active' : ''}" src="${esc(b)}" alt="${esc(produkt.titel)} — Bild ${i + 1}" data-src="${esc(b)}" loading="lazy">`
-      ).join('')}</div>`
-    : ''
-
-  const shopLink = shop?.slug
-    ? `<a class="product-info__shop" href="shop.html?slug=${encodeURIComponent(shop.slug)}">${esc(shopName)}</a>`
-    : `<span class="product-info__shop" style="text-decoration:none">${esc(shopName)}</span>`
-
-  const beschreibung = produkt.beschreibung
-    ? `<p class="product-info__desc">${esc(produkt.beschreibung)}</p>`
-    : ''
-
-  const formularOderStatus = verfuegbar
-    ? `
-      ${groessenBlock}
-      <p class="reservierung__title">Artikel reservieren</p>
-      <p class="reservierung__hint">Reservieren, im Geschäft abholen — kein Account nötig. Die Reservierung gilt 7&nbsp;Tage.</p>
-      <form class="reservierung-form" id="reservierung-form" novalidate>
-        <div class="form-group">
-          <label class="form-label" for="kunde-name">Name</label>
-          <input class="form-input" type="text" id="kunde-name" name="name" required autocomplete="name">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="kunde-email">E-Mail</label>
-          <input class="form-input" type="email" id="kunde-email" name="email" required autocomplete="email">
-        </div>
-        <button class="btn btn--primary btn--full" type="submit">Reservieren</button>
-        <div id="reservierung-feedback" aria-live="polite"></div>
-      </form>`
-    : '<p class="badge badge--outline product-info__soldout">Aktuell nicht verfügbar</p>'
+  // Teilen
+  const url = window.location.href
+  const waText = `Schau mal: ${produkt.titel} bei ${shopName} auf Shoppen in Braunschweig – ${url}`
+  const wa = `https://wa.me/?text=${encodeURIComponent(waText)}`
+  const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
 
   el.innerHTML = `
-    <div class="product-detail">
-      <div class="product-gallery">
+    <div class="pdp-layout">
+      <div class="pdp-gallery">
         ${neuBadge(produkt)}
         ${mainImg}
-        ${thumbs}
+        ${thumbsHtml}
       </div>
-      <div class="product-info">
+      <div class="pdp-info">
+        <h1 class="pdp-info__title">${esc(produkt.titel)}</h1>
         ${shopLink}
-        <h1 class="product-info__title">${esc(produkt.titel)}</h1>
-        <p class="product-info__price">${esc(preis)}</p>
-        ${shareRow(`Schau mal: ${produkt.titel} bei ${shopName} auf Shoppen in Braunschweig – ${window.location.href}`, window.location.href)}
-        ${beschreibung}
-        <hr>
-        ${formularOderStatus}
+        <p class="pdp-info__price">${esc(preis)}</p>
+        <hr class="pdp-divider">
+        ${kategorieHtml}
+        ${groesseHtml}
+        <form class="pdp-form" id="reservierung-form" novalidate>
+          ${formularHtml}
+        </form>
+        <div class="pdp-share">
+          <span class="pdp-share__label">Teilen</span>
+          <a class="share-btn" href="${esc(wa)}" target="_blank" rel="noopener" aria-label="WhatsApp">${SHARE_ICONS.whatsapp}</a>
+          <a class="share-btn" href="${esc(fb)}" target="_blank" rel="noopener" aria-label="Facebook">${SHARE_ICONS.facebook}</a>
+          <button class="share-btn share-btn--copy" type="button" data-copy-url="${esc(url)}" aria-label="Link kopieren">${SHARE_ICONS.link}</button>
+        </div>
       </div>
     </div>`
 
@@ -208,7 +213,7 @@ function renderDetail (produkt, varianten = []) {
   }
 }
 
-// Größen-Dropdown: Auswahl übernehmen
+// Größen-Dropdown
 function initGroessen () {
   const select = document.getElementById('groesse-select')
   if (!select) return
@@ -220,7 +225,7 @@ function initGroessen () {
 // Thumbnail-Klick tauscht das Hauptbild
 function initGallery () {
   const main = document.getElementById('gallery-main')
-  const thumbs = document.querySelectorAll('.product-gallery__thumb')
+  const thumbs = document.querySelectorAll('.pdp-gallery__thumb')
   thumbs.forEach((thumb) => {
     thumb.addEventListener('click', () => {
       const src = thumb.getAttribute('data-src')
@@ -231,7 +236,6 @@ function initGallery () {
   })
 }
 
-// Reservierungsbestätigung per E-Mail (Edge Function) — stört den Ablauf nicht
 async function sendeBestaetigungsMail (payload) {
   try {
     await supabase.functions.invoke('send-email', {
@@ -269,7 +273,6 @@ function initReservierung (produkt) {
     submitBtn.disabled = true
     submitBtn.textContent = 'Wird gesendet…'
 
-    // Ablaufdatum = jetzt + 7 Tage
     const ablauf = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
     try {
@@ -284,13 +287,11 @@ function initReservierung (produkt) {
 
       if (error) throw error
 
-      // Formular durch Erfolgsmeldung ersetzen
       const ansehen = neu?.id
         ? ` <a href="reservierung.html?id=${encodeURIComponent(neu.id)}">Reservierung ansehen →</a>`
         : ''
       form.innerHTML = `<div class="success-msg">Reservierung erfolgreich! Wir benachrichtigen dich wenn der Artikel abholbereit ist.${ansehen}</div>`
 
-      // Bestätigungs-E-Mail an den Kunden (nicht blockierend)
       sendeBestaetigungsMail({
         kunde_name: name,
         kunde_email: email,
@@ -336,17 +337,13 @@ async function ladeWeitere (produkt) {
 
     const shopIdsW = [...new Set(weitere.map(p => p.shop_id).filter(Boolean))]
     const shopRatingW = await fetchShopRatings(supabase, shopIdsW)
-
     container.innerHTML = weitere.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler', shopRatingW[p.shop_id] || null)).join('')
-
     section.hidden = false
   } catch (err) {
     console.error('Weitere Artikel konnten nicht geladen werden:', err)
-    // Stumm scheitern — Sektion bleibt ausgeblendet
   }
 }
 
-// Array mischen (Fisher-Yates)
 function mischen (arr) {
   const a = arr.slice()
   for (let i = a.length - 1; i > 0; i--) {
@@ -356,7 +353,6 @@ function mischen (arr) {
   return a
 }
 
-// ── Das könnte dir auch gefallen (gleiche Kategorie, andere Händler) ──
 async function ladeAehnliche (produkt) {
   const section = document.getElementById('aehnliche-section')
   const container = document.getElementById('aehnliche')
@@ -380,44 +376,32 @@ async function ladeAehnliche (produkt) {
     if (kandidaten.length === 0) return
 
     const auswahl = mischen(kandidaten).slice(0, 4)
-
     const shopIdsA = [...new Set(auswahl.map(p => p.shop_id).filter(Boolean))]
     const shopRatingA = await fetchShopRatings(supabase, shopIdsA)
-
     container.innerHTML = auswahl.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler', shopRatingA[p.shop_id] || null)).join('')
-
     section.hidden = false
   } catch (err) {
     console.error('Ähnliche Artikel konnten nicht geladen werden:', err)
-    // Stumm scheitern — Sektion bleibt ausgeblendet
   }
 }
 
-// ── Init ──
 async function init () {
   initMobileMenu()
   initHeaderSearch()
 
   const id = getProduktId()
-  if (!id) {
-    notFound('Kein Produkt angegeben.')
-    return
-  }
+  if (!id) { notFound('Kein Produkt angegeben.'); return }
 
   try {
     const { data, error } = await supabase
       .from('produkte')
-      .select('*, shops(name, slug, adresse)')
+      .select('*, shops(name, slug, adresse), kategorien(name)')
       .eq('id', id)
       .maybeSingle()
 
     if (error) throw error
-    if (!data) {
-      notFound()
-      return
-    }
+    if (!data) { notFound(); return }
 
-    // Alle Größen (Varianten) laden — auch ausverkaufte werden angezeigt
     let varianten = []
     try {
       const { data: vData, error: vErr } = await supabase
