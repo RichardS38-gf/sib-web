@@ -200,10 +200,11 @@
 
 .section-link {
   font-weight: 500;
-  color: var(--color-muted);
-  text-decoration: none;
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
-.section-link:hover { color: var(--color-ink); opacity: 1; }
+.section-link:hover { opacity: 0.6; }
 
 /* Produkt-Tabs entfernt */
 
