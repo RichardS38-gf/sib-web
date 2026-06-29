@@ -230,6 +230,15 @@
   margin-right: auto;
 }
 
+.shop-about__headline,
+.shop-about__bild-wrap,
+.shop-about__text {
+  max-width: 1140px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
 .shop-about__headline {
   font-family: var(--font-sans);
   font-weight: 800;
