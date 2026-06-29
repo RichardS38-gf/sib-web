@@ -22,7 +22,7 @@
 ───────────────────────────────────────── */
 .shop-galerie {
   flex: 1;
-  min-height: 0;
+  min-height: 480px;
   width: calc(100% - 3rem);
   margin: 0.5rem auto 0;
   overflow: hidden;
