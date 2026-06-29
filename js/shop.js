@@ -229,7 +229,9 @@ function initChatWidget (shop) {
     panel.style.display = 'flex'
     if (iconOpen)  iconOpen.style.display  = 'none'
     if (iconClose) iconClose.style.display = 'block'
+    // Badge sofort wegräumen
     badge.hidden = true
+    badge.textContent = ''
     if (session?.chat_id) { loadMessages(); startPolling() }
     else messages.innerHTML = '<p class="chat-empty">Schreib uns!</p>'
     setTimeout(() => input.focus(), 80)

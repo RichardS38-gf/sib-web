@@ -503,12 +503,12 @@
   border-radius: 50%;
   background: var(--color-ink);
   color: var(--color-on-dark);
-  border: none;
+  border: 2px solid white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
   transition: transform 0.2s, box-shadow 0.2s;
   position: relative;
   flex-shrink: 0;

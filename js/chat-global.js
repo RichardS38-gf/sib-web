@@ -38,7 +38,7 @@ function injectStyles () {
   s.id = 'gcw-styles'
   s.textContent = `
     .gcw-bubble{position:fixed;bottom:1.5rem;right:1.5rem;z-index:900}
-    .gcw-trigger{width:56px;height:56px;border-radius:50%;background:#0D0D0D;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s;position:relative}
+    .gcw-trigger{width:56px;height:56px;border-radius:50%;background:#0D0D0D;color:#fff;border:2px solid white;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.35);transition:transform .2s,box-shadow .2s;position:relative}
     .gcw-trigger:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(0,0,0,.3)}
     .gcw-trigger svg path{fill:currentColor}
     .gcw-trigger-close{display:none}
@@ -148,6 +148,8 @@ function initGlobalChat () {
     panel.hidden = false
     trigger.classList.add('open')
     badge.hidden = true
+    badge.textContent = ''
+    lastHaendlerCount = 0  // Reset damit Badge nicht sofort wieder erscheint
     loadMessages()
     startPolling()
     setTimeout(() => input.focus(), 80)
