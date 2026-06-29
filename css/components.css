@@ -150,8 +150,9 @@
 
 .product-card__prices {
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.4rem;
   margin-top: auto;
 }
 
