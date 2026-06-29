@@ -1,5 +1,14 @@
 /* shop.css v4 — SIB Shopseite */
 
+/* Alle Headlines auf der Shopseite = Inter wie Shop-Name */
+#shop-main h1,
+#shop-main h2,
+#shop-main h3 {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
 /* ─────────────────────────────────────────
    LOADING
 ───────────────────────────────────────── */
