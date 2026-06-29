@@ -4,6 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
+import { renderProductCard } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -20,15 +21,7 @@ function preisOf (p) {
   return isNaN(n) ? 0 : n
 }
 
-// "Neu"-Badge: nur für verfügbare, freigegebene Produkte < 7 Tage alt
-function neuBadge (p) {
-  if (p.verfuegbar === false || p.freigegeben !== true) return ''
-  const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
-  if (!t) return ''
-  return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
-    ? '<span class="product-card__badge">NEU</span>'
-    : ''
-}
+// neuBadge + Karte via product-card.js
 
 function istNeu (p) {
   const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
@@ -105,25 +98,7 @@ function renderProdukte (produkte) {
     container.innerHTML = '<p class="kategorie-empty">Keine Produkte für diese Auswahl gefunden.</p>'
     return
   }
-  container.innerHTML = produkte.map((p) => {
-    const id = encodeURIComponent(p.id)
-    const bilder = Array.isArray(p.bilder) ? p.bilder.filter(Boolean) : []
-    const bild = bilder[0]
-      ? `<img class="product-card__image" src="${esc(bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
-      : '<div class="product-card__image"></div>'
-    const shopName = p.shops?.name || 'Lokaler Händler'
-    const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
-    const soldout = p.verfuegbar === false
-      ? '<span class="product-card__soldout">Nicht verfügbar</span>'
-      : ''
-    return `
-      <a class="product-card" href="produkt.html?id=${id}">
-        ${neuBadge(p)}${bild}
-        <span class="product-card__shop">${esc(shopName)}</span>
-        <span class="product-card__title">${esc(p.titel)}</span>
-        <span class="product-card__price">${esc(preis)}${soldout}</span>
-      </a>`
-  }).join('')
+  container.innerHTML = produkte.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler')).join('')
 }
 
 function renderTags () {

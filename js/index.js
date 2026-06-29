@@ -3,6 +3,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
+import { renderProductCard } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -67,36 +68,9 @@ async function ladeKategorien () {
   }
 }
 
-// "Neu"-Badge: Produkte, die jünger als 7 Tage freigegeben wurden
-function neuBadge (p) {
-  const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
-  if (!t) return ''
-  return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
-    ? '<span class="product-card__badge">NEU</span>'
-    : ''
-}
-
-// Einzelne Produktkarte rendern (inkl. Sterne-Meta + Neu-Badge)
-function produktKarte (p, ratings) {
-  const id = encodeURIComponent(p.id)
-  const bilder = Array.isArray(p.bilder) ? p.bilder : []
-  const bild = bilder[0]
-    ? `<img class="product-card__image" src="${esc(bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
-    : '<div class="product-card__image"></div>'
-  const shopName = p.shops?.name || 'Lokaler Händler'
-  const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
-  const r = ratings[p.shop_id]
-  const ratingHtml = (r && r.anzahl > 0)
-    ? `<span class="product-card__rating"><span class="product-card__stars">★</span> <span class="product-card__rating-val">${(r.summe / r.anzahl).toFixed(1).replace('.', ',')}</span> <span class="product-card__count">(${r.anzahl})</span></span>`
-    : '<span class="product-card__rating"><span class="product-card__stars">★</span> <span class="product-card__count">Noch keine Bewertungen (0)</span></span>'
-  return `
-    <a class="product-card" href="produkt.html?id=${id}">
-      ${neuBadge(p)}${bild}
-      <span class="product-card__title">${esc(p.titel)}</span>
-      <span class="product-card__meta">von ${esc(shopName)}</span>
-      ${ratingHtml}
-      <span class="product-card__price">${esc(preis)}</span>
-    </a>`
+// "Neu"-Badge und Karte werden jetzt von product-card.js geliefert
+function produktKarte (p) {
+  return renderProductCard(p, p.shops?.name || 'Lokaler Händler')
 }
 
 // ── 4. Produkte: Neue und Beliebte als zwei separate Sektionen ──
@@ -158,13 +132,13 @@ async function ladeProdukte () {
 
     if (neueContainer) {
       neueContainer.innerHTML = neu.length > 0
-        ? neu.map((p) => produktKarte(p, ratings)).join('')
+        ? neu.map((p) => produktKarte(p)).join('')
         : '<p class="empty-state">Noch keine neuen Produkte.</p>'
     }
 
     if (beliebtContainer) {
       beliebtContainer.innerHTML = beliebt.length > 0
-        ? beliebt.map((p) => produktKarte(p, ratings)).join('')
+        ? beliebt.map((p) => produktKarte(p)).join('')
         : '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
     }
 

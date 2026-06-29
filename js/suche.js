@@ -4,6 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
+import { renderProductCard } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -89,22 +90,7 @@ function renderProdukte (produkte, q) {
     return
   }
 
-  container.innerHTML = produkte.map((p) => {
-    const id = encodeURIComponent(p.id)
-    const bilder = Array.isArray(p.bilder) ? p.bilder.filter(Boolean) : []
-    const bild = bilder[0]
-      ? `<img class="product-card__image" src="${esc(bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
-      : '<div class="product-card__image"></div>'
-    const shopName = p.shops?.name || 'Lokaler Händler'
-    const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
-    return `
-      <a class="product-card" href="produkt.html?id=${id}">
-        ${neuBadge(p)}${bild}
-        <span class="product-card__shop">${esc(shopName)}</span>
-        <span class="product-card__title">${esc(p.titel)}</span>
-        <span class="product-card__price">${esc(preis)}</span>
-      </a>`
-  }).join('')
+  container.innerHTML = produkte.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler')).join('')
 }
 
 // ── Init ──
