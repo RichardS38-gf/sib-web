@@ -217,8 +217,8 @@
    3. WILLKOMMEN / ABOUT
 ───────────────────────────────────────── */
 .shop-about__inner-card {
-  width: 90%;
-  margin: 0 auto;
+  width: 90vw;
+  margin-left: calc(50% - 45vw);
   background: #f5f5f3;
   border-radius: 20px;
   padding: var(--space-6);
