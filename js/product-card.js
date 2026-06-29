@@ -10,9 +10,19 @@ function esc (value) {
     .replace(/"/g, '&quot;')
 }
 
+// Prüft ob ein Angebot gerade aktiv ist
+export function isSaleAktiv (p) {
+  if (!p.angebotspreis || p.angebotspreis <= 0) return false
+  if (p.angebotspreis >= p.preis) return false // kein Rabatt
+  const now = new Date()
+  if (p.angebot_von && now < new Date(p.angebot_von)) return false
+  if (p.angebot_bis && now > new Date(p.angebot_bis + 'T23:59:59')) return false
+  return true
+}
+
 function neuBadge (p) {
   if (p.verfuegbar === false || p.freigegeben !== true) return ''
-  if (p.vergleichspreis && p.vergleichspreis > p.preis)
+  if (isSaleAktiv(p))
     return '<span class="product-card__badge product-card__badge--sale">SALE</span>'
   const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
   if (!t) return ''
@@ -56,10 +66,10 @@ export function renderProductCard (p, shopName, rating = null) {
     ? `<img class="product-card__image" src="${esc(bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
     : '<div class="product-card__image" style="background:var(--color-bg-soft);width:100%;height:100%"></div>'
   const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
-  const istSale = p.vergleichspreis && p.vergleichspreis > p.preis
-  const preisHtml = istSale
-    ? `<span class="product-card__price product-card__price--sale">${esc(preis)}</span>
-       <span class="product-card__price-alt">${euro.format(p.vergleichspreis)}</span>`
+  const sale = isSaleAktiv(p)
+  const preisHtml = sale
+    ? `<span class="product-card__price product-card__price--sale">${euro.format(p.angebotspreis)}</span>
+       <span class="product-card__price-alt">${esc(preis)}</span>`
     : `<span class="product-card__price">${esc(preis)}</span>`
   const shop = shopName || p.shops?.name || 'Lokaler Händler'
 

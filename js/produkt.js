@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchShopRatings } from './product-card.js'
+import { renderProductCard, fetchShopRatings, isSaleAktiv } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -126,6 +126,12 @@ function renderDetail (produkt, varianten = []) {
       ).join('')}</div>`
     : ''
 
+  // Sale-Preis
+  const sale = isSaleAktiv(produkt)
+  const preisHtml = sale
+    ? `<p class="pdp-info__price">${euro.format(produkt.angebotspreis)} <span class="pdp-info__streichpreis">${euro.format(produkt.preis)}</span></p>`
+    : `<p class="pdp-info__price">${esc(preis)}</p>`
+
   // Shop-Link
   const shopLink = shop?.slug
     ? `<a class="pdp-info__shop" href="shop.html?slug=${encodeURIComponent(shop.slug)}">${esc(shopName)}</a>`
@@ -187,7 +193,7 @@ function renderDetail (produkt, varianten = []) {
       <div class="pdp-info">
         <h1 class="pdp-info__title">${esc(produkt.titel)}</h1>
         ${shopLink}
-        <p class="pdp-info__price">${esc(preis)}</p>
+        ${preisHtml}
         <hr class="pdp-divider">
         ${kategorieHtml}
         ${groesseHtml}

@@ -1,12 +1,13 @@
 // js/produkt-modal.js
 // Geteiltes Produkt-Modal für Händler- und Admin-Dashboard.
-// Unterstützt Anlegen + Bearbeiten inkl. Multi-Foto-Upload zu Supabase Storage.
+// Unterstützt Anlegen + Bearbeiten inkl. Multi-Foto-Upload, Features, Angebotspreis.
 
 import { supabase } from './supabase.js'
 
 let onSaveCallback = null
 let aktuellesProduktId = null
 let bildUrls = []
+let featuresList = []
 
 // ── Modal-HTML einmalig in den DOM injizieren ──
 export function initProduktModal () {
@@ -24,6 +25,7 @@ export function initProduktModal () {
       </div>
 
       <div class="pmodal-body">
+
         <!-- Fotos -->
         <div class="pmodal-section">
           <p class="pmodal-label">Fotos</p>
@@ -37,6 +39,7 @@ export function initProduktModal () {
         </div>
 
         <form id="pmodal-form" novalidate>
+
           <!-- Titel + Preis -->
           <div class="pmodal-row">
             <div class="pmodal-field">
@@ -49,10 +52,37 @@ export function initProduktModal () {
             </div>
           </div>
 
+          <!-- Angebotspreis + Zeitraum -->
+          <div class="pmodal-section pmodal-angebot-section">
+            <p class="pmodal-label pmodal-label--muted">Angebot (optional)</p>
+            <div class="pmodal-row pmodal-row--3">
+              <div class="pmodal-field pmodal-field--sm">
+                <label class="pmodal-label" for="pmodal-angebotspreis">Angebotspreis (€)</label>
+                <input class="form-input" id="pmodal-angebotspreis" name="angebotspreis" type="number" min="0" step="0.01" placeholder="z.B. 59.99">
+              </div>
+              <div class="pmodal-field">
+                <label class="pmodal-label" for="pmodal-angebot-von">Gültig ab</label>
+                <input class="form-input" id="pmodal-angebot-von" name="angebot_von" type="date">
+              </div>
+              <div class="pmodal-field">
+                <label class="pmodal-label" for="pmodal-angebot-bis">Gültig bis</label>
+                <input class="form-input" id="pmodal-angebot-bis" name="angebot_bis" type="date">
+              </div>
+            </div>
+            <p class="pmodal-hint">Wird im Shop als Streichpreis angezeigt, solange der Zeitraum aktiv ist.</p>
+          </div>
+
           <!-- Beschreibung -->
           <div class="pmodal-field">
             <label class="pmodal-label" for="pmodal-beschreibung">Beschreibung</label>
             <textarea class="form-input pmodal-textarea" id="pmodal-beschreibung" name="beschreibung" rows="3"></textarea>
+          </div>
+
+          <!-- Features / Highlights -->
+          <div class="pmodal-field">
+            <label class="pmodal-label">Features / Highlights</label>
+            <div class="pmodal-features" id="pmodal-features-list"></div>
+            <button type="button" class="pmodal-add-btn" id="pmodal-add-feature">+ Feature hinzufügen</button>
           </div>
 
           <!-- Kategorie + Verfügbar -->
@@ -83,14 +113,19 @@ export function initProduktModal () {
 
   document.body.appendChild(el)
 
-  // Events
   el.querySelector('.pmodal-backdrop').addEventListener('click', schliesseProduktModal)
   el.querySelector('.pmodal-close').addEventListener('click', schliesseProduktModal)
   document.getElementById('pmodal-cancel').addEventListener('click', schliesseProduktModal)
   document.getElementById('pmodal-file-input').addEventListener('change', handleDateiUpload)
+  document.getElementById('pmodal-add-feature').addEventListener('click', () => {
+    featuresList.push('')
+    renderFeatures()
+    // Fokus auf das neue Feld
+    const inputs = document.querySelectorAll('.pmodal-feature-input')
+    inputs[inputs.length - 1]?.focus()
+  })
   document.getElementById('pmodal-form').addEventListener('submit', handleSpeichern)
 
-  // Escape-Taste
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') schliesseProduktModal()
   })
@@ -100,7 +135,7 @@ export function initProduktModal () {
 
 async function ladeKategorien () {
   const select = document.getElementById('pmodal-kategorie')
-  if (!select) return
+  if (!select || select.options.length > 1) return
   try {
     const { data } = await supabase.from('kategorien').select('id, name').order('name')
     ;(data || []).forEach((k) => {
@@ -112,6 +147,7 @@ async function ladeKategorien () {
   } catch {}
 }
 
+// ── Thumbnails ──
 function renderThumbs () {
   const container = document.getElementById('pmodal-thumbs')
   if (!container) return
@@ -129,6 +165,34 @@ function renderThumbs () {
   })
 }
 
+// ── Features ──
+function renderFeatures () {
+  const container = document.getElementById('pmodal-features-list')
+  if (!container) return
+  container.innerHTML = featuresList.map((text, i) => `
+    <div class="pmodal-feature-row">
+      <input class="form-input pmodal-feature-input" type="text" value="${escAttr(text)}" data-fidx="${i}" placeholder="z.B. Weiche Baumwolle – ideal für kühle Tage">
+      <button type="button" class="pmodal-feature-del" data-fidx="${i}" title="Entfernen">&#x2715;</button>
+    </div>`).join('')
+
+  container.querySelectorAll('.pmodal-feature-input').forEach((inp) => {
+    inp.addEventListener('input', () => {
+      featuresList[parseInt(inp.dataset.fidx)] = inp.value
+    })
+  })
+  container.querySelectorAll('.pmodal-feature-del').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      featuresList.splice(parseInt(btn.dataset.fidx), 1)
+      renderFeatures()
+    })
+  })
+}
+
+function escAttr (v) {
+  return String(v ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// ── Datei-Upload ──
 async function handleDateiUpload (e) {
   const dateien = Array.from(e.target.files)
   if (!dateien.length) return
@@ -163,6 +227,7 @@ async function handleDateiUpload (e) {
   e.target.value = ''
 }
 
+// ── Speichern ──
 async function handleSpeichern (e) {
   e.preventDefault()
   const feedback = document.getElementById('pmodal-feedback')
@@ -170,7 +235,6 @@ async function handleSpeichern (e) {
 
   const titel = document.getElementById('pmodal-titel').value.trim()
   const preisRaw = document.getElementById('pmodal-preis').value
-
   if (!titel || preisRaw === '') {
     feedback.innerHTML = '<div class="error-msg">Bitte Titel und Preis ausfüllen.</div>'
     return
@@ -180,13 +244,24 @@ async function handleSpeichern (e) {
   submitBtn.disabled = true
   submitBtn.textContent = 'Wird gespeichert…'
 
+  const angebotpreisRaw = document.getElementById('pmodal-angebotspreis').value
+  const angebotVon = document.getElementById('pmodal-angebot-von').value || null
+  const angebotBis = document.getElementById('pmodal-angebot-bis').value || null
+
+  // Features: nur nicht-leere Einträge übernehmen
+  const highlights = featuresList.map((f) => f.trim()).filter(Boolean)
+
   const daten = {
     titel,
     preis: parseFloat(preisRaw),
     beschreibung: document.getElementById('pmodal-beschreibung').value.trim() || null,
     kategorie_id: document.getElementById('pmodal-kategorie').value || null,
     verfuegbar: document.getElementById('pmodal-verfuegbar').checked,
-    bilder: [...bildUrls]
+    bilder: [...bildUrls],
+    highlights: highlights.length ? highlights : null,
+    angebotspreis: angebotpreisRaw ? parseFloat(angebotpreisRaw) : null,
+    angebot_von: angebotVon,
+    angebot_bis: angebotBis
   }
 
   try {
@@ -196,7 +271,6 @@ async function handleSpeichern (e) {
       schliesseProduktModal()
       if (onSaveCallback) onSaveCallback(null)
     } else {
-      // Neu anlegen — Callback ergänzt shop_id + freigegeben
       await onSaveCallback(daten)
       schliesseProduktModal()
     }
@@ -216,6 +290,7 @@ export function oeffneProduktModal ({ produkt = null, onSave } = {}) {
   onSaveCallback = onSave || null
   aktuellesProduktId = produkt?.id || null
   bildUrls = Array.isArray(produkt?.bilder) ? [...produkt.bilder.filter(Boolean)] : []
+  featuresList = Array.isArray(produkt?.highlights) ? [...produkt.highlights] : []
 
   document.getElementById('pmodal-title').textContent = produkt ? 'Produkt bearbeiten' : 'Produkt anlegen'
   document.getElementById('pmodal-titel').value = produkt?.titel || ''
@@ -223,10 +298,14 @@ export function oeffneProduktModal ({ produkt = null, onSave } = {}) {
   document.getElementById('pmodal-beschreibung').value = produkt?.beschreibung || ''
   document.getElementById('pmodal-kategorie').value = produkt?.kategorie_id || ''
   document.getElementById('pmodal-verfuegbar').checked = produkt?.verfuegbar !== false
+  document.getElementById('pmodal-angebotspreis').value = produkt?.angebotspreis ?? ''
+  document.getElementById('pmodal-angebot-von').value = produkt?.angebot_von || ''
+  document.getElementById('pmodal-angebot-bis').value = produkt?.angebot_bis || ''
   document.getElementById('pmodal-feedback').innerHTML = ''
   document.getElementById('pmodal-upload-status').textContent = ''
 
   renderThumbs()
+  renderFeatures()
   modal.hidden = false
   document.body.style.overflow = 'hidden'
   setTimeout(() => document.getElementById('pmodal-titel').focus(), 50)
@@ -238,5 +317,6 @@ export function schliesseProduktModal () {
   document.body.style.overflow = ''
   aktuellesProduktId = null
   bildUrls = []
+  featuresList = []
   onSaveCallback = null
 }

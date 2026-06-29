@@ -156,6 +156,14 @@
   margin-right: 0.25rem;
 }
 
+.pdp-info__streichpreis {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-muted);
+  text-decoration: line-through;
+  margin-left: 0.4rem;
+}
+
 /* Feedback */
 .reservierung-feedback { margin-top: var(--space-2); }
 
