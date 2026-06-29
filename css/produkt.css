@@ -159,6 +159,63 @@
 /* Feedback */
 .reservierung-feedback { margin-top: var(--space-2); }
 
+/* ─── Details-Sektion ─── */
+.pdp-details__layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .pdp-details__layout { grid-template-columns: 1fr; }
+  .pdp-details__bild { order: -1; }
+}
+
+.pdp-details__headline {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 2.5rem;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-4);
+}
+
+.pdp-details__sub {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-bottom: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.pdp-details__desc {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--color-ink);
+  max-width: 60ch;
+}
+
+.pdp-details__list {
+  list-style: disc;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pdp-details__list li {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-ink);
+}
+
+.pdp-details__bild img {
+  width: 100%;
+  display: block;
+  border-radius: var(--radius-md);
+  object-fit: contain;
+}
+
 /* Not found */
 .product-notfound {
   text-align: center;

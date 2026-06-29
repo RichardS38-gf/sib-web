@@ -310,6 +310,40 @@ function initReservierung (produkt) {
   })
 }
 
+// ── Details-Sektion (Beschreibung + Features + Bild) ──
+function renderDetails (produkt) {
+  const section = document.getElementById('produkt-details-section')
+  if (!section) return
+
+  const beschreibung = produkt.beschreibung || ''
+  const highlights = Array.isArray(produkt.highlights) ? produkt.highlights : []
+  const bildUrl = produkt.details_bild_url || ''
+
+  if (!beschreibung && !highlights.length) return
+
+  const bildHtml = bildUrl
+    ? `<div class="pdp-details__bild"><img src="${esc(bildUrl)}" alt="${esc(produkt.titel)}"></div>`
+    : ''
+
+  const featuresHtml = highlights.length
+    ? `<h3 class="pdp-details__sub">Features</h3>
+       <ul class="pdp-details__list">${highlights.map(h => `<li>${esc(h)}</li>`).join('')}</ul>`
+    : ''
+
+  section.innerHTML = `
+    <div class="container">
+      <div class="pdp-details__layout">
+        <div class="pdp-details__text">
+          <h2 class="pdp-details__headline">Details</h2>
+          ${beschreibung ? `<h3 class="pdp-details__sub">Beschreibung</h3><p class="pdp-details__desc">${esc(beschreibung)}</p>` : ''}
+          ${featuresHtml}
+        </div>
+        ${bildHtml}
+      </div>
+    </div>`
+  section.hidden = false
+}
+
 // ── Weitere Artikel desselben Shops ──
 async function ladeWeitere (produkt) {
   const section = document.getElementById('weitere-section')
@@ -415,6 +449,7 @@ async function init () {
     }
 
     renderDetail(data, varianten)
+    renderDetails(data)
     ladeWeitere(data)
     ladeAehnliche(data)
   } catch (err) {
