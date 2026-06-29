@@ -533,6 +533,26 @@
 }
 
 /* ─────────────────────────────────────────
+   7. ÖFFNUNGSZEITEN-TABELLE
+───────────────────────────────────────── */
+.shop-oz {
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.shop-oz td {
+  padding: 0.2rem 1rem 0.2rem 0;
+  vertical-align: top;
+  line-height: 1.6;
+}
+.shop-oz__tag {
+  font-weight: 600;
+  color: var(--color-ink);
+  white-space: nowrap;
+  padding-right: 2rem !important;
+  min-width: 120px;
+}
+
+/* ─────────────────────────────────────────
    NOT FOUND
 ───────────────────────────────────────── */
 .shop-notfound {

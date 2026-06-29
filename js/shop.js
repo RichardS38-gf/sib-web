@@ -576,13 +576,25 @@ function initBewertungForm (shop) {
 // ─────────────────────────────────────────
 // 6. INFO-TABELLE
 // ─────────────────────────────────────────
+function formatOeffnungszeiten (v) {
+  try {
+    const tage = JSON.parse(v)
+    if (Array.isArray(tage)) {
+      return `<table class="shop-oz">${tage.map(t =>
+        `<tr><td class="shop-oz__tag">${esc(t.tag)}</td><td>${Array.isArray(t.zeiten) ? t.zeiten.map(esc).join('<br>') : esc(t.zeiten)}</td></tr>`
+      ).join('')}</table>`
+    }
+  } catch {}
+  // Fallback: plain text mit Zeilenumbrüchen
+  return esc(v).replace(/\n/g, '<br>')
+}
+
 function renderInfoTabelle (shop) {
   const felder = [
-    { key: 'agb_datum',       label: 'AGB',                  formatter: v => `Zuletzt aktualisiert am ${formatDatum(v)}` },
-    { key: 'versand',         label: 'Versand',               formatter: v => esc(v) },
-    { key: 'rueckgaben',      label: 'Rückgaben & Umtausch', formatter: v => esc(v) },
-    { key: 'stornierungen',   label: 'Stornierungen',         formatter: v => esc(v) },
-    { key: 'oeffnungszeiten', label: 'Öffnungszeiten',       formatter: v => esc(v) },
+    { key: 'agb_datum',        label: 'AGB',                    formatter: v => `Zuletzt aktualisiert am ${formatDatum(v)}` },
+    { key: 'oeffnungszeiten',  label: 'Öffnungszeiten',           formatter: formatOeffnungszeiten },
+    { key: 'zahlungsmethoden', label: 'Zahlungsmöglichkeiten',    formatter: v => esc(v) },
+    { key: 'rueckgaben',       label: 'Rückgaben & Umtausch',    formatter: v => esc(v) },
   ]
   const vorhandene = felder.filter(f => shop[f.key])
   if (vorhandene.length === 0) return
