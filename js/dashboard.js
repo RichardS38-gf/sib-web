@@ -4,6 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
+import { initProduktModal, oeffneProduktModal } from './produkt-modal.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -254,12 +255,26 @@ async function ladeProdukte () {
             </div>
           </div>
 
-          <button class="dash-produkt__delete" data-delete="${esc(p.id)}" data-titel="${esc(p.titel)}">Produkt löschen</button>
+          <div class="dash-produkt__actions">
+            <button class="btn btn--outline dash-produkt__edit" data-edit="${esc(p.id)}">Bearbeiten</button>
+            <button class="dash-produkt__delete" data-delete="${esc(p.id)}" data-titel="${esc(p.titel)}">Löschen</button>
+          </div>
         </div>`
     }).join('')}</div>`
 
     el.querySelectorAll('[data-delete]').forEach((btn) => {
       btn.addEventListener('click', () => loesche(btn.dataset.delete, btn.dataset.titel))
+    })
+
+    el.querySelectorAll('[data-edit]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const p = produkte.find((x) => x.id === btn.dataset.edit)
+        if (!p) return
+        oeffneProduktModal({
+          produkt: p,
+          onSave: () => ladeProdukte()
+        })
+      })
     })
 
     // Checkbox aktiviert/deaktiviert das zugehörige Stückzahl-Feld
@@ -348,60 +363,19 @@ async function ladeKategorienDropdown () {
 
 function initProduktForm () {
   const toggleBtn = document.getElementById('toggle-produkt-form')
-  const cancelBtn = document.getElementById('cancel-produkt-form')
-  const form = document.getElementById('produkt-form')
-  const feedback = document.getElementById('produkt-form-feedback')
-
+  if (!toggleBtn) return
   toggleBtn.addEventListener('click', () => {
-    form.hidden = !form.hidden
-    if (!form.hidden) form.titel.focus()
-  })
-  cancelBtn.addEventListener('click', () => {
-    form.reset()
-    feedback.innerHTML = ''
-    form.hidden = true
-  })
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault()
-    feedback.innerHTML = ''
-
-    const titel = form.titel.value.trim()
-    const preisRaw = form.preis.value
-    if (!titel || preisRaw === '') {
-      feedback.innerHTML = '<div class="error-msg">Bitte Titel und Preis ausfüllen.</div>'
-      return
-    }
-
-    const bildUrl = form.bild_url.value.trim()
-    const neu = {
-      shop_id: shop.id,
-      titel,
-      beschreibung: form.beschreibung.value.trim() || null,
-      preis: parseFloat(preisRaw),
-      kategorie_id: form.kategorie_id.value || null,
-      bilder: bildUrl ? [bildUrl] : [],
-      verfuegbar: true,
-      freigegeben: false // muss vom Admin freigegeben werden
-    }
-
-    const submitBtn = form.querySelector('button[type="submit"]')
-    submitBtn.disabled = true
-    submitBtn.textContent = 'Wird gespeichert…'
-
-    try {
-      const { error } = await supabase.from('produkte').insert(neu)
-      if (error) throw error
-      form.reset()
-      form.hidden = true
-      ladeProdukte()
-    } catch (err) {
-      console.error('Produkt anlegen fehlgeschlagen:', err)
-      feedback.innerHTML = '<div class="error-msg">Das Produkt konnte nicht gespeichert werden.</div>'
-    } finally {
-      submitBtn.disabled = false
-      submitBtn.textContent = 'Speichern'
-    }
+    oeffneProduktModal({
+      onSave: async (daten) => {
+        const { error } = await supabase.from('produkte').insert({
+          ...daten,
+          shop_id: shop.id,
+          freigegeben: false
+        })
+        if (error) throw error
+        ladeProdukte()
+      }
+    })
   })
 }
 
@@ -662,13 +636,13 @@ async function init () {
 
   initTabs()
   initLogout()
+  initProduktModal()
   initProduktForm()
   initShopForm()
 
   ladeReservierungen()
   ladeProdukte()
   ladeNachrichten()
-  ladeKategorienDropdown()
   fuelleShopForm()
 
   // Nachrichten-Badge alle 30s aktualisieren

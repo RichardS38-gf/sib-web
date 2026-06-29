@@ -4,6 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
+import { initProduktModal, oeffneProduktModal } from './produkt-modal.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -76,6 +77,7 @@ function zeigeAdmin () {
 
   initTabs()
   initLogout()
+  initProduktModal()
   initShopCreateForm()
   initProduktCreateForm()
 
@@ -302,6 +304,7 @@ async function ladeProdukte () {
           <td>${freigabeZelle}</td>
           <td>
             ${freigebenBtn}
+            <button class="admin-link-btn" data-edit-produkt="${esc(p.id)}">Bearbeiten</button>
             <button class="admin-link-btn" data-toggle-produkt="${esc(p.id)}" data-verf="${verfuegbar}">${toggleLabel}</button>
             <button class="admin-link-btn" data-delete-produkt="${esc(p.id)}" data-titel="${esc(p.titel)}">Löschen</button>
           </td>
@@ -318,6 +321,16 @@ async function ladeProdukte () {
 
     el.querySelectorAll('[data-freigeben-produkt]').forEach((btn) => {
       btn.addEventListener('click', () => freigebenProdukt(btn.dataset.freigebenProdukt))
+    })
+    el.querySelectorAll('[data-edit-produkt]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const p = produkte.find((x) => x.id === btn.dataset.editProdukt)
+        if (!p) return
+        oeffneProduktModal({
+          produkt: p,
+          onSave: () => ladeProdukte()
+        })
+      })
     })
     el.querySelectorAll('[data-toggle-produkt]').forEach((btn) => {
       btn.addEventListener('click', () => toggleProdukt(btn.dataset.toggleProdukt, btn.dataset.verf === 'true'))
