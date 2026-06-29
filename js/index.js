@@ -110,7 +110,10 @@ async function ladeProdukte () {
 
     // Beliebt: nach Shop-Bewertung sortiert, Top 5
     const beliebt = [...alle]
-      .map((p) => ({ p, avg: avgOf(p.shop_id) }))
+      .map((p) => {
+        const r = ratings[p.shop_id]
+        return { p, avg: r && r.anzahl > 0 ? r.summe / r.anzahl : null }
+      })
       .sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1))
       .slice(0, 5)
       .map((x) => x.p)
