@@ -105,8 +105,8 @@
 }
 
 .product-card__badge--sale {
-  background: var(--color-ink);
-  color: #fff;
+  background: #fff;
+  color: var(--color-ink);
   border: 1.5px solid var(--color-ink);
 }
 
