@@ -163,6 +163,8 @@
   margin: 0.3rem 0;
   font-size: 0.75rem;
   color: var(--color-muted);
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .product-card__stars { color: #f5a623; font-size: 0.8rem; }
