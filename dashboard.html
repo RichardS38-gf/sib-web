@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css?v=3">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/dashboard.css?v=9">
+  <link rel="stylesheet" href="css/dashboard.css?v=10">
 </head>
 <body>
 
@@ -176,16 +176,65 @@
                 <input class="form-input" type="text" id="sf-adresse" name="adresse">
               </div>
               <div class="form-group">
-                <label class="form-label" for="sf-oeffnungszeiten">Öffnungszeiten</label>
-                <input class="form-input" type="text" id="sf-oeffnungszeiten" name="oeffnungszeiten" placeholder="z. B. Mo–Fr 10–18 Uhr">
+                <label class="form-label">Öffnungszeiten</label>
+                <div class="dash-oz-grid" id="sf-oz-grid">
+                  <div class="dash-oz-row" data-tag="Montag"><span class="dash-oz-row__label">Montag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Dienstag"><span class="dash-oz-row__label">Dienstag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Mittwoch"><span class="dash-oz-row__label">Mittwoch</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Donnerstag"><span class="dash-oz-row__label">Donnerstag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Freitag"><span class="dash-oz-row__label">Freitag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Samstag"><span class="dash-oz-row__label">Samstag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Sonntag"><span class="dash-oz-row__label">Sonntag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                </div>
               </div>
+
               <div class="form-group">
-                <label class="form-label" for="sf-logo">Logo-URL</label>
-                <input class="form-input" type="url" id="sf-logo" name="logo_url" placeholder="https://…">
+                <label class="form-label" for="sf-zahlung">Zahlungsmöglichkeiten</label>
+                <textarea class="form-input" id="sf-zahlung" name="zahlungsmethoden" rows="2" placeholder="z.B. Barzahlung, EC-Karte, Kreditkarte"></textarea>
               </div>
+
               <div class="form-group">
-                <label class="form-label" for="sf-banner">Banner-URL</label>
-                <input class="form-input" type="url" id="sf-banner" name="banner_url" placeholder="https://…">
+                <label class="form-label" for="sf-rueckgabe">Rückgabe &amp; Umtausch</label>
+                <textarea class="form-input" id="sf-rueckgabe" name="rueckgaben" rows="2" placeholder="z.B. Umtausch innerhalb von 14 Tagen mit Kassenbon"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">AGB (PDF)</label>
+                <div class="dash-file-upload" id="sf-agb-wrap">
+                  <div class="dash-file-current" id="sf-agb-current" hidden>
+                    <a id="sf-agb-link" href="#" target="_blank" rel="noopener">Aktuelle AGB ansehen</a>
+                    <button type="button" class="dash-file-remove" id="sf-agb-remove">Entfernen</button>
+                  </div>
+                  <label class="dash-file-btn">
+                    <span>PDF hochladen</span>
+                    <input type="file" id="sf-agb-input" accept="application/pdf" hidden>
+                  </label>
+                  <span class="dash-file-status" id="sf-agb-status"></span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Logo</label>
+                <div class="dash-file-upload">
+                  <div class="dash-file-preview" id="sf-logo-preview"></div>
+                  <label class="dash-file-btn">
+                    <span>Bild hochladen</span>
+                    <input type="file" id="sf-logo-input" accept="image/*" hidden>
+                  </label>
+                  <span class="dash-file-status" id="sf-logo-status"></span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Banner</label>
+                <div class="dash-file-upload">
+                  <div class="dash-file-preview" id="sf-banner-preview"></div>
+                  <label class="dash-file-btn">
+                    <span>Bild hochladen</span>
+                    <input type="file" id="sf-banner-input" accept="image/*" hidden>
+                  </label>
+                  <span class="dash-file-status" id="sf-banner-status"></span>
+                </div>
               </div>
               <div class="dash-toggle-row">
                 <div>
@@ -251,6 +300,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/dashboard.js?v=6"></script>
+  <script type="module" src="js/dashboard.js?v=7"></script>
 </body>
 </html>

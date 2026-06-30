@@ -528,14 +528,139 @@ async function ladeNachrichten () {
 }
 
 // ── TAB 3: Shop-Einstellungen ──
+
+const TAGE_ORDER = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+
+function fuelleOeffnungszeiten (rohWert) {
+  let eintraege = []
+  if (Array.isArray(rohWert)) {
+    eintraege = rohWert
+  } else if (typeof rohWert === 'string' && rohWert.trim().startsWith('[')) {
+    try { eintraege = JSON.parse(rohWert) } catch { eintraege = [] }
+  }
+  const byTag = {}
+  eintraege.forEach((e) => { if (e?.tag) byTag[e.tag] = Array.isArray(e.zeiten) ? e.zeiten.join(', ') : (e.zeiten || '') })
+
+  document.querySelectorAll('.dash-oz-row').forEach((row) => {
+    const tag = row.dataset.tag
+    const input = row.querySelector('input')
+    input.value = byTag[tag] || ''
+  })
+}
+
+function sammleOeffnungszeiten () {
+  const eintraege = []
+  document.querySelectorAll('.dash-oz-row').forEach((row) => {
+    const tag = row.dataset.tag
+    const wert = row.querySelector('input').value.trim()
+    if (!wert) return
+    eintraege.push({ tag, zeiten: [wert] })
+  })
+  return eintraege.length ? eintraege : null
+}
+
+function setzeBildPreview (containerId, url) {
+  const el = document.getElementById(containerId)
+  if (!el) return
+  el.innerHTML = url ? `<img src="${esc(url)}" alt="Vorschau">` : '<span class="dash-file-preview__empty">Kein Bild</span>'
+  el.dataset.url = url || ''
+}
+
+function setzeAgbAnzeige (url) {
+  const wrap = document.getElementById('sf-agb-current')
+  const link = document.getElementById('sf-agb-link')
+  if (!wrap || !link) return
+  if (url) {
+    link.href = url
+    wrap.hidden = false
+    wrap.dataset.url = url
+  } else {
+    wrap.hidden = true
+    wrap.dataset.url = ''
+  }
+}
+
+async function ladeDateiHoch (datei, ordner = '') {
+  const ext = datei.name.split('.').pop().toLowerCase()
+  const pfad = `${ordner}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { data, error } = await supabase.storage
+    .from('produkt-bilder')
+    .upload(pfad, datei, { cacheControl: '3600', upsert: false })
+  if (error) throw error
+  const { data: { publicUrl } } = supabase.storage.from('produkt-bilder').getPublicUrl(data.path)
+  return publicUrl
+}
+
+function initDateiUploads () {
+  // Logo
+  document.getElementById('sf-logo-input')?.addEventListener('change', async (e) => {
+    const datei = e.target.files[0]
+    if (!datei) return
+    const status = document.getElementById('sf-logo-status')
+    status.textContent = 'Lädt hoch…'
+    try {
+      const url = await ladeDateiHoch(datei, 'shop-logos/')
+      setzeBildPreview('sf-logo-preview', url)
+      status.textContent = 'Hochgeladen.'
+    } catch (err) {
+      console.error('Logo-Upload fehlgeschlagen:', err)
+      status.textContent = 'Upload fehlgeschlagen.'
+    }
+    e.target.value = ''
+  })
+
+  // Banner
+  document.getElementById('sf-banner-input')?.addEventListener('change', async (e) => {
+    const datei = e.target.files[0]
+    if (!datei) return
+    const status = document.getElementById('sf-banner-status')
+    status.textContent = 'Lädt hoch…'
+    try {
+      const url = await ladeDateiHoch(datei, 'shop-banner/')
+      setzeBildPreview('sf-banner-preview', url)
+      status.textContent = 'Hochgeladen.'
+    } catch (err) {
+      console.error('Banner-Upload fehlgeschlagen:', err)
+      status.textContent = 'Upload fehlgeschlagen.'
+    }
+    e.target.value = ''
+  })
+
+  // AGB-PDF
+  document.getElementById('sf-agb-input')?.addEventListener('change', async (e) => {
+    const datei = e.target.files[0]
+    if (!datei) return
+    const status = document.getElementById('sf-agb-status')
+    status.textContent = 'Lädt hoch…'
+    try {
+      const url = await ladeDateiHoch(datei, 'shop-agb/')
+      setzeAgbAnzeige(url)
+      status.textContent = 'Hochgeladen.'
+    } catch (err) {
+      console.error('AGB-Upload fehlgeschlagen:', err)
+      status.textContent = 'Upload fehlgeschlagen.'
+    }
+    e.target.value = ''
+  })
+
+  document.getElementById('sf-agb-remove')?.addEventListener('click', () => {
+    setzeAgbAnzeige(null)
+  })
+}
+
 function fuelleShopForm () {
   const f = document.getElementById('shop-form')
   f.name.value = shop.name || ''
   f.beschreibung.value = shop.beschreibung || ''
   f.adresse.value = shop.adresse || ''
-  f.oeffnungszeiten.value = shop.oeffnungszeiten || ''
-  f.logo_url.value = shop.logo_url || ''
-  f.banner_url.value = shop.banner_url || ''
+  f.zahlungsmethoden.value = shop.zahlungsmethoden || ''
+  f.rueckgaben.value = shop.rueckgaben || ''
+
+  fuelleOeffnungszeiten(shop.oeffnungszeiten)
+  setzeBildPreview('sf-logo-preview', shop.logo_url)
+  setzeBildPreview('sf-banner-preview', shop.banner_url)
+  setzeAgbAnzeige(shop.agb_url)
+
   const msgToggle = document.getElementById('sf-messaging')
   if (msgToggle) msgToggle.checked = !!shop.messaging_enabled
 }
@@ -544,17 +669,26 @@ function initShopForm () {
   const form = document.getElementById('shop-form')
   const feedback = document.getElementById('shop-form-feedback')
 
+  initDateiUploads()
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
     feedback.innerHTML = ''
+
+    const logoUrl = document.getElementById('sf-logo-preview')?.dataset.url || null
+    const bannerUrl = document.getElementById('sf-banner-preview')?.dataset.url || null
+    const agbUrl = document.getElementById('sf-agb-current')?.dataset.url || null
 
     const updates = {
       name: form.name.value.trim(),
       beschreibung: form.beschreibung.value.trim() || null,
       adresse: form.adresse.value.trim() || null,
-      oeffnungszeiten: form.oeffnungszeiten.value.trim() || null,
-      logo_url: form.logo_url.value.trim() || null,
-      banner_url: form.banner_url.value.trim() || null,
+      oeffnungszeiten: sammleOeffnungszeiten(),
+      zahlungsmethoden: form.zahlungsmethoden.value.trim() || null,
+      rueckgaben: form.rueckgaben.value.trim() || null,
+      logo_url: logoUrl,
+      banner_url: bannerUrl,
+      agb_url: agbUrl,
       messaging_enabled: document.getElementById('sf-messaging')?.checked ?? false
     }
 
