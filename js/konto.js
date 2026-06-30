@@ -194,6 +194,13 @@ function sterneHtmlKonto (n, max = 5) {
   return '★'.repeat(v) + '☆'.repeat(max - v) + ` <span class="dash-bewertung__sterne-text">${v} von ${max}</span>`
 }
 
+function sterneAuswahlHtml (aktuelleSterne) {
+  return Array.from({ length: 5 }, (_, i) => {
+    const wert = i + 1
+    return `<button type="button" class="stern${wert <= aktuelleSterne ? ' is-on' : ''}" data-wert="${wert}">★</button>`
+  }).join('')
+}
+
 async function ladeBewertungen () {
   const el = document.getElementById('konto-bewertungen-content')
   try {
@@ -212,18 +219,123 @@ async function ladeBewertungen () {
     }
 
     el.innerHTML = `<div class="dash-bewertungen-liste">${bewertungen.map((b) => `
-      <div class="dash-bewertung">
+      <div class="dash-bewertung" data-bewertung-id="${esc(b.id)}">
         <div class="dash-bewertung__kopf">
           <a class="dash-bewertung__produkt" href="produkt.html?id=${esc(b.produkte?.id || '')}">${esc(b.produkte?.titel || 'Unbekanntes Produkt')}</a>
           <span class="dash-bewertung__datum">${formatDatum(b.erstellt_am)}</span>
         </div>
-        <div class="dash-bewertung__sterne">${sterneHtmlKonto(b.sterne)}</div>
-        ${b.text ? `<p class="dash-bewertung__text">${esc(b.text)}</p>` : ''}
+        <div class="dash-bewertung__ansicht">
+          <div class="dash-bewertung__sterne">${sterneHtmlKonto(b.sterne)}</div>
+          ${b.text ? `<p class="dash-bewertung__text">${esc(b.text)}</p>` : ''}
+          <div class="dash-bewertung__actions">
+            <button class="dash-bewertung__edit" type="button" data-edit-bewertung="${esc(b.id)}">Bearbeiten</button>
+            <button class="dash-bewertung__delete" type="button" data-delete-bewertung="${esc(b.id)}">Löschen</button>
+          </div>
+        </div>
+        <form class="dash-bewertung__edit-form" data-edit-form="${esc(b.id)}" hidden>
+          <div class="sterne-input">${sterneAuswahlHtml(b.sterne)}</div>
+          <textarea class="form-input" rows="3">${esc(b.text || '')}</textarea>
+          <div class="dash-bewertung__edit-actions">
+            <button class="btn btn--primary" type="submit">Speichern</button>
+            <button class="btn btn--outline" type="button" data-cancel-edit="${esc(b.id)}">Abbrechen</button>
+          </div>
+          <div class="dash-bewertung__edit-feedback" aria-live="polite"></div>
+        </form>
       </div>`).join('')}</div>`
+
+    initBewertungAktionen()
   } catch (err) {
     console.error('Bewertungen konnten nicht geladen werden:', err)
     el.innerHTML = '<p class="dash-empty">Bewertungen konnten nicht geladen werden.</p>'
   }
+}
+
+function initBewertungAktionen () {
+  const container = document.getElementById('konto-bewertungen-content')
+
+  // Bearbeiten-Button öffnet das Inline-Formular
+  container.querySelectorAll('[data-edit-bewertung]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const karte = btn.closest('.dash-bewertung')
+      karte.querySelector('.dash-bewertung__ansicht').hidden = true
+      karte.querySelector('[data-edit-form]').hidden = false
+    })
+  })
+
+  // Abbrechen schließt das Formular wieder
+  container.querySelectorAll('[data-cancel-edit]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const karte = btn.closest('.dash-bewertung')
+      karte.querySelector('[data-edit-form]').hidden = true
+      karte.querySelector('.dash-bewertung__ansicht').hidden = false
+    })
+  })
+
+  // Sterne-Auswahl im Bearbeiten-Formular
+  container.querySelectorAll('.dash-bewertung__edit-form .sterne-input').forEach((sterneEl) => {
+    sterneEl.querySelectorAll('.stern').forEach((sternBtn) => {
+      sternBtn.addEventListener('click', () => {
+        const wert = Number(sternBtn.dataset.wert)
+        sterneEl.querySelectorAll('.stern').forEach((b) => b.classList.toggle('is-on', Number(b.dataset.wert) <= wert))
+        sterneEl.dataset.gewaehlt = wert
+      })
+    })
+  })
+
+  // Speichern (UPDATE)
+  container.querySelectorAll('[data-edit-form]').forEach((form) => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const id = form.dataset.editForm
+      const feedback = form.querySelector('.dash-bewertung__edit-feedback')
+      const sterneEl = form.querySelector('.sterne-input')
+      const aktiveSterne = sterneEl.querySelectorAll('.stern.is-on').length
+      const text = form.querySelector('textarea').value.trim()
+      feedback.innerHTML = ''
+
+      if (aktiveSterne < 1) {
+        feedback.innerHTML = '<span class="error-msg">Bitte wähle eine Sterne-Bewertung.</span>'
+        return
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]')
+      submitBtn.disabled = true
+      submitBtn.textContent = 'Wird gespeichert…'
+
+      try {
+        const { error } = await supabase
+          .from('bewertungen')
+          .update({ sterne: aktiveSterne, text: text || null })
+          .eq('id', id)
+          .eq('user_id', userId)
+        if (error) throw error
+        ladeBewertungen()
+      } catch (err) {
+        console.error('Bewertung aktualisieren fehlgeschlagen:', err)
+        feedback.innerHTML = '<span class="error-msg">Konnte nicht gespeichert werden.</span>'
+        submitBtn.disabled = false
+        submitBtn.textContent = 'Speichern'
+      }
+    })
+  })
+
+  // Löschen
+  container.querySelectorAll('[data-delete-bewertung]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (!window.confirm('Diese Bewertung wirklich löschen?')) return
+      const id = btn.dataset.deleteBewertung
+      btn.disabled = true
+      try {
+        const { error } = await supabase.from('bewertungen').delete().eq('id', id).eq('user_id', userId)
+        if (error) throw error
+        ladeBewertungen()
+      } catch (err) {
+        console.error('Bewertung löschen fehlgeschlagen:', err)
+        window.alert('Die Bewertung konnte nicht gelöscht werden.')
+        btn.disabled = false
+      }
+    })
+  })
 }
 
 // ── TAB: Wunschliste ──

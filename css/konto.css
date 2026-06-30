@@ -9,3 +9,68 @@
   background: var(--color-bg-soft, #f5f5f3);
   color: var(--color-ink);
 }
+
+/* ─── Bewertungen bearbeiten/löschen ─── */
+.dash-bewertung__actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.dash-bewertung__edit,
+.dash-bewertung__delete {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.dash-bewertung__edit:hover { color: var(--color-ink); }
+.dash-bewertung__delete:hover { color: #ef4444; }
+
+.dash-bewertung__edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.dash-bewertung__edit-form textarea {
+  resize: vertical;
+}
+
+.dash-bewertung__edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dash-bewertung__edit-feedback {
+  font-size: var(--text-xs);
+}
+
+/* Sterne-Eingabe (Bearbeiten-Formular im Konto) */
+.sterne-input {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.sterne-input .stern {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-line);
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s, transform 0.1s;
+}
+
+.sterne-input .stern:hover,
+.sterne-input .stern.is-on {
+  color: #f5a623;
+}
+
+.sterne-input .stern:hover { transform: scale(1.15); }
