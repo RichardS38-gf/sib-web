@@ -527,6 +527,54 @@ async function ladeNachrichten () {
   }
 }
 
+// ── TAB: Bewertungen ──
+function sterneHtmlDash (n, max = 5) {
+  const v = Math.max(0, Math.min(max, Math.round(n)))
+  return '★'.repeat(v) + '☆'.repeat(max - v) + ` <span class="dash-bewertung__sterne-text">${v} von ${max}</span>`
+}
+
+async function ladeBewertungen () {
+  const el = document.getElementById('bewertungen-content')
+  const summaryEl = document.getElementById('dash-bewertung-summary')
+
+  try {
+    const { data, error } = await supabase
+      .from('bewertungen')
+      .select('*, produkte!inner(titel, shop_id)')
+      .eq('produkte.shop_id', shop.id)
+      .order('erstellt_am', { ascending: false })
+
+    if (error) throw error
+    const bewertungen = data || []
+
+    if (bewertungen.length === 0) {
+      summaryEl.innerHTML = ''
+      el.innerHTML = '<p class="dash-empty">Noch keine Bewertungen für deine Produkte.</p>'
+      return
+    }
+
+    const schnitt = bewertungen.reduce((s, b) => s + (b.sterne || 0), 0) / bewertungen.length
+    summaryEl.innerHTML = `
+      <span class="dash-bewertung-summary__star">★</span>
+      <span class="dash-bewertung-summary__zahl">${schnitt.toFixed(1)}/5</span>
+      <span class="dash-bewertung-summary__anzahl">(${bewertungen.length} Bewertung${bewertungen.length !== 1 ? 'en' : ''})</span>`
+
+    el.innerHTML = `<div class="dash-bewertungen-liste">${bewertungen.map((b) => `
+      <div class="dash-bewertung">
+        <div class="dash-bewertung__kopf">
+          <span class="dash-bewertung__autor">${esc(b.autor_name)}</span>
+          <span class="dash-bewertung__datum">${formatDatum(b.erstellt_am)}</span>
+        </div>
+        <a class="dash-bewertung__produkt" href="produkt.html?id=${esc(b.produkt_id)}" target="_blank" rel="noopener">${esc(b.produkte?.titel || 'Unbekanntes Produkt')}</a>
+        <div class="dash-bewertung__sterne">${sterneHtmlDash(b.sterne)}</div>
+        ${b.text ? `<p class="dash-bewertung__text">${esc(b.text)}</p>` : ''}
+      </div>`).join('')}</div>`
+  } catch (err) {
+    console.error('Bewertungen konnten nicht geladen werden:', err)
+    el.innerHTML = '<p class="dash-empty">Bewertungen konnten nicht geladen werden.</p>'
+  }
+}
+
 // ── TAB 3: Shop-Einstellungen ──
 
 const TAGE_ORDER = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
@@ -776,6 +824,7 @@ async function init () {
 
   ladeReservierungen()
   ladeProdukte()
+  ladeBewertungen()
   ladeNachrichten()
   fuelleShopForm()
 

@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css?v=3">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/dashboard.css?v=10">
+  <link rel="stylesheet" href="css/dashboard.css?v=11">
 </head>
 <body>
 
@@ -80,20 +80,21 @@
 
           <!-- Tab-Navigation -->
           <div class="dash-tabs" role="tablist">
-            <button class="dash-tab is-active" data-tab="reservierungen" role="tab">Reservierungen</button>
+            <button class="dash-tab is-active" data-tab="einstellungen" role="tab">Shop-Einstellungen</button>
             <button class="dash-tab" data-tab="produkte" role="tab">Produkte</button>
+            <button class="dash-tab" data-tab="reservierungen" role="tab">Reservierungen</button>
+            <button class="dash-tab" data-tab="bewertungen" role="tab">Bewertungen</button>
             <button class="dash-tab" data-tab="nachrichten" role="tab">Nachrichten <span class="dash-tab__badge" id="nachrichten-badge" hidden></span></button>
-            <button class="dash-tab" data-tab="einstellungen" role="tab">Shop-Einstellungen</button>
           </div>
 
-          <!-- TAB 1: Reservierungen -->
-          <div class="dash-panel is-active" data-panel="reservierungen">
+          <!-- TAB: Reservierungen -->
+          <div class="dash-panel" data-panel="reservierungen" hidden>
             <div id="reservierungen-content">
               <div class="loading">Reservierungen werden geladen…</div>
             </div>
           </div>
 
-          <!-- TAB 2: Produkte -->
+          <!-- TAB: Produkte -->
           <div class="dash-panel" data-panel="produkte" hidden>
             <div class="dash-panel__toolbar">
               <h2>Deine Produkte</h2>
@@ -138,7 +139,18 @@
             </div>
           </div>
 
-          <!-- TAB 4: Nachrichten -->
+          <!-- TAB: Bewertungen -->
+          <div class="dash-panel" data-panel="bewertungen" hidden>
+            <div class="dash-panel__toolbar">
+              <h2>Bewertungen</h2>
+              <div class="dash-bewertung-summary" id="dash-bewertung-summary"></div>
+            </div>
+            <div id="bewertungen-content">
+              <div class="loading">Bewertungen werden geladen…</div>
+            </div>
+          </div>
+
+          <!-- TAB: Nachrichten -->
           <div class="dash-panel" data-panel="nachrichten" hidden>
             <div class="dash-panel__toolbar">
               <h2>Nachrichten</h2>
@@ -159,8 +171,8 @@
             </div>
           </div>
 
-          <!-- TAB 3: Shop-Einstellungen -->
-          <div class="dash-panel" data-panel="einstellungen" hidden>
+          <!-- TAB: Shop-Einstellungen -->
+          <div class="dash-panel is-active" data-panel="einstellungen">
             <h2 class="dash-panel__heading">Shop-Einstellungen</h2>
             <form class="dash-shop-form" id="shop-form">
               <div class="form-group">
@@ -300,6 +312,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/dashboard.js?v=7"></script>
+  <script type="module" src="js/dashboard.js?v=8"></script>
 </body>
 </html>

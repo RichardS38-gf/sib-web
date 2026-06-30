@@ -687,6 +687,63 @@ textarea.form-input {
 }
 .dash-file-remove:hover { color: var(--color-ink); border-color: var(--color-ink); }
 
+/* ─── Bewertungen-Tab ─── */
+.dash-bewertung-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dash-bewertung-summary__star { color: #f5a623; font-size: 1.1rem; }
+.dash-bewertung-summary__zahl { font-weight: 700; font-size: 1rem; color: var(--color-ink); }
+.dash-bewertung-summary__anzahl { color: var(--color-muted); font-size: var(--text-sm); }
+
+.dash-bewertungen-liste {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+@media (min-width: 700px) { .dash-bewertungen-liste { grid-template-columns: repeat(2, 1fr); } }
+
+.dash-bewertung {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dash-bewertung__kopf {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dash-bewertung__autor { font-weight: 600; font-size: var(--text-sm); color: var(--color-ink); }
+.dash-bewertung__datum { font-size: var(--text-xs); color: var(--color-muted); white-space: nowrap; }
+
+.dash-bewertung__produkt {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  width: fit-content;
+}
+.dash-bewertung__produkt:hover { color: var(--color-ink); }
+
+.dash-bewertung__sterne { color: #f5a623; font-size: 0.95rem; }
+.dash-bewertung__sterne-text { color: var(--color-muted); font-size: var(--text-xs); }
+
+.dash-bewertung__text {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-ink);
+}
+
 /* ─── Produkt-Bearbeiten-Button ─── */
 .dash-produkt__actions {
   display: flex;
