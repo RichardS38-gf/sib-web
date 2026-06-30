@@ -38,6 +38,8 @@
   margin-top: 0.25rem;
 }
 
+.dash-bewertung__edit-form[hidden] { display: none !important; }
+
 .dash-bewertung__edit-form textarea {
   resize: vertical;
 }
