@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css?v=3">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/dashboard.css?v=11">
+  <link rel="stylesheet" href="css/dashboard.css?v=12">
 </head>
 <body>
 
@@ -179,14 +179,63 @@
                 <label class="form-label" for="sf-name">Shop-Name</label>
                 <input class="form-input" type="text" id="sf-name" name="name" required>
               </div>
+
               <div class="form-group">
-                <label class="form-label" for="sf-beschreibung">Beschreibung</label>
-                <textarea class="form-input" id="sf-beschreibung" name="beschreibung" rows="4"></textarea>
+                <label class="form-label">Logo</label>
+                <div class="dash-file-upload">
+                  <div class="dash-file-preview" id="sf-logo-preview"></div>
+                  <label class="dash-file-btn">
+                    <span>Bild hochladen</span>
+                    <input type="file" id="sf-logo-input" accept="image/*" hidden>
+                  </label>
+                  <span class="dash-file-status" id="sf-logo-status"></span>
+                </div>
               </div>
+
+              <div class="form-group">
+                <label class="form-label">Banner</label>
+                <div class="dash-file-upload">
+                  <div class="dash-file-preview" id="sf-banner-preview"></div>
+                  <label class="dash-file-btn">
+                    <span>Bild hochladen</span>
+                    <input type="file" id="sf-banner-input" accept="image/*" hidden>
+                  </label>
+                  <span class="dash-file-status" id="sf-banner-status"></span>
+                </div>
+              </div>
+
               <div class="form-group">
                 <label class="form-label" for="sf-adresse">Adresse</label>
                 <input class="form-input" type="text" id="sf-adresse" name="adresse">
               </div>
+
+              <div class="form-group">
+                <label class="form-label" for="sf-email">E-Mail</label>
+                <input class="form-input" type="email" id="sf-email" name="email" placeholder="kontakt@deinshop.de">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="sf-headline">Überschrift (Willkommenstext)</label>
+                <input class="form-input" type="text" id="sf-headline" name="about_headline" placeholder="z.B. Willkommen bei Amelie Fair Fashion ✨">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Titelbild</label>
+                <div class="dash-file-upload">
+                  <div class="dash-file-preview dash-file-preview--wide" id="sf-titelbild-preview"></div>
+                  <label class="dash-file-btn">
+                    <span>Bild hochladen</span>
+                    <input type="file" id="sf-titelbild-input" accept="image/*" hidden>
+                  </label>
+                  <span class="dash-file-status" id="sf-titelbild-status"></span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="sf-beschreibung">Beschreibung</label>
+                <textarea class="form-input" id="sf-beschreibung" name="beschreibung" rows="4"></textarea>
+              </div>
+
               <div class="form-group">
                 <label class="form-label">Öffnungszeiten</label>
                 <div class="dash-oz-grid" id="sf-oz-grid">
@@ -225,29 +274,6 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">Logo</label>
-                <div class="dash-file-upload">
-                  <div class="dash-file-preview" id="sf-logo-preview"></div>
-                  <label class="dash-file-btn">
-                    <span>Bild hochladen</span>
-                    <input type="file" id="sf-logo-input" accept="image/*" hidden>
-                  </label>
-                  <span class="dash-file-status" id="sf-logo-status"></span>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Banner</label>
-                <div class="dash-file-upload">
-                  <div class="dash-file-preview" id="sf-banner-preview"></div>
-                  <label class="dash-file-btn">
-                    <span>Bild hochladen</span>
-                    <input type="file" id="sf-banner-input" accept="image/*" hidden>
-                  </label>
-                  <span class="dash-file-status" id="sf-banner-status"></span>
-                </div>
-              </div>
               <div class="dash-toggle-row">
                 <div>
                   <span class="form-label">Direktnachrichten</span>
@@ -312,6 +338,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/dashboard.js?v=8"></script>
+  <script type="module" src="js/dashboard.js?v=9"></script>
 </body>
 </html>

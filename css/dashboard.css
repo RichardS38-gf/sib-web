@@ -649,6 +649,11 @@ textarea.form-input {
   text-align: center;
 }
 
+.dash-file-preview--wide {
+  width: 220px;
+  height: 110px;
+}
+
 .dash-file-btn {
   display: inline-flex;
   align-items: center;

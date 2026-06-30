@@ -674,6 +674,23 @@ function initDateiUploads () {
     e.target.value = ''
   })
 
+  // Titelbild (Willkommens-/About-Bild)
+  document.getElementById('sf-titelbild-input')?.addEventListener('change', async (e) => {
+    const datei = e.target.files[0]
+    if (!datei) return
+    const status = document.getElementById('sf-titelbild-status')
+    status.textContent = 'Lädt hoch…'
+    try {
+      const url = await ladeDateiHoch(datei, 'shop-titelbild/')
+      setzeBildPreview('sf-titelbild-preview', url)
+      status.textContent = 'Hochgeladen.'
+    } catch (err) {
+      console.error('Titelbild-Upload fehlgeschlagen:', err)
+      status.textContent = 'Upload fehlgeschlagen.'
+    }
+    e.target.value = ''
+  })
+
   // AGB-PDF
   document.getElementById('sf-agb-input')?.addEventListener('change', async (e) => {
     const datei = e.target.files[0]
@@ -699,14 +716,17 @@ function initDateiUploads () {
 function fuelleShopForm () {
   const f = document.getElementById('shop-form')
   f.name.value = shop.name || ''
-  f.beschreibung.value = shop.beschreibung || ''
   f.adresse.value = shop.adresse || ''
+  f.email.value = shop.email || ''
+  f.about_headline.value = shop.about_headline || ''
+  f.beschreibung.value = shop.beschreibung || ''
   f.zahlungsmethoden.value = shop.zahlungsmethoden || ''
   f.rueckgaben.value = shop.rueckgaben || ''
 
   fuelleOeffnungszeiten(shop.oeffnungszeiten)
   setzeBildPreview('sf-logo-preview', shop.logo_url)
   setzeBildPreview('sf-banner-preview', shop.banner_url)
+  setzeBildPreview('sf-titelbild-preview', shop.bild_url)
   setzeAgbAnzeige(shop.agb_url)
 
   const msgToggle = document.getElementById('sf-messaging')
@@ -725,17 +745,21 @@ function initShopForm () {
 
     const logoUrl = document.getElementById('sf-logo-preview')?.dataset.url || null
     const bannerUrl = document.getElementById('sf-banner-preview')?.dataset.url || null
+    const titelbildUrl = document.getElementById('sf-titelbild-preview')?.dataset.url || null
     const agbUrl = document.getElementById('sf-agb-current')?.dataset.url || null
 
     const updates = {
       name: form.name.value.trim(),
-      beschreibung: form.beschreibung.value.trim() || null,
       adresse: form.adresse.value.trim() || null,
+      email: form.email.value.trim() || null,
+      about_headline: form.about_headline.value.trim() || null,
+      beschreibung: form.beschreibung.value.trim() || null,
       oeffnungszeiten: sammleOeffnungszeiten(),
       zahlungsmethoden: form.zahlungsmethoden.value.trim() || null,
       rueckgaben: form.rueckgaben.value.trim() || null,
       logo_url: logoUrl,
       banner_url: bannerUrl,
+      bild_url: titelbildUrl,
       agb_url: agbUrl,
       messaging_enabled: document.getElementById('sf-messaging')?.checked ?? false
     }

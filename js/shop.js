@@ -396,7 +396,7 @@ function renderAbout (shop) {
 
   inner.innerHTML = `
     <div class="shop-about__inner-card">
-      <h2 class="shop-about__headline">Willkommen bei ${esc(shop.name)} ✨</h2>
+      <h2 class="shop-about__headline">${esc(shop.about_headline || `Willkommen bei ${shop.name} ✨`)}</h2>
       ${bildHtml}
       ${beschreibung ? `<div class="shop-about__text">${beschreibung}</div>` : ''}
     </div>`
