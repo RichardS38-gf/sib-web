@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Händler-Login — Shoppen in Braunschweig</title>
-  <meta name="description" content="Händler-Login — Shoppen in Braunschweig.">
+  <title>Anmelden — Shoppen in Braunschweig</title>
+  <meta name="description" content="Anmelden bei Shoppen in Braunschweig — für Käufer und Händler.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/base.css?v=3">
-  <link rel="stylesheet" href="css/layout.css?v=3">
-  <link rel="stylesheet" href="css/components.css?v=6">
-  <link rel="stylesheet" href="css/login.css?v=2">
+  <link rel="stylesheet" href="css/layout.css?v=4">
+  <link rel="stylesheet" href="css/components.css?v=10">
+  <link rel="stylesheet" href="css/login.css?v=3">
 </head>
 <body>
 
@@ -39,7 +39,7 @@
 
         <div class="site-header__actions">
           <a class="site-header__textlink site-header__desktop-only" href="haendler-login.html">Anmelden</a>
-          <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Händler werden</a>
+          <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Registrieren</a>
           <button class="site-header__burger" type="button" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
             <span></span><span></span><span></span>
           </button>
@@ -55,7 +55,7 @@
         <a href="geschaefte.html">Geschäfte</a>
         <a href="newsletter.html">Newsletter</a>
         <a class="btn btn--outline-light btn--full" href="haendler-login.html">Anmelden</a>
-        <a class="btn btn--light btn--full" href="haendler-werden.html">Händler werden</a>
+        <a class="btn btn--light btn--full" href="haendler-werden.html">Registrieren</a>
       </div>
     </div>
   </header>
@@ -64,9 +64,15 @@
     <section class="section login">
       <div class="container">
         <div class="login__box">
-          <span class="badge badge--outline login__eyebrow">Für Händler</span>
-          <h1 class="login__headline">Händler-Login</h1>
-          <p class="login__subtext">Melde dich an, um deine Produkte und Reservierungen zu verwalten.</p>
+          <span class="badge badge--outline login__eyebrow">Anmelden</span>
+          <h1 class="login__headline" id="login-headline">Willkommen zurück</h1>
+          <p class="login__subtext" id="login-subtext">Melde dich an, um fortzufahren.</p>
+
+          <!-- Rollen-Toggle -->
+          <div class="rollen-toggle" role="tablist" aria-label="Kontotyp wählen">
+            <button class="rollen-toggle__btn is-active" data-rolle="kunde" type="button" role="tab">Als Käufer</button>
+            <button class="rollen-toggle__btn" data-rolle="haendler" type="button" role="tab">Als Händler</button>
+          </div>
 
           <form class="login-form" id="login-form" novalidate>
             <div class="form-group">
@@ -80,6 +86,8 @@
             <button class="btn btn--primary btn--full" type="submit">Anmelden</button>
             <div id="login-feedback" aria-live="polite"></div>
           </form>
+
+          <p class="login__switch">Noch kein Konto? <a id="login-register-link" href="haendler-werden.html?rolle=kunde">Jetzt registrieren</a></p>
         </div>
       </div>
     </section>
@@ -102,13 +110,15 @@
             <li><a href="newsletter.html">Newsletter</a></li>
             <li><a href="ueber-uns.html">Über uns</a></li>
             <li><a href="faq.html">FAQ</a></li>
+            <li><a href="haendler-login.html?rolle=kunde">Käufer-Login</a></li>
+            <li><a href="haendler-werden.html?rolle=kunde">Käufer-Account erstellen</a></li>
           </ul>
         </div>
         <div class="site-footer__col">
           <p class="site-footer__col-title">Für Verkäufer</p>
           <ul>
-            <li><a href="haendler-werden.html">Händler werden</a></li>
-            <li><a href="haendler-login.html">Händler Login</a></li>
+            <li><a href="haendler-werden.html?rolle=haendler">Händler werden</a></li>
+            <li><a href="haendler-login.html?rolle=haendler">Händler Login</a></li>
             <li><a href="faq.html">FAQ</a></li>
           </ul>
         </div>
@@ -127,6 +137,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/login.js?v=2"></script>
+  <script type="module" src="js/login.js?v=3"></script>
 </body>
 </html>

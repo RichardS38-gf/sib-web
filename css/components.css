@@ -110,6 +110,26 @@
   border: 1.5px solid var(--color-ink);
 }
 
+.product-card__wish {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-ink);
+  transition: transform 0.15s, color 0.15s;
+}
+.product-card__wish:hover { transform: scale(1.08); }
+.product-card__wish.is-active { color: #e0245e; }
+
 /* Body */
 .product-card__body {
   padding: 0.75rem;

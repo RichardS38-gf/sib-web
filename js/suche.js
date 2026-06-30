@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings } from './product-card.js'
+import { renderProductCard, fetchProductRatings, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -91,12 +91,17 @@ async function renderProdukte (produkte, q) {
   }
 
   const produktIds = produkte.map(p => p.id)
-  const ratings = await fetchProductRatings(supabase, produktIds)
+  const [ratings, wunschlisteIds] = await Promise.all([
+    fetchProductRatings(supabase, produktIds),
+    fetchWunschlisteIds(supabase)
+  ])
   container.innerHTML = produkte.map((p) => renderProductCard(
     p,
     p.shops?.name || 'Lokaler Händler',
-    ratings[p.id] || null
+    ratings[p.id] || null,
+    wunschlisteIds.has(p.id)
   )).join('')
+  initWunschlisteButtons(supabase, container)
 }
 
 // ── Init ──

@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, isSaleAktiv } from './product-card.js'
+import { renderProductCard, fetchProductRatings, isSaleAktiv, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -199,6 +199,9 @@ function renderDetail (produkt, varianten = []) {
     <div class="pdp-layout">
       <div class="pdp-gallery">
         ${neuBadge(produkt)}
+        <button class="product-card__wish pdp-gallery__wish" type="button" data-wunschliste-produkt="${produkt.id}" aria-label="Zur Wunschliste hinzufügen" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>
+        </button>
         ${mainImg}
         ${thumbsHtml}
       </div>
@@ -225,6 +228,15 @@ function renderDetail (produkt, varianten = []) {
 
   initGallery()
   initCopyButtons(el)
+  initWunschlisteButtons(supabase, el)
+  fetchWunschlisteIds(supabase).then((ids) => {
+    const btn = el.querySelector('[data-wunschliste-produkt]')
+    if (btn && ids.has(produkt.id)) {
+      btn.classList.add('is-active')
+      btn.setAttribute('aria-pressed', 'true')
+      btn.querySelector('svg').setAttribute('fill', 'currentColor')
+    }
+  })
   if (verfuegbar) {
     initGroessen()
     initReservierung(produkt)
@@ -294,13 +306,15 @@ function initReservierung (produkt) {
     const ablauf = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const { data: neu, error } = await supabase.from('reservierungen').insert({
         produkt_id: produkt.id,
         kunde_name: name,
         kunde_email: email,
         groesse: selectedGroesse,
         status: 'offen',
-        ablauf_am: ablauf
+        ablauf_am: ablauf,
+        user_id: session?.user?.id || null
       }).select('id').single()
 
       if (error) throw error
@@ -465,9 +479,11 @@ function initBewertungForm (produkt) {
     submitBtn.disabled = true; submitBtn.textContent = 'Wird gesendet…'
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const { error } = await supabase.from('bewertungen').insert({
         produkt_id: produkt.id, autor_name: nameVal, autor_email: emailVal,
-        sterne: gewaehlteSterne, text: textVal || null
+        sterne: gewaehlteSterne, text: textVal || null,
+        user_id: session?.user?.id || null
       })
       if (error) throw error
       form.reset(); form.hidden = true

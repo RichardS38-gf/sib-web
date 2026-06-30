@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mein Konto — Shoppen in Braunschweig</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css?v=3">
+  <link rel="stylesheet" href="css/layout.css?v=4">
+  <link rel="stylesheet" href="css/components.css?v=10">
+  <link rel="stylesheet" href="css/dashboard.css?v=12">
+  <link rel="stylesheet" href="css/konto.css?v=1">
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="container">
+      <div class="site-header__inner">
+        <a class="site-header__logo" href="index.html" aria-label="Shoppen in Braunschweig — Startseite">
+          <img src="https://ezruwstzpncunbjzwdfk.supabase.co/storage/v1/object/public/produkt-bilder/Group%20635898.-fotor-enhance-2026031913012.jpg" alt="Shoppen in Braunschweig"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+          <span class="site-header__logo-text" style="display:none">Shoppen in&nbsp;Braunschweig</span>
+        </a>
+
+        <form class="site-header__search" role="search" action="suche.html" method="get">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 20.3l-5.4-5.4a7.5 7.5 0 1 0-1.4 1.4l5.4 5.4a1 1 0 0 0 1.4-1.4zM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z"/></svg>
+          <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
+        </form>
+
+        <nav class="site-header__nav" aria-label="Hauptnavigation">
+          <a href="kategorie.html">Artikel</a>
+          <a href="geschaefte.html">Geschäfte</a>
+        </nav>
+
+        <div class="site-header__actions">
+          <a class="site-header__textlink site-header__desktop-only" href="haendler-login.html">Anmelden</a>
+          <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Registrieren</a>
+          <button class="site-header__burger" type="button" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile-Menü -->
+      <div class="site-header__mobile" id="mobile-menu" hidden>
+        <form class="site-header__mobile-search" role="search" action="suche.html" method="get">
+          <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
+        </form>
+        <a href="kategorie.html">Artikel</a>
+        <a href="geschaefte.html">Geschäfte</a>
+        <a href="newsletter.html">Newsletter</a>
+        <a class="btn btn--outline-light btn--full" href="haendler-login.html">Anmelden</a>
+        <a class="btn btn--light btn--full" href="haendler-werden.html">Registrieren</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+
+        <!-- Ladezustand / Schutz -->
+        <div id="konto-loading" class="loading">Konto wird geladen…</div>
+
+        <!-- Konto-Inhalt (nach Auth sichtbar) -->
+        <div id="konto" hidden>
+
+          <!-- Begrüßung + Logout -->
+          <div class="dash-head">
+            <div>
+              <p class="label">Mein Konto</p>
+              <h1 class="dash-head__greeting" id="konto-greeting">Willkommen</h1>
+            </div>
+            <button class="btn btn--outline" id="konto-logout-btn" type="button">Abmelden</button>
+          </div>
+
+          <!-- Tab-Navigation -->
+          <div class="dash-tabs" role="tablist">
+            <button class="dash-tab is-active" data-tab="daten" role="tab">Persönliche Daten</button>
+            <button class="dash-tab" data-tab="reservierungen" role="tab">Reservierungen</button>
+            <button class="dash-tab" data-tab="bewertungen" role="tab">Bewertungen</button>
+            <button class="dash-tab" data-tab="wunschliste" role="tab">Wunschliste</button>
+            <button class="dash-tab" data-tab="nachrichten" role="tab">Nachrichten</button>
+          </div>
+
+          <!-- TAB: Persönliche Daten -->
+          <div class="dash-panel is-active" data-panel="daten">
+            <h2 class="dash-panel__heading">Persönliche Daten</h2>
+            <form class="dash-shop-form" id="konto-daten-form">
+              <div class="dash-produkt-form__row">
+                <div class="form-group">
+                  <label class="form-label" for="kf-vorname">Vorname</label>
+                  <input class="form-input" type="text" id="kf-vorname" name="vorname" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="kf-nachname">Nachname</label>
+                  <input class="form-input" type="text" id="kf-nachname" name="nachname" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="kf-email">E-Mail</label>
+                <input class="form-input" type="email" id="kf-email" name="email" disabled>
+                <p class="dash-toggle-row__desc">Die E-Mail-Adresse ist mit deinem Login verknüpft und kann nicht geändert werden.</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="kf-telefon">Telefon <span class="bw-optional">(optional)</span></label>
+                <input class="form-input" type="tel" id="kf-telefon" name="telefon">
+              </div>
+              <div>
+                <button class="btn btn--primary" type="submit">Speichern</button>
+              </div>
+              <div id="konto-daten-feedback" aria-live="polite"></div>
+            </form>
+
+            <h2 class="dash-panel__heading" style="margin-top:var(--space-6)">Passwort ändern</h2>
+            <form class="dash-shop-form" id="konto-passwort-form">
+              <div class="form-group">
+                <label class="form-label" for="kf-passwort">Neues Passwort</label>
+                <input class="form-input" type="password" id="kf-passwort" name="passwort" minlength="6" autocomplete="new-password">
+              </div>
+              <div>
+                <button class="btn btn--outline" type="submit">Passwort aktualisieren</button>
+              </div>
+              <div id="konto-passwort-feedback" aria-live="polite"></div>
+            </form>
+          </div>
+
+          <!-- TAB: Reservierungen -->
+          <div class="dash-panel" data-panel="reservierungen" hidden>
+            <h2 class="dash-panel__heading">Meine Reservierungen</h2>
+            <div id="konto-reservierungen-content">
+              <div class="loading">Reservierungen werden geladen…</div>
+            </div>
+          </div>
+
+          <!-- TAB: Bewertungen -->
+          <div class="dash-panel" data-panel="bewertungen" hidden>
+            <h2 class="dash-panel__heading">Meine Bewertungen</h2>
+            <div id="konto-bewertungen-content">
+              <div class="loading">Bewertungen werden geladen…</div>
+            </div>
+          </div>
+
+          <!-- TAB: Wunschliste -->
+          <div class="dash-panel" data-panel="wunschliste" hidden>
+            <h2 class="dash-panel__heading">Meine Wunschliste</h2>
+            <div class="grid-5" id="konto-wunschliste-content">
+              <div class="loading">Wunschliste wird geladen…</div>
+            </div>
+          </div>
+
+          <!-- TAB: Nachrichten -->
+          <div class="dash-panel" data-panel="nachrichten" hidden>
+            <h2 class="dash-panel__heading">Meine Nachrichten</h2>
+            <div id="konto-nachrichten-content">
+              <div class="loading">Nachrichten werden geladen…</div>
+            </div>
+            <div class="dash-chat" id="konto-chat" hidden>
+              <div class="dash-chat__tabs" id="konto-chat-tabs"></div>
+              <div class="dash-chat__messages" id="konto-chat-messages"></div>
+              <div class="dash-chat__footer">
+                <textarea class="dash-chat__input" id="konto-chat-input" placeholder="Nachricht schreiben…" rows="1"></textarea>
+                <button class="dash-chat__send" id="konto-chat-send" type="button">
+                  <svg viewBox="0 0 24 24" width="18" height="18"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__brand">
+        <span class="site-footer__logo">Shoppen in Braunschweig</span>
+        <p class="site-footer__slogan">Lokale Händler. Einzigartige Produkte.</p>
+      </div>
+
+      <div class="site-footer__grid">
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Für Käufer</p>
+          <ul>
+            <li><a href="kategorie.html">Alle Produkte</a></li>
+            <li><a href="geschaefte.html">Geschäfte entdecken</a></li>
+            <li><a href="newsletter.html">Newsletter</a></li>
+            <li><a href="ueber-uns.html">Über uns</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+            <li><a href="haendler-login.html?rolle=kunde">Käufer-Login</a></li>
+            <li><a href="haendler-werden.html?rolle=kunde">Käufer-Account erstellen</a></li>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Für Verkäufer</p>
+          <ul>
+            <li><a href="haendler-werden.html?rolle=haendler">Händler werden</a></li>
+            <li><a href="haendler-login.html?rolle=haendler">Händler Login</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Kontakt</p>
+          <ul>
+            <li><a href="mailto:support@shoppeninbraunschweig.de">support@shoppeninbraunschweig.de</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="site-footer__bottom">
+        <p>© 2026 Shoppen in Braunschweig</p>
+        <p><a href="datenschutz.html">Datenschutz</a> &nbsp;|&nbsp; <a href="impressum.html">Impressum</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="js/konto.js?v=1"></script>
+</body>
+</html>

@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/base.css?v=3">
   <link rel="stylesheet" href="css/layout.css?v=4">
-  <link rel="stylesheet" href="css/components.css?v=10">
+  <link rel="stylesheet" href="css/components.css?v=11">
   <link rel="stylesheet" href="css/suche.css?v=3">
 </head>
 <body>
@@ -40,7 +40,7 @@
 
         <div class="site-header__actions">
           <a class="site-header__textlink site-header__desktop-only" href="haendler-login.html">Anmelden</a>
-          <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Händler werden</a>
+          <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Registrieren</a>
           <button class="site-header__burger" type="button" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
             <span></span><span></span><span></span>
           </button>
@@ -56,7 +56,7 @@
         <a href="geschaefte.html">Geschäfte</a>
         <a href="newsletter.html">Newsletter</a>
         <a class="btn btn--outline-light btn--full" href="haendler-login.html">Anmelden</a>
-        <a class="btn btn--light btn--full" href="haendler-werden.html">Händler werden</a>
+        <a class="btn btn--light btn--full" href="haendler-werden.html">Registrieren</a>
       </div>
     </div>
   </header>
@@ -106,13 +106,15 @@
             <li><a href="newsletter.html">Newsletter</a></li>
             <li><a href="ueber-uns.html">Über uns</a></li>
             <li><a href="faq.html">FAQ</a></li>
+            <li><a href="haendler-login.html?rolle=kunde">Käufer-Login</a></li>
+            <li><a href="haendler-werden.html?rolle=kunde">Käufer-Account erstellen</a></li>
           </ul>
         </div>
         <div class="site-footer__col">
           <p class="site-footer__col-title">Für Verkäufer</p>
           <ul>
-            <li><a href="haendler-werden.html">Händler werden</a></li>
-            <li><a href="haendler-login.html">Händler Login</a></li>
+            <li><a href="haendler-werden.html?rolle=haendler">Händler werden</a></li>
+            <li><a href="haendler-login.html?rolle=haendler">Händler Login</a></li>
             <li><a href="faq.html">FAQ</a></li>
           </ul>
         </div>
@@ -131,6 +133,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/suche.js?v=2"></script>
+  <script type="module" src="js/suche.js?v=3"></script>
 </body>
 </html>

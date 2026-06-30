@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings } from './product-card.js'
+import { renderProductCard, fetchProductRatings, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -291,20 +291,23 @@ function initChatWidget (shop) {
   function startPolling () { stopPolling(); pollTimer = setInterval(loadMessages, 10000) }
   function stopPolling  () { if (pollTimer) { clearInterval(pollTimer); pollTimer = null } }
 
-  // ── Senden (vollständig anonym) ──
+  // ── Senden (anonym ODER mit Kundenkonto verknüpft) ──
   async function sendMessage () {
     const text = input.value.trim()
     if (!text) return
     sendBtn.disabled = true
 
     try {
+      const { data: { session: kundenSession } } = await supabase.auth.getSession()
+      const kundenUserId = kundenSession?.user?.id || null
+
       if (!session?.chat_id) {
-        // Erste Nachricht: Chat anonym anlegen
+        // Erste Nachricht: Chat anlegen (anonym oder mit user_id, falls eingeloggt)
         // ID selbst generieren → kein SELECT nach INSERT nötig (anon hat kein SELECT)
         const chatId = crypto.randomUUID()
         const { error: e1 } = await supabase
           .from('chats')
-          .insert({ id: chatId, shop_id: shop.id, sender_name: 'Anonym', sender_email: '' })
+          .insert({ id: chatId, shop_id: shop.id, sender_name: 'Anonym', sender_email: '', user_id: kundenUserId })
         if (e1) throw e1
 
         const { error: e2 } = await supabase
@@ -409,13 +412,15 @@ const PAGE_SIZE = 10
 let alleProdukte = []
 let gezeigte = 0
 let produktRatings = {}  // produkt_id -> { summe, anzahl }
+let wunschlisteIds = new Set()
 
 function renderProduktBatch (shop) {
   const container = document.getElementById('shop-produkte')
   const batch = alleProdukte.slice(0, gezeigte + PAGE_SIZE)
   gezeigte = batch.length
 
-  container.innerHTML = batch.map((p) => renderProductCard(p, shop.name, produktRatings[p.id] || null)).join('')
+  container.innerHTML = batch.map((p) => renderProductCard(p, shop.name, produktRatings[p.id] || null, wunschlisteIds.has(p.id))).join('')
+  initWunschlisteButtons(supabase, container)
 
   document.getElementById('shop-mehr-wrap').hidden = gezeigte >= alleProdukte.length
 }
@@ -444,6 +449,7 @@ async function ladeProdukte (shop) {
     }
 
     produktRatings = await fetchProductRatings(supabase, alleProdukte.map(p => p.id))
+    wunschlisteIds = await fetchWunschlisteIds(supabase)
 
     renderProduktBatch(shop)
     document.getElementById('shop-mehr-btn').addEventListener('click', () => renderProduktBatch(shop))

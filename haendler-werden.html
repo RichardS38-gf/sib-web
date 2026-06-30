@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Händler werden — Shoppen in Braunschweig</title>
-  <meta name="description" content="Werde Händler bei Shoppen in Braunschweig und erreiche neue Kunden in deiner Stadt.">
+  <title>Registrieren — Shoppen in Braunschweig</title>
+  <meta name="description" content="Registriere dich bei Shoppen in Braunschweig — als Käufer oder als Händler.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/base.css?v=3">
-  <link rel="stylesheet" href="css/layout.css?v=3">
-  <link rel="stylesheet" href="css/components.css?v=6">
-  <link rel="stylesheet" href="css/haendler-werden.css?v=3">
+  <link rel="stylesheet" href="css/layout.css?v=4">
+  <link rel="stylesheet" href="css/components.css?v=10">
+  <link rel="stylesheet" href="css/haendler-werden.css?v=4">
+  <link rel="stylesheet" href="css/login.css?v=3">
 </head>
 <body>
 
@@ -39,7 +40,7 @@
 
         <div class="site-header__actions">
           <a class="site-header__textlink site-header__desktop-only" href="haendler-login.html">Anmelden</a>
-          <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Händler werden</a>
+          <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Registrieren</a>
           <button class="site-header__burger" type="button" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
             <span></span><span></span><span></span>
           </button>
@@ -55,7 +56,7 @@
         <a href="geschaefte.html">Geschäfte</a>
         <a href="newsletter.html">Newsletter</a>
         <a class="btn btn--outline-light btn--full" href="haendler-login.html">Anmelden</a>
-        <a class="btn btn--light btn--full" href="haendler-werden.html">Händler werden</a>
+        <a class="btn btn--light btn--full" href="haendler-werden.html">Registrieren</a>
       </div>
     </div>
   </header>
@@ -65,13 +66,8 @@
     <!-- 1. Hero (dunkel) -->
     <section class="section section--dark hw-hero">
       <div class="container">
-        <h1 class="hw-hero__headline">Dein Geschäft.<br>Online sichtbar.</h1>
-        <p class="hw-hero__subtext">Registriere dein Geschäft auf Shoppen in Braunschweig und erreiche tausende lokale Käufer.</p>
-        <ul class="hw-vorteile">
-          <li class="hw-vorteil">Kostenlos starten</li>
-          <li class="hw-vorteil">Keine Provision</li>
-          <li class="hw-vorteil">Volle Kontrolle</li>
-        </ul>
+        <h1 class="hw-hero__headline" id="hw-hero-headline">Lokal einkaufen.<br>Online entdecken.</h1>
+        <p class="hw-hero__subtext" id="hw-hero-subtext">Erstelle dein Konto bei Shoppen in Braunschweig.</p>
       </div>
     </section>
 
@@ -79,58 +75,111 @@
     <section class="section">
       <div class="container">
         <div class="hw-form-wrap">
-          <h2 class="hw-form__headline">Jetzt registrieren</h2>
 
-          <form class="hw-form" id="haendler-form" novalidate>
-            <div class="hw-form__row">
-              <div class="form-group">
-                <label class="form-label" for="hf-vorname">Vorname</label>
-                <input class="form-input" type="text" id="hf-vorname" name="vorname" required autocomplete="given-name">
+          <!-- Rollen-Toggle -->
+          <div class="rollen-toggle" role="tablist" aria-label="Kontotyp wählen">
+            <button class="rollen-toggle__btn is-active" data-rolle="kunde" type="button" role="tab">Als Käufer</button>
+            <button class="rollen-toggle__btn" data-rolle="haendler" type="button" role="tab">Als Händler</button>
+          </div>
+
+          <!-- KÄUFER-FORMULAR -->
+          <div id="kunde-block">
+            <h2 class="hw-form__headline">Käufer-Account erstellen</h2>
+            <p class="login__subtext">Kostenlos. Sieh deine Reservierungen, Bewertungen und Wunschliste an einem Ort.</p>
+
+            <form class="hw-form" id="kunde-form" novalidate>
+              <div class="hw-form__row">
+                <div class="form-group">
+                  <label class="form-label" for="kf-vorname">Vorname</label>
+                  <input class="form-input" type="text" id="kf-vorname" name="vorname" required autocomplete="given-name">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="kf-nachname">Nachname</label>
+                  <input class="form-input" type="text" id="kf-nachname" name="nachname" required autocomplete="family-name">
+                </div>
               </div>
+
               <div class="form-group">
-                <label class="form-label" for="hf-nachname">Nachname</label>
-                <input class="form-input" type="text" id="hf-nachname" name="nachname" required autocomplete="family-name">
+                <label class="form-label" for="kf-email">E-Mail-Adresse</label>
+                <input class="form-input" type="email" id="kf-email" name="email" required autocomplete="email">
               </div>
-            </div>
 
-            <div class="form-group">
-              <label class="form-label" for="hf-email">E-Mail-Adresse</label>
-              <input class="form-input" type="email" id="hf-email" name="email" required autocomplete="email">
-            </div>
+              <div class="form-group">
+                <label class="form-label" for="kf-passwort">Passwort</label>
+                <input class="form-input" type="password" id="kf-passwort" name="passwort" required minlength="6" autocomplete="new-password">
+              </div>
 
-            <div class="form-group">
-              <label class="form-label" for="hf-telefon">Telefonnummer</label>
-              <input class="form-input" type="tel" id="hf-telefon" name="telefon" required autocomplete="tel">
-            </div>
+              <label class="hw-check">
+                <input type="checkbox" id="kf-datenschutz" name="datenschutz" required>
+                <span>Ich habe die <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und akzeptiere sie.</span>
+              </label>
 
-            <div class="form-group">
-              <label class="form-label" for="hf-geschaeft">Geschäftsname</label>
-              <input class="form-input" type="text" id="hf-geschaeft" name="geschaeft_name" required>
-            </div>
+              <button class="btn btn--primary btn--full" type="submit">Käufer-Account erstellen</button>
+              <div id="kf-feedback" aria-live="polite"></div>
+            </form>
 
-            <div class="form-group">
-              <label class="form-label" for="hf-adresse">Adresse des Geschäfts</label>
-              <input class="form-input" type="text" id="hf-adresse" name="adresse" required>
-            </div>
+            <p class="login__switch">Schon ein Konto? <a href="haendler-login.html?rolle=kunde">Jetzt anmelden</a></p>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label" for="hf-beschreibung">Kurze Beschreibung des Geschäfts</label>
-              <textarea class="form-input" id="hf-beschreibung" name="beschreibung" rows="4"></textarea>
-            </div>
+          <!-- HÄNDLER-FORMULAR -->
+          <div id="haendler-block" hidden>
+            <h2 class="hw-form__headline">Jetzt als Händler registrieren</h2>
+            <p class="login__subtext">Wir prüfen deine Anfrage und melden uns innerhalb von 2 Werktagen.</p>
 
-            <div class="form-group">
-              <label class="form-label" for="hf-logo">Logo hochladen <span class="hw-optional">(optional)</span></label>
-              <input class="form-input" type="file" id="hf-logo" name="logo" accept="image/*">
-            </div>
+            <form class="hw-form" id="haendler-form" novalidate>
+              <div class="hw-form__row">
+                <div class="form-group">
+                  <label class="form-label" for="hf-vorname">Vorname</label>
+                  <input class="form-input" type="text" id="hf-vorname" name="vorname" required autocomplete="given-name">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="hf-nachname">Nachname</label>
+                  <input class="form-input" type="text" id="hf-nachname" name="nachname" required autocomplete="family-name">
+                </div>
+              </div>
 
-            <label class="hw-check">
-              <input type="checkbox" id="hf-datenschutz" name="datenschutz" required>
-              <span>Ich habe die <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und akzeptiere sie.</span>
-            </label>
+              <div class="form-group">
+                <label class="form-label" for="hf-email">E-Mail-Adresse</label>
+                <input class="form-input" type="email" id="hf-email" name="email" required autocomplete="email">
+              </div>
 
-            <button class="btn btn--primary btn--full" type="submit">Registrierung absenden</button>
-            <div id="hw-feedback" aria-live="polite"></div>
-          </form>
+              <div class="form-group">
+                <label class="form-label" for="hf-telefon">Telefonnummer</label>
+                <input class="form-input" type="tel" id="hf-telefon" name="telefon" required autocomplete="tel">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="hf-geschaeft">Geschäftsname</label>
+                <input class="form-input" type="text" id="hf-geschaeft" name="geschaeft_name" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="hf-adresse">Adresse des Geschäfts</label>
+                <input class="form-input" type="text" id="hf-adresse" name="adresse" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="hf-beschreibung">Kurze Beschreibung des Geschäfts</label>
+                <textarea class="form-input" id="hf-beschreibung" name="beschreibung" rows="4"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="hf-logo">Logo hochladen <span class="hw-optional">(optional)</span></label>
+                <input class="form-input" type="file" id="hf-logo" name="logo" accept="image/*">
+              </div>
+
+              <label class="hw-check">
+                <input type="checkbox" id="hf-datenschutz" name="datenschutz" required>
+                <span>Ich habe die <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a> gelesen und akzeptiere sie.</span>
+              </label>
+
+              <button class="btn btn--primary btn--full" type="submit">Registrierung absenden</button>
+              <div id="hw-feedback" aria-live="polite"></div>
+            </form>
+
+            <p class="login__switch">Schon Händler bei uns? <a href="haendler-login.html?rolle=haendler">Jetzt anmelden</a></p>
+          </div>
+
         </div>
       </div>
     </section>
@@ -154,13 +203,15 @@
             <li><a href="newsletter.html">Newsletter</a></li>
             <li><a href="ueber-uns.html">Über uns</a></li>
             <li><a href="faq.html">FAQ</a></li>
+            <li><a href="haendler-login.html?rolle=kunde">Käufer-Login</a></li>
+            <li><a href="haendler-werden.html?rolle=kunde">Käufer-Account erstellen</a></li>
           </ul>
         </div>
         <div class="site-footer__col">
           <p class="site-footer__col-title">Für Verkäufer</p>
           <ul>
-            <li><a href="haendler-werden.html">Händler werden</a></li>
-            <li><a href="haendler-login.html">Händler Login</a></li>
+            <li><a href="haendler-werden.html?rolle=haendler">Händler werden</a></li>
+            <li><a href="haendler-login.html?rolle=haendler">Händler Login</a></li>
             <li><a href="faq.html">FAQ</a></li>
           </ul>
         </div>
@@ -179,6 +230,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/haendler-werden.js?v=2"></script>
+  <script type="module" src="js/haendler-werden.js?v=3"></script>
 </body>
 </html>

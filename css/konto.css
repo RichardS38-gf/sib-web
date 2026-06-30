@@ -1,0 +1,11 @@
+/* konto.css — Käufer-Konto, ergänzt dashboard.css */
+
+.dash-chat__msg.out .dash-chat__bubble {
+  background: var(--color-ink);
+  color: #fff;
+}
+
+.dash-chat__msg.in .dash-chat__bubble {
+  background: var(--color-bg-soft, #f5f5f3);
+  color: var(--color-ink);
+}

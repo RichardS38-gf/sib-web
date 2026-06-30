@@ -3,7 +3,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings } from './product-card.js'
+import { renderProductCard, fetchProductRatings, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -69,9 +69,9 @@ async function ladeKategorien () {
 }
 
 // "Neu"-Badge und Karte werden jetzt von product-card.js geliefert
-function produktKarte (p, ratings) {
+function produktKarte (p, ratings, wunschlisteIds) {
   const rating = ratings?.[p.id] || null
-  return renderProductCard(p, p.shops?.name || 'Lokaler Händler', rating)
+  return renderProductCard(p, p.shops?.name || 'Lokaler Händler', rating, wunschlisteIds?.has(p.id))
 }
 
 // ── 4. Produkte: Neue und Beliebte als zwei separate Sektionen ──
@@ -101,7 +101,10 @@ async function ladeProdukte () {
     }
 
     const produktIds = alle.map(p => p.id)
-    const ratings = await fetchProductRatings(supabase, produktIds)
+    const [ratings, wunschlisteIds] = await Promise.all([
+      fetchProductRatings(supabase, produktIds),
+      fetchWunschlisteIds(supabase)
+    ])
 
     // Neu: neueste zuerst (freigegeben_am wenn vorhanden, sonst erstellt_am), Top 5
     const neu = [...alle]
@@ -120,15 +123,17 @@ async function ladeProdukte () {
 
     if (neueContainer) {
       neueContainer.innerHTML = neu.length > 0
-        ? neu.map((p) => produktKarte(p, ratings)).join('')
+        ? neu.map((p) => produktKarte(p, ratings, wunschlisteIds)).join('')
         : '<p class="empty-state">Noch keine neuen Produkte.</p>'
     }
 
     if (beliebtContainer) {
       beliebtContainer.innerHTML = beliebt.length > 0
-        ? beliebt.map((p) => produktKarte(p, ratings)).join('')
+        ? beliebt.map((p) => produktKarte(p, ratings, wunschlisteIds)).join('')
         : '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
     }
+
+    initWunschlisteButtons(supabase)
 
   } catch (err) {
     console.error('Produkte konnten nicht geladen werden:', err)

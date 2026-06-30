@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings } from './product-card.js'
+import { renderProductCard, fetchProductRatings, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -50,6 +50,7 @@ let alleProdukte = []
 let aktiverSlug = null
 let haendlerById = {}
 let shopRatings = {}  // produkt_id -> { summe, anzahl }
+let wunschlisteIds = new Set()
 const state = {
   min: null,
   max: null,
@@ -102,8 +103,10 @@ function renderProdukte (produkte) {
   container.innerHTML = produkte.map((p) => renderProductCard(
     p,
     p.shops?.name || 'Lokaler Händler',
-    shopRatings[p.id] || null
+    shopRatings[p.id] || null,
+    wunschlisteIds.has(p.id)
   )).join('')
+  initWunschlisteButtons(supabase, container)
 }
 
 function renderTags () {
@@ -272,9 +275,12 @@ async function init () {
     if (error) throw error
     alleProdukte = data || []
 
-    // Ratings für alle geladenen Produkte holen
+    // Ratings + Wunschliste für alle geladenen Produkte holen
     const produktIds = alleProdukte.map(p => p.id)
-    shopRatings = await fetchProductRatings(supabase, produktIds)
+    ;[shopRatings, wunschlisteIds] = await Promise.all([
+      fetchProductRatings(supabase, produktIds),
+      fetchWunschlisteIds(supabase)
+    ])
 
     fuelleHaendler()
     anwenden()
