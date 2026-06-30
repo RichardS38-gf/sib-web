@@ -1,11 +1,28 @@
 // js/login.js — SIB Anmelden (Käufer + Händler)
 // Authentifizierung via Supabase Auth (E-Mail + Passwort).
 // Toggle bestimmt die Weiterleitung nach erfolgreichem Login.
+// Optionaler "weiter"-Parameter leitet nach dem Login zurück zur Ursprungsseite
+// (z.B. wenn jemand von "Bewertung schreiben" hierher geschickt wurde).
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
 
 let aktiveRolle = 'kunde'
+
+function esc (value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function getZielUrl () {
+  const params = new URLSearchParams(window.location.search)
+  const weiter = params.get('weiter')
+  if (weiter && weiter.startsWith(window.location.origin)) return weiter
+  return aktiveRolle === 'haendler' ? 'dashboard.html' : 'konto.html'
+}
 
 // ── Mobile-Menü ──
 function initMobileMenu () {
@@ -53,10 +70,27 @@ function initRollenToggle () {
   setzeRolle(rolleParam === 'haendler' ? 'haendler' : 'kunde')
 }
 
-// Bereits eingeloggt? -> passendes Ziel je nach Account-Typ
+// Hinweistext anzeigen, falls man von einer Aktion hierher weitergeleitet wurde
+// (z.B. "Melde dich an, um eine Bewertung zu schreiben")
+function zeigeHinweis () {
+  const params = new URLSearchParams(window.location.search)
+  const hinweis = params.get('hinweis')
+  if (!hinweis) return
+  const subtext = document.getElementById('login-subtext')
+  if (subtext) subtext.innerHTML = `<span class="login__hinweis">${esc(hinweis)}</span>`
+}
+
+// Bereits eingeloggt? -> passendes Ziel je nach Account-Typ (oder "weiter"-Ziel)
 async function redirectIfLoggedIn () {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return
+
+  const params = new URLSearchParams(window.location.search)
+  const weiter = params.get('weiter')
+  if (weiter && weiter.startsWith(window.location.origin)) {
+    window.location.replace(weiter)
+    return
+  }
 
   // Prüfen ob ein Shop (Händler) verknüpft ist
   const { data: shop } = await supabase.from('shops').select('id').eq('user_id', session.user.id).maybeSingle()
@@ -90,8 +124,7 @@ function initLogin () {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
 
-      // Weiterleitung je nach gewähltem Toggle
-      window.location.replace(aktiveRolle === 'haendler' ? 'dashboard.html' : 'konto.html')
+      window.location.replace(getZielUrl())
     } catch (err) {
       console.error('Login fehlgeschlagen:', err)
       feedback.innerHTML = '<div class="error-msg">Anmeldung fehlgeschlagen. Bitte prüfe E-Mail und Passwort.</div>'
@@ -104,5 +137,6 @@ function initLogin () {
 initMobileMenu()
 initHeaderSearch()
 initRollenToggle()
+zeigeHinweis()
 redirectIfLoggedIn()
 initLogin()

@@ -442,7 +442,7 @@ async function ladeBewertungen (produkt) {
   }
 }
 
-function initBewertungForm (produkt) {
+async function initBewertungForm (produkt) {
   const toggle = document.getElementById('toggle-bewertung-form')
   const form = document.getElementById('bewertung-form')
   const feedback = document.getElementById('bewertung-feedback')
@@ -453,9 +453,38 @@ function initBewertungForm (produkt) {
     sternBtns.forEach(b => b.classList.toggle('is-on', Number(b.dataset.wert) <= wert))
   }
 
+  // Login-Status prüfen — nur angemeldete Käufer dürfen bewerten
+  const { data: { session } } = await supabase.auth.getSession()
+  let kundenProfil = null
+
+  if (session) {
+    const { data: kunde } = await supabase.from('kunden').select('vorname, nachname, email').eq('id', session.user.id).maybeSingle()
+    kundenProfil = kunde
+  }
+
   toggle.addEventListener('click', () => {
+    if (!session) {
+      window.location.href = `haendler-login.html?rolle=kunde&hinweis=${encodeURIComponent('Melde dich an, um eine Bewertung zu schreiben')}&weiter=${encodeURIComponent(window.location.href)}`
+      return
+    }
     form.hidden = !form.hidden
-    if (!form.hidden) form.querySelector('[name="name"]').focus()
+    if (!form.hidden) {
+      // Name + E-Mail aus dem Profil vorausfüllen, falls vorhanden
+      const nameFeld = form.querySelector('[name="name"]')
+      const emailFeld = form.querySelector('[name="email"]')
+      if (kundenProfil) {
+        const vollerName = [kundenProfil.vorname, kundenProfil.nachname].filter(Boolean).join(' ')
+        if (vollerName) nameFeld.value = vollerName
+        if (kundenProfil.email) emailFeld.value = kundenProfil.email
+      } else if (session.user.email) {
+        emailFeld.value = session.user.email
+      }
+      // Felder ausblenden, wenn bereits bekannt — angemeldete Käufer müssen sie nicht nochmal eintippen
+      nameFeld.closest('.form-group').hidden = !!nameFeld.value
+      emailFeld.closest('.form-group').hidden = !!emailFeld.value
+      const fokusFeld = !nameFeld.value ? nameFeld : (!emailFeld.value ? emailFeld : form.querySelector('#sterne-input .stern'))
+      fokusFeld.focus()
+    }
   })
 
   sternBtns.forEach(btn => btn.addEventListener('click', () => {
@@ -479,7 +508,6 @@ function initBewertungForm (produkt) {
     submitBtn.disabled = true; submitBtn.textContent = 'Wird gesendet…'
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       const { error } = await supabase.from('bewertungen').insert({
         produkt_id: produkt.id, autor_name: nameVal, autor_email: emailVal,
         sterne: gewaehlteSterne, text: textVal || null,

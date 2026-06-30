@@ -42,6 +42,16 @@
   text-underline-offset: 2px;
 }
 
+.login__hinweis {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: var(--radius-sm);
+  color: var(--color-on-dark);
+  font-weight: 500;
+}
+
 /* Heller Kontext (Registrieren-Seite nutzt .hw-form-wrap statt .login__box) */
 .hw-form-wrap .rollen-toggle {
   background: var(--color-bg-soft, #f5f5f3);
