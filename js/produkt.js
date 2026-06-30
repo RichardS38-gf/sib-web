@@ -43,7 +43,7 @@ function neuBadge (p) {
 
 function sterneHtml (n, max = 5) {
   const v = Math.max(0, Math.min(max, Math.round(n)))
-  return '<span class="stern-on">★</span>'.repeat(v) + '<span class="stern-off">★</span>'.repeat(max - v)
+  return '<span class="stern-on">★</span>'.repeat(v) + '<span class="stern-off">★</span>'.repeat(max - v) + `<span class="bw-karte__sterne-text">${v} von ${max}</span>`
 }
 
 function avatarHtml (name) {
@@ -382,12 +382,7 @@ function renderBewertungBatch () {
 
   liste.innerHTML = batch.map((b) => `
     <article class="bw-karte">
-      <div class="bw-karte__kopf">
-        ${avatarHtml(b.autor_name)}
-        <div>
-          <span class="bw-karte__autor-datum">${esc(b.autor_name)} <span class="bw-karte__datum">am ${formatBwDatum(b.erstellt_am)}</span></span>
-        </div>
-      </div>
+      <span class="bw-karte__autor-datum">${esc(b.autor_name)} <span class="bw-karte__datum">am ${formatBwDatum(b.erstellt_am)}</span></span>
       <div class="bw-karte__sterne">${sterneHtml(b.sterne)}</div>
       ${b.text ? `<p class="bw-karte__text">${esc(b.text)}</p>` : ''}
     </article>`).join('')

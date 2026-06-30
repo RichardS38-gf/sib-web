@@ -479,6 +479,15 @@
 .bw-karte__sterne {
   font-size: 1rem;
   letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.bw-karte__sterne-text {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  letter-spacing: normal;
 }
 
 .bw-karte__produkt {
