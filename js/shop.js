@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard } from './product-card.js'
+import { renderProductCard, fetchProductRatings } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -408,14 +408,14 @@ function renderAbout (shop) {
 const PAGE_SIZE = 10
 let alleProdukte = []
 let gezeigte = 0
-let shopBewertungRating = null  // wird nach ladeBewertungen gesetzt
+let produktRatings = {}  // produkt_id -> { summe, anzahl }
 
 function renderProduktBatch (shop) {
   const container = document.getElementById('shop-produkte')
   const batch = alleProdukte.slice(0, gezeigte + PAGE_SIZE)
   gezeigte = batch.length
 
-  container.innerHTML = batch.map((p) => renderProductCard(p, shop.name, shopBewertungRating)).join('')
+  container.innerHTML = batch.map((p) => renderProductCard(p, shop.name, produktRatings[p.id] || null)).join('')
 
   document.getElementById('shop-mehr-wrap').hidden = gezeigte >= alleProdukte.length
 }
@@ -442,6 +442,9 @@ async function ladeProdukte (shop) {
       container.innerHTML = '<p class="shop-empty">Dieses Geschäft hat aktuell keine Artikel.</p>'
       return 0
     }
+
+    produktRatings = await fetchProductRatings(supabase, alleProdukte.map(p => p.id))
+
     renderProduktBatch(shop)
     document.getElementById('shop-mehr-btn').addEventListener('click', () => renderProduktBatch(shop))
     return alleProdukte.length
@@ -453,12 +456,14 @@ async function ladeProdukte (shop) {
 }
 
 // ─────────────────────────────────────────
-// 5. BEWERTUNGEN
+// 5. BEWERTUNGEN (immer Produkt-bezogen — niemals Shop-bezogen)
+// Auf der Shop-Seite werden alle Bewertungen der Produkte dieses Shops
+// gesammelt angezeigt, jeweils mit Hinweis welches Produkt bewertet wurde.
+// Kunden können hier KEINE Bewertung schreiben (nur über die Produktseite).
 // ─────────────────────────────────────────
 let alleBewertungen = []
 let gezeigteB = 0
 const BW_PAGE = 6
-let gewaehlteSterne = 0
 
 function renderBewertungBatch () {
   const liste = document.getElementById('bewertungen-liste')
@@ -474,6 +479,7 @@ function renderBewertungBatch () {
         </div>
       </div>
       <div class="bw-karte__sterne">${sterneHtml(b.sterne)}</div>
+      ${b.produkte?.titel ? `<a class="bw-karte__produkt" href="produkt.html?id=${encodeURIComponent(b.produkt_id)}">Bewertung zu: ${esc(b.produkte.titel)}</a>` : ''}
       ${b.text ? `<p class="bw-karte__text">${esc(b.text)}</p>` : ''}
     </article>`).join('')
 
@@ -486,7 +492,9 @@ async function ladeBewertungen (shop) {
 
   try {
     const { data, error } = await supabase
-      .from('bewertungen').select('*').eq('shop_id', shop.id)
+      .from('bewertungen')
+      .select('*, produkte!inner(titel, shop_id)')
+      .eq('produkte.shop_id', shop.id)
       .order('erstellt_am', { ascending: false })
     if (error) throw error
     alleBewertungen = data || []
@@ -508,7 +516,7 @@ async function ladeBewertungen (shop) {
 
     if (alleBewertungen.length === 0) {
       document.getElementById('bewertungen-liste').innerHTML =
-        '<p class="shop-empty shop-empty--light">Sei die erste Person, die dieses Geschäft bewertet.</p>'
+        '<p class="shop-empty shop-empty--light">Dieses Geschäft hat noch keine Produktbewertungen.</p>'
     } else {
       gezeigteB = 0
       renderBewertungBatch()
@@ -520,57 +528,6 @@ async function ladeBewertungen (shop) {
     document.getElementById('shop-rating-summary').innerHTML = ''
     return { schnitt: 0, anzahl: 0 }
   }
-}
-
-function initBewertungForm (shop) {
-  const toggle    = document.getElementById('toggle-bewertung-form')
-  const form      = document.getElementById('bewertung-form')
-  const feedback  = document.getElementById('bewertung-feedback')
-  const sternBtns = Array.from(document.querySelectorAll('#sterne-input .stern'))
-
-  function zeichneSterne (wert) {
-    sternBtns.forEach(b => b.classList.toggle('is-on', Number(b.dataset.wert) <= wert))
-  }
-
-  toggle.addEventListener('click', () => {
-    form.hidden = !form.hidden
-    if (!form.hidden) form.querySelector('[name="name"]').focus()
-  })
-
-  sternBtns.forEach(btn => btn.addEventListener('click', () => {
-    gewaehlteSterne = Number(btn.dataset.wert)
-    zeichneSterne(gewaehlteSterne)
-  }))
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault()
-    feedback.innerHTML = ''
-    const nameVal  = form.querySelector('[name="name"]').value.trim()
-    const emailVal = form.querySelector('[name="email"]').value.trim()
-    const textVal  = form.querySelector('[name="text"]').value.trim()
-
-    if (!nameVal || !emailVal) { feedback.innerHTML = '<div class="error-msg">Bitte Name und E-Mail ausfüllen.</div>'; return }
-    if (gewaehlteSterne < 1) { feedback.innerHTML = '<div class="error-msg">Bitte wähle eine Sterne-Bewertung.</div>'; return }
-
-    const submitBtn = form.querySelector('button[type="submit"]')
-    submitBtn.disabled = true; submitBtn.textContent = 'Wird gesendet…'
-
-    try {
-      const { error } = await supabase.from('bewertungen').insert({
-        shop_id: shop.id, autor_name: nameVal, autor_email: emailVal,
-        sterne: gewaehlteSterne, text: textVal || null
-      })
-      if (error) throw error
-      form.reset(); form.hidden = true
-      gewaehlteSterne = 0; zeichneSterne(0)
-      alleBewertungen = []; gezeigteB = 0
-      ladeBewertungen(shop)
-    } catch (err) {
-      console.error(err)
-      feedback.innerHTML = '<div class="error-msg">Konnte nicht gespeichert werden.</div>'
-      submitBtn.disabled = false; submitBtn.textContent = 'Absenden'
-    }
-  })
 }
 
 // ─────────────────────────────────────────
@@ -634,16 +591,9 @@ async function init () {
       ladeBewertungen(shop)
     ])
 
-    // Bewertungsdaten für Produktkarten setzen + Karten neu rendern
-    if (anzahl > 0) {
-      shopBewertungRating = { summe: schnitt * anzahl, anzahl }
-      renderProduktBatch(shop)
-    }
-
     renderInfoBar(shop, produktAnzahl || 0, schnitt, anzahl)
     renderAbout(shop)
     renderInfoTabelle(shop)
-    initBewertungForm(shop)
     initChatWidget(shop)
 
   } catch (err) {

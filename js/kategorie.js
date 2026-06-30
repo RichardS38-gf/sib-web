@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchShopRatings } from './product-card.js'
+import { renderProductCard, fetchProductRatings } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -49,7 +49,7 @@ function getParams () {
 let alleProdukte = []
 let aktiverSlug = null
 let haendlerById = {}
-let shopRatings = {}  // shop_id -> { summe, anzahl }
+let shopRatings = {}  // produkt_id -> { summe, anzahl }
 const state = {
   min: null,
   max: null,
@@ -102,7 +102,7 @@ function renderProdukte (produkte) {
   container.innerHTML = produkte.map((p) => renderProductCard(
     p,
     p.shops?.name || 'Lokaler Händler',
-    shopRatings[p.shop_id] || null
+    shopRatings[p.id] || null
   )).join('')
 }
 
@@ -272,9 +272,9 @@ async function init () {
     if (error) throw error
     alleProdukte = data || []
 
-    // Ratings für alle geladenen Shops holen
-    const shopIds = [...new Set(alleProdukte.map(p => p.shop_id).filter(Boolean))]
-    shopRatings = await fetchShopRatings(supabase, shopIds)
+    // Ratings für alle geladenen Produkte holen
+    const produktIds = alleProdukte.map(p => p.id)
+    shopRatings = await fetchProductRatings(supabase, produktIds)
 
     fuelleHaendler()
     anwenden()

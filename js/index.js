@@ -3,7 +3,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchShopRatings } from './product-card.js'
+import { renderProductCard, fetchProductRatings } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -70,7 +70,7 @@ async function ladeKategorien () {
 
 // "Neu"-Badge und Karte werden jetzt von product-card.js geliefert
 function produktKarte (p, ratings) {
-  const rating = ratings?.[p.shop_id] || null
+  const rating = ratings?.[p.id] || null
   return renderProductCard(p, p.shops?.name || 'Lokaler Händler', rating)
 }
 
@@ -100,18 +100,18 @@ async function ladeProdukte () {
       return
     }
 
-    const shopIds = [...new Set(alle.map(p => p.shop_id).filter(Boolean))]
-    const ratings = await fetchShopRatings(supabase, shopIds)
+    const produktIds = alle.map(p => p.id)
+    const ratings = await fetchProductRatings(supabase, produktIds)
 
     // Neu: neueste zuerst (freigegeben_am wenn vorhanden, sonst erstellt_am), Top 5
     const neu = [...alle]
       .sort((a, b) => new Date(b.freigegeben_am || b.erstellt_am || 0) - new Date(a.freigegeben_am || a.erstellt_am || 0))
       .slice(0, 5)
 
-    // Beliebt: nach Shop-Bewertung sortiert, Top 5
+    // Beliebt: nach Produkt-Bewertung sortiert, Top 5
     const beliebt = [...alle]
       .map((p) => {
-        const r = ratings[p.shop_id]
+        const r = ratings[p.id]
         return { p, avg: r && r.anzahl > 0 ? r.summe / r.anzahl : null }
       })
       .sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1))

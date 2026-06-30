@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchShopRatings, isSaleAktiv } from './product-card.js'
+import { renderProductCard, fetchProductRatings, isSaleAktiv } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -39,6 +39,18 @@ function neuBadge (p) {
   return (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
     ? '<span class="product-card__badge product-card__badge--neu">NEU</span>'
     : ''
+}
+
+function sterneHtml (n, max = 5) {
+  const v = Math.max(0, Math.min(max, Math.round(n)))
+  return '<span class="stern-on">★</span>'.repeat(v) + '<span class="stern-off">★</span>'.repeat(max - v)
+}
+
+function avatarHtml (name) {
+  const initials = (name || '?').trim().slice(0, 1).toUpperCase()
+  const colors = ['#2D6A4F', '#1B4332', '#52796F', '#354F52', '#40916C', '#1D3557', '#457B9D', '#6D4C41']
+  const hue = initials.charCodeAt(0) % colors.length
+  return `<span class="bw-avatar" style="background:${colors[hue]}">${initials}</span>`
 }
 
 // ── Social-Share Icons ──
@@ -350,6 +362,131 @@ function renderDetails (produkt) {
   section.hidden = false
 }
 
+// ── Bewertungen (Produkt-bezogen) ──
+let alleBewertungen = []
+let gezeigteB = 0
+const BW_PAGE = 6
+let gewaehlteSterne = 0
+
+function formatBwDatum (value) {
+  if (!value) return ''
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+function renderBewertungBatch () {
+  const liste = document.getElementById('bewertungen-liste')
+  const batch = alleBewertungen.slice(0, gezeigteB + BW_PAGE)
+  gezeigteB = batch.length
+
+  liste.innerHTML = batch.map((b) => `
+    <article class="bw-karte">
+      <div class="bw-karte__kopf">
+        ${avatarHtml(b.autor_name)}
+        <div>
+          <span class="bw-karte__autor-datum">${esc(b.autor_name)} <span class="bw-karte__datum">am ${formatBwDatum(b.erstellt_am)}</span></span>
+        </div>
+      </div>
+      <div class="bw-karte__sterne">${sterneHtml(b.sterne)}</div>
+      ${b.text ? `<p class="bw-karte__text">${esc(b.text)}</p>` : ''}
+    </article>`).join('')
+
+  const mehrWrap = document.getElementById('bw-mehr-wrap')
+  if (mehrWrap) mehrWrap.hidden = gezeigteB >= alleBewertungen.length
+}
+
+async function ladeBewertungen (produkt) {
+  const section = document.getElementById('bewertungen-section')
+  if (!section) return
+  section.hidden = false
+
+  try {
+    const { data, error } = await supabase
+      .from('bewertungen').select('*').eq('produkt_id', produkt.id)
+      .order('erstellt_am', { ascending: false })
+    if (error) throw error
+    alleBewertungen = data || []
+
+    const schnitt = alleBewertungen.length > 0
+      ? alleBewertungen.reduce((s, b) => s + (b.sterne || 0), 0) / alleBewertungen.length : 0
+
+    const summary = document.getElementById('produkt-rating-summary')
+    if (alleBewertungen.length > 0) {
+      summary.innerHTML = `
+        <span class="shop-rating-star">★</span>
+        <span class="shop-rating-zahl">${schnitt.toFixed(1)}/5</span>
+        <span class="shop-rating-anzahl">(${alleBewertungen.length} Bewertung${alleBewertungen.length !== 1 ? 'en' : ''})</span>`
+    } else {
+      summary.innerHTML = '<span class="shop-rating-star">★</span><span class="shop-rating-leer">Noch keine Bewertungen (0)</span>'
+    }
+
+    if (alleBewertungen.length === 0) {
+      document.getElementById('bewertungen-liste').innerHTML =
+        '<p class="dash-empty">Sei die erste Person, die dieses Produkt bewertet.</p>'
+    } else {
+      gezeigteB = 0
+      renderBewertungBatch()
+    }
+  } catch (err) {
+    console.error('Bewertungen konnten nicht geladen werden:', err)
+  }
+}
+
+function initBewertungForm (produkt) {
+  const toggle = document.getElementById('toggle-bewertung-form')
+  const form = document.getElementById('bewertung-form')
+  const feedback = document.getElementById('bewertung-feedback')
+  const sternBtns = Array.from(document.querySelectorAll('#sterne-input .stern'))
+  if (!toggle || !form) return
+
+  function zeichneSterne (wert) {
+    sternBtns.forEach(b => b.classList.toggle('is-on', Number(b.dataset.wert) <= wert))
+  }
+
+  toggle.addEventListener('click', () => {
+    form.hidden = !form.hidden
+    if (!form.hidden) form.querySelector('[name="name"]').focus()
+  })
+
+  sternBtns.forEach(btn => btn.addEventListener('click', () => {
+    gewaehlteSterne = Number(btn.dataset.wert)
+    zeichneSterne(gewaehlteSterne)
+  }))
+
+  document.getElementById('bw-mehr-btn')?.addEventListener('click', renderBewertungBatch)
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    feedback.innerHTML = ''
+    const nameVal = form.querySelector('[name="name"]').value.trim()
+    const emailVal = form.querySelector('[name="email"]').value.trim()
+    const textVal = form.querySelector('[name="text"]').value.trim()
+
+    if (!nameVal || !emailVal) { feedback.innerHTML = '<div class="error-msg">Bitte Name und E-Mail ausfüllen.</div>'; return }
+    if (gewaehlteSterne < 1) { feedback.innerHTML = '<div class="error-msg">Bitte wähle eine Sterne-Bewertung.</div>'; return }
+
+    const submitBtn = form.querySelector('button[type="submit"]')
+    submitBtn.disabled = true; submitBtn.textContent = 'Wird gesendet…'
+
+    try {
+      const { error } = await supabase.from('bewertungen').insert({
+        produkt_id: produkt.id, autor_name: nameVal, autor_email: emailVal,
+        sterne: gewaehlteSterne, text: textVal || null
+      })
+      if (error) throw error
+      form.reset(); form.hidden = true
+      gewaehlteSterne = 0; zeichneSterne(0)
+      alleBewertungen = []; gezeigteB = 0
+      ladeBewertungen(produkt)
+    } catch (err) {
+      console.error('Bewertung speichern fehlgeschlagen:', err)
+      feedback.innerHTML = '<div class="error-msg">Konnte nicht gespeichert werden.</div>'
+      submitBtn.disabled = false; submitBtn.textContent = 'Absenden'
+    }
+  })
+}
+
 // ── Weitere Artikel desselben Shops ──
 async function ladeWeitere (produkt) {
   const section = document.getElementById('weitere-section')
@@ -376,8 +513,8 @@ async function ladeWeitere (produkt) {
     titel.textContent = `Weitere Artikel von ${shopName}`
 
     const shopIdsW = [...new Set(weitere.map(p => p.shop_id).filter(Boolean))]
-    const shopRatingW = await fetchShopRatings(supabase, shopIdsW)
-    container.innerHTML = weitere.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler', shopRatingW[p.shop_id] || null)).join('')
+    const shopRatingW = await fetchProductRatings(supabase, weitere.map(p => p.id))
+    container.innerHTML = weitere.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler', shopRatingW[p.id] || null)).join('')
     section.hidden = false
   } catch (err) {
     console.error('Weitere Artikel konnten nicht geladen werden:', err)
@@ -419,8 +556,8 @@ async function ladeAehnliche (produkt) {
 
     const auswahl = mischen(kandidaten).slice(0, 4)
     const shopIdsA = [...new Set(auswahl.map(p => p.shop_id).filter(Boolean))]
-    const shopRatingA = await fetchShopRatings(supabase, shopIdsA)
-    container.innerHTML = auswahl.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler', shopRatingA[p.shop_id] || null)).join('')
+    const shopRatingA = await fetchProductRatings(supabase, auswahl.map(p => p.id))
+    container.innerHTML = auswahl.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler', shopRatingA[p.id] || null)).join('')
     section.hidden = false
   } catch (err) {
     console.error('Ähnliche Artikel konnten nicht geladen werden:', err)
@@ -458,6 +595,8 @@ async function init () {
 
     renderDetail(data, varianten)
     renderDetails(data)
+    ladeBewertungen(data)
+    initBewertungForm(data)
     ladeWeitere(data)
     ladeAehnliche(data)
   } catch (err) {

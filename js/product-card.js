@@ -32,21 +32,22 @@ function neuBadge (p) {
 }
 
 /**
- * Lädt Shop-Bewertungen für eine Liste von shop_ids.
- * @param {object} supabase  - Supabase-Client
- * @param {string[]} shopIds - Array von UUIDs
- * @returns {object} ratings - { [shop_id]: { summe, anzahl } }
+ * Lädt Produkt-Bewertungen für eine Liste von produkt_ids.
+ * Bewertungen gehören immer zu einem Produkt, nie zu einem Shop direkt.
+ * @param {object} supabase   - Supabase-Client
+ * @param {string[]} produktIds - Array von UUIDs
+ * @returns {object} ratings - { [produkt_id]: { summe, anzahl } }
  */
-export async function fetchShopRatings (supabase, shopIds) {
+export async function fetchProductRatings (supabase, produktIds) {
   const ratings = {}
-  if (!shopIds?.length) return ratings
+  if (!produktIds?.length) return ratings
   try {
     const { data } = await supabase
       .from('bewertungen')
-      .select('shop_id, sterne')
-      .in('shop_id', shopIds)
+      .select('produkt_id, sterne')
+      .in('produkt_id', produktIds)
     ;(data || []).forEach(b => {
-      const r = ratings[b.shop_id] || (ratings[b.shop_id] = { summe: 0, anzahl: 0 })
+      const r = ratings[b.produkt_id] || (ratings[b.produkt_id] = { summe: 0, anzahl: 0 })
       r.summe += (b.sterne || 0)
       r.anzahl += 1
     })

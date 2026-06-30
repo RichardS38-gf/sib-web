@@ -481,6 +481,14 @@
   letter-spacing: 1px;
 }
 
+.bw-karte__produkt {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.bw-karte__produkt:hover { color: var(--color-ink); }
+
 .bw-karte__text {
   font-size: var(--text-sm);
   line-height: 1.6;
