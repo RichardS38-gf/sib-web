@@ -355,7 +355,17 @@
 }
 
 @media (min-width: 640px) {
-  .site-footer__grid { grid-template-columns: repeat(3, 1fr); }
+  .site-footer__grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 900px) {
+  .site-footer__grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.site-footer__logo-img {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
 .site-footer__col-title {

@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/base.css?v=3">
   <link rel="stylesheet" href="css/layout.css?v=3">
-  <link rel="stylesheet" href="css/components.css?v=10">
+  <link rel="stylesheet" href="css/components.css?v=12">
   <link rel="stylesheet" href="css/faq.css?v=2">
 </head>
 <body>
@@ -38,8 +38,8 @@
         </nav>
 
         <div class="site-header__actions">
-          <a class="site-header__textlink site-header__desktop-only" href="haendler-login.html">Anmelden</a>
-          <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Händler werden</a>
+          <a class="site-header__textlink site-header__desktop-only" href="haendler-login.html">Mein Konto</a>
+          <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Registrieren</a>
           <button class="site-header__burger" type="button" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
             <span></span><span></span><span></span>
           </button>
@@ -54,8 +54,8 @@
         <a href="kategorie.html">Artikel</a>
         <a href="geschaefte.html">Geschäfte</a>
         <a href="newsletter.html">Newsletter</a>
-        <a class="btn btn--outline-light btn--full" href="haendler-login.html">Anmelden</a>
-        <a class="btn btn--light btn--full" href="haendler-werden.html">Händler werden</a>
+        <a class="btn btn--outline-light btn--full" href="haendler-login.html">Mein Konto</a>
+        <a class="btn btn--light btn--full" href="haendler-werden.html">Registrieren</a>
       </div>
     </div>
   </header>
@@ -142,15 +142,15 @@
   <footer class="site-footer">
     <div class="container">
       <div class="site-footer__brand">
-        <span class="site-footer__logo">Shoppen in Braunschweig</span>
+        <img class="site-footer__logo-img" src="https://ezruwstzpncunbjzwdfk.supabase.co/storage/v1/object/public/produkt-bilder/Group%20635898.-fotor-enhance-2026031913012.jpg" alt="Shoppen in Braunschweig">
         <p class="site-footer__slogan">Lokale Händler. Einzigartige Produkte.</p>
       </div>
 
       <div class="site-footer__grid">
         <div class="site-footer__col">
-          <p class="site-footer__col-title">Für Käufer</p>
+          <p class="site-footer__col-title">Seiten</p>
           <ul>
-            <li><a href="kategorie.html">Alle Produkte</a></li>
+            <li><a href="kategorie.html">Produkte</a></li>
             <li><a href="geschaefte.html">Geschäfte entdecken</a></li>
             <li><a href="newsletter.html">Newsletter</a></li>
             <li><a href="ueber-uns.html">Über uns</a></li>
@@ -158,11 +158,17 @@
           </ul>
         </div>
         <div class="site-footer__col">
-          <p class="site-footer__col-title">Für Verkäufer</p>
+          <p class="site-footer__col-title">Für Käufer</p>
           <ul>
-            <li><a href="haendler-werden.html">Händler werden</a></li>
-            <li><a href="haendler-login.html">Händler Login</a></li>
-            <li><a href="faq.html">FAQ</a></li>
+            <li><a href="haendler-login.html?rolle=kunde">Käufer Konto</a></li>
+            <li><a href="haendler-werden.html?rolle=kunde">Käufer Account erstellen</a></li>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__col-title">Für Händler</p>
+          <ul>
+            <li><a href="haendler-werden.html?rolle=haendler">Händler werden</a></li>
+            <li><a href="haendler-login.html?rolle=haendler">Händler Dashboard</a></li>
           </ul>
         </div>
         <div class="site-footer__col">
