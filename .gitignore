@@ -20,6 +20,9 @@ supabase/.temp/
 *-DESKTOP-*
 *-LAPTOP-*
 
+# Firecrawl CLI lokaler Cache
+.firecrawl/
+
 # System
 .DS_Store
 Thumbs.db
