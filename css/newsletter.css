@@ -76,7 +76,7 @@
   background-image: url('../Bilder/BS.jpg');
   background-size: cover;
   background-position: center;
-  opacity: 0.35;
+  opacity: 0.25;
   z-index: 0;
 }
 
@@ -167,6 +167,17 @@
 
 .nl-hero__card .nl-hero__sub {
   margin-bottom: 0;
+}
+
+.nl-hero__monat {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(3.5rem, 8vw, 6rem);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.25);
+  line-height: 1;
+  margin-bottom: var(--space-2);
+  letter-spacing: -0.02em;
 }
 
 /* ── NEUE PRODUKTE ── */
