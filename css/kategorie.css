@@ -187,13 +187,3 @@
   font-size: var(--text-sm);
 }
 
-/* Mehr-laden-Button */
-.kat-mehr-wrap {
-  display: flex;
-  justify-content: center;
-  margin-top: var(--space-5);
-}
-
-.kat-mehr-btn {
-  min-width: 200px;
-}

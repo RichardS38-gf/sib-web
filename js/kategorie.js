@@ -1,12 +1,11 @@
-// js/kategorie.js — SIB Kategorie-/Produktübersicht v7
-// Filter clientseitig, Pagination (20 pro Seite), Sale-Filter
+// js/kategorie.js — SIB Kategorie-/Produktübersicht v8
+// Filter clientseitig, Sale-Filter, alles auf einmal laden
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
 import { renderProductCard, fetchProductRatings, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
-const PAGE_SIZE = 20
 
 function esc (value) {
   return String(value ?? '')
@@ -49,7 +48,6 @@ let aktiverSlug = null
 let haendlerById = {}
 let shopRatings = {}
 let wunschlisteIds = new Set()
-let aktuelleSeite = 1
 
 const state = {
   min: null,
@@ -94,33 +92,22 @@ function gefilterteListe () {
   return list
 }
 
-// Rendern mit Pagination
-function renderProdukte (produkte, seite) {
+// Rendern ohne Pagination — alles auf einmal
+function renderProdukte (produkte) {
   const container = document.getElementById('produkte')
-  const mehrBtn = document.getElementById('kat-mehr-btn')
-  const mehrWrap = document.getElementById('kat-mehr-wrap')
 
   if (produkte.length === 0) {
     container.innerHTML = '<p class="kategorie-empty">Keine Produkte für diese Auswahl gefunden.</p>'
-    if (mehrWrap) mehrWrap.hidden = true
     return
   }
 
-  const sichtbar = produkte.slice(0, seite * PAGE_SIZE)
-  const hatMehr = sichtbar.length < produkte.length
-
-  container.innerHTML = sichtbar.map((p) => renderProductCard(
+  container.innerHTML = produkte.map((p) => renderProductCard(
     p,
     p.shops?.name || 'Lokaler Händler',
     shopRatings[p.id] || null,
     wunschlisteIds.has(p.id)
   )).join('')
   initWunschlisteButtons(supabase, container)
-
-  if (mehrWrap) mehrWrap.hidden = !hatMehr
-  if (mehrBtn && hatMehr) {
-    mehrBtn.textContent = `Mehr anzeigen (${produkte.length - sichtbar.length} weitere)`
-  }
 }
 
 function renderTags () {
@@ -163,12 +150,11 @@ function updateURL () {
   window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
 }
 
-function anwenden (resetSeite = true) {
-  if (resetSeite) aktuelleSeite = 1
+function anwenden () {
   const liste = gefilterteListe()
   document.getElementById('kategorie-anzahl').textContent =
     `${liste.length} ${liste.length === 1 ? 'Produkt' : 'Produkte'}`
-  renderProdukte(liste, aktuelleSeite)
+  renderProdukte(liste)
   renderTags()
   updateURL()
 }
@@ -199,7 +185,6 @@ function initFilterControls () {
   const sale = document.getElementById('filter-sale')
   const haendler = document.getElementById('filter-haendler')
   const sort = document.getElementById('filter-sort')
-  const mehrBtn = document.getElementById('kat-mehr-btn')
 
   document.getElementById('preis-anwenden').addEventListener('click', () => {
     state.min = isNaN(parseFloat(min.value)) ? null : parseFloat(min.value)
@@ -225,13 +210,6 @@ function initFilterControls () {
   sale.addEventListener('change', () => { state.nurSale = sale.checked; anwenden() })
   haendler.addEventListener('change', () => { state.haendler = haendler.value; anwenden() })
   sort.addEventListener('change', () => { state.sort = sort.value; anwenden() })
-
-  if (mehrBtn) {
-    mehrBtn.addEventListener('click', () => {
-      aktuelleSeite++
-      renderProdukte(gefilterteListe(), aktuelleSeite)
-    })
-  }
 
   const toggle = document.getElementById('filter-toggle')
   const sidebar = document.getElementById('kategorie-sidebar')
