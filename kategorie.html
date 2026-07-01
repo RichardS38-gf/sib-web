@@ -105,6 +105,13 @@
             </div>
 
             <div class="kat-side-block">
+              <label class="kat-check">
+                <input type="checkbox" id="filter-sale">
+                <span>Nur Sale-Artikel</span>
+              </label>
+            </div>
+
+            <div class="kat-side-block">
               <p class="kategorie-sidebar__title">Händler</p>
               <select class="form-select" id="filter-haendler">
                 <option value="">Alle Händler</option>
@@ -127,6 +134,9 @@
             <div class="kat-tags" id="filter-tags"></div>
             <div class="kategorie-grid" id="produkte">
               <div class="loading">Produkte werden geladen…</div>
+            </div>
+            <div class="kat-mehr-wrap" id="kat-mehr-wrap" hidden>
+              <button class="btn btn--outline kat-mehr-btn" id="kat-mehr-btn" type="button">Mehr anzeigen</button>
             </div>
           </div>
 
@@ -175,6 +185,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/kategorie.js?v=6"></script>
+  <script type="module" src="js/kategorie.js?v=7"></script>
 </body>
 </html>

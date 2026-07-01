@@ -1,12 +1,12 @@
-// js/kategorie.js — SIB Kategorie-/Produktübersicht mit Filtern
-// Produkte einer Kategorie (?slug=XXX) bzw. alle Produkte; Filter clientseitig,
-// Zustand in URL-Parametern.
+// js/kategorie.js — SIB Kategorie-/Produktübersicht v7
+// Filter clientseitig, Pagination (20 pro Seite), Sale-Filter
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
 import { renderProductCard, fetchProductRatings, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
+const PAGE_SIZE = 20
 
 function esc (value) {
   return String(value ?? '')
@@ -21,14 +21,12 @@ function preisOf (p) {
   return isNaN(n) ? 0 : n
 }
 
-// neuBadge + Karte via product-card.js
-
 function istNeu (p) {
   const t = new Date(p.freigegeben_am || p.erstellt_am || 0).getTime()
   return t > 0 && (Date.now() - t) < 7 * 24 * 60 * 60 * 1000
 }
 
-// ── Mobile-Menü ──
+// Mobile-Menü
 function initMobileMenu () {
   const burger = document.querySelector('.site-header__burger')
   const menu = document.getElementById('mobile-menu')
@@ -49,17 +47,20 @@ function getParams () {
 let alleProdukte = []
 let aktiverSlug = null
 let haendlerById = {}
-let shopRatings = {}  // produkt_id -> { summe, anzahl }
+let shopRatings = {}
 let wunschlisteIds = new Set()
+let aktuelleSeite = 1
+
 const state = {
   min: null,
   max: null,
   nurVerfuegbar: true,
+  nurSale: false,
   haendler: '',
   sort: 'neu'
 }
 
-// ── Sidebar mit allen Kategorien ──
+// Sidebar
 function renderSidebar (kategorien, slug) {
   const nav = document.getElementById('kategorie-nav')
   const isNeu = slug === 'neu'
@@ -75,14 +76,13 @@ function renderSidebar (kategorien, slug) {
   nav.innerHTML = links.join('')
 }
 
-// ── Filter anwenden ──
+// Filtern + Sortieren
 function gefilterteListe () {
   let list = alleProdukte.slice()
 
-  // Virtuelle "Neu"-Kategorie: nur Produkte < 7 Tage
   if (aktiverSlug === 'neu') list = list.filter(istNeu)
-
   if (state.nurVerfuegbar) list = list.filter((p) => p.verfuegbar !== false)
+  if (state.nurSale) list = list.filter((p) => p.angebot_preis != null && Number(p.angebot_preis) > 0)
   if (state.haendler) list = list.filter((p) => p.shop_id === state.haendler)
   if (state.min !== null) list = list.filter((p) => preisOf(p) >= state.min)
   if (state.max !== null) list = list.filter((p) => preisOf(p) <= state.max)
@@ -94,19 +94,33 @@ function gefilterteListe () {
   return list
 }
 
-function renderProdukte (produkte) {
+// Rendern mit Pagination
+function renderProdukte (produkte, seite) {
   const container = document.getElementById('produkte')
+  const mehrBtn = document.getElementById('kat-mehr-btn')
+  const mehrWrap = document.getElementById('kat-mehr-wrap')
+
   if (produkte.length === 0) {
     container.innerHTML = '<p class="kategorie-empty">Keine Produkte für diese Auswahl gefunden.</p>'
+    if (mehrWrap) mehrWrap.hidden = true
     return
   }
-  container.innerHTML = produkte.map((p) => renderProductCard(
+
+  const sichtbar = produkte.slice(0, seite * PAGE_SIZE)
+  const hatMehr = sichtbar.length < produkte.length
+
+  container.innerHTML = sichtbar.map((p) => renderProductCard(
     p,
     p.shops?.name || 'Lokaler Händler',
     shopRatings[p.id] || null,
     wunschlisteIds.has(p.id)
   )).join('')
   initWunschlisteButtons(supabase, container)
+
+  if (mehrWrap) mehrWrap.hidden = !hatMehr
+  if (mehrBtn && hatMehr) {
+    mehrBtn.textContent = `Mehr anzeigen (${produkte.length - sichtbar.length} weitere)`
+  }
 }
 
 function renderTags () {
@@ -116,6 +130,7 @@ function renderTags () {
   if (state.max !== null) tags.push({ key: 'max', label: `bis ${euro.format(state.max)}` })
   if (state.haendler) tags.push({ key: 'haendler', label: haendlerById[state.haendler] || 'Händler' })
   if (!state.nurVerfuegbar) tags.push({ key: 'verfuegbar', label: 'inkl. nicht verfügbare' })
+  if (state.nurSale) tags.push({ key: 'sale', label: 'Sale' })
 
   el.innerHTML = tags.map((t) =>
     `<button class="kat-tag" type="button" data-remove="${t.key}">${esc(t.label)} <span aria-hidden="true">×</span></button>`
@@ -131,32 +146,33 @@ function entferneFilter (key) {
   else if (key === 'max') { state.max = null; document.getElementById('filter-max').value = '' }
   else if (key === 'haendler') { state.haendler = ''; document.getElementById('filter-haendler').value = '' }
   else if (key === 'verfuegbar') { state.nurVerfuegbar = true; document.getElementById('filter-verfuegbar').checked = true }
+  else if (key === 'sale') { state.nurSale = false; document.getElementById('filter-sale').checked = false }
   anwenden()
 }
 
-// Zustand -> URL
 function updateURL () {
   const params = new URLSearchParams()
   if (aktiverSlug) params.set('slug', aktiverSlug)
   if (state.min !== null) params.set('min', String(state.min))
   if (state.max !== null) params.set('max', String(state.max))
   if (!state.nurVerfuegbar) params.set('verf', '0')
+  if (state.nurSale) params.set('sale', '1')
   if (state.haendler) params.set('shop', state.haendler)
   if (state.sort !== 'neu') params.set('sort', state.sort)
   const qs = params.toString()
   window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
 }
 
-function anwenden () {
+function anwenden (resetSeite = true) {
+  if (resetSeite) aktuelleSeite = 1
   const liste = gefilterteListe()
   document.getElementById('kategorie-anzahl').textContent =
     `${liste.length} ${liste.length === 1 ? 'Produkt' : 'Produkte'}`
-  renderProdukte(liste)
+  renderProdukte(liste, aktuelleSeite)
   renderTags()
   updateURL()
 }
 
-// Händler-Dropdown aus den geladenen Produkten füllen
 function fuelleHaendler () {
   const select = document.getElementById('filter-haendler')
   const seen = {}
@@ -180,28 +196,43 @@ function initFilterControls () {
   const min = document.getElementById('filter-min')
   const max = document.getElementById('filter-max')
   const verf = document.getElementById('filter-verfuegbar')
+  const sale = document.getElementById('filter-sale')
   const haendler = document.getElementById('filter-haendler')
   const sort = document.getElementById('filter-sort')
+  const mehrBtn = document.getElementById('kat-mehr-btn')
 
   document.getElementById('preis-anwenden').addEventListener('click', () => {
-    const minV = parseFloat(min.value)
-    const maxV = parseFloat(max.value)
-    state.min = isNaN(minV) ? null : minV
-    state.max = isNaN(maxV) ? null : maxV
+    state.min = isNaN(parseFloat(min.value)) ? null : parseFloat(min.value)
+    state.max = isNaN(parseFloat(max.value)) ? null : parseFloat(max.value)
     anwenden()
   })
 
+  ;[min, max].forEach(el => {
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('preis-anwenden').click()
+    })
+  })
+
   document.getElementById('filter-reset').addEventListener('click', () => {
-    state.min = null; state.max = null; state.nurVerfuegbar = true; state.haendler = ''; state.sort = 'neu'
-    min.value = ''; max.value = ''; verf.checked = true; haendler.value = ''; sort.value = 'neu'
+    state.min = null; state.max = null; state.nurVerfuegbar = true
+    state.nurSale = false; state.haendler = ''; state.sort = 'neu'
+    min.value = ''; max.value = ''; verf.checked = true
+    sale.checked = false; haendler.value = ''; sort.value = 'neu'
     anwenden()
   })
 
   verf.addEventListener('change', () => { state.nurVerfuegbar = verf.checked; anwenden() })
+  sale.addEventListener('change', () => { state.nurSale = sale.checked; anwenden() })
   haendler.addEventListener('change', () => { state.haendler = haendler.value; anwenden() })
   sort.addEventListener('change', () => { state.sort = sort.value; anwenden() })
 
-  // Mobile: Filter-Panel auf-/zuklappen
+  if (mehrBtn) {
+    mehrBtn.addEventListener('click', () => {
+      aktuelleSeite++
+      renderProdukte(gefilterteListe(), aktuelleSeite)
+    })
+  }
+
   const toggle = document.getElementById('filter-toggle')
   const sidebar = document.getElementById('kategorie-sidebar')
   toggle.addEventListener('click', () => {
@@ -210,11 +241,11 @@ function initFilterControls () {
   })
 }
 
-// Filter-Controls aus URL/State vorbelegen
 function syncControlsFromState () {
   document.getElementById('filter-min').value = state.min !== null ? state.min : ''
   document.getElementById('filter-max').value = state.max !== null ? state.max : ''
   document.getElementById('filter-verfuegbar').checked = state.nurVerfuegbar
+  document.getElementById('filter-sale').checked = state.nurSale
   document.getElementById('filter-sort').value = state.sort
 }
 
@@ -224,12 +255,13 @@ function leseStateAusURL (params) {
   state.min = isNaN(min) ? null : min
   state.max = isNaN(max) ? null : max
   state.nurVerfuegbar = params.get('verf') !== '0'
+  state.nurSale = params.get('sale') === '1'
   state.haendler = params.get('shop') || ''
   const sort = params.get('sort')
   state.sort = ['preis-asc', 'preis-desc'].includes(sort) ? sort : 'neu'
 }
 
-// ── Init ──
+// Init
 async function init () {
   initMobileMenu()
   initHeaderSearch()
@@ -238,7 +270,6 @@ async function init () {
   const slug = params.get('slug')
   aktiverSlug = slug || null
   leseStateAusURL(params)
-
   initFilterControls()
   syncControlsFromState()
 
@@ -256,11 +287,12 @@ async function init () {
     if (slug) aktiveKat = kategorien.find((k) => k.slug === slug) || null
 
     const isNeu = slug === 'neu'
-    titelEl.textContent = isNeu ? 'Neue Produkte' : (aktiveKat ? aktiveKat.name : (slug ? 'Kategorie' : 'Alle Produkte'))
+    titelEl.textContent = isNeu
+      ? 'Neue Produkte'
+      : (aktiveKat ? aktiveKat.name : (slug ? 'Kategorie' : 'Alle Produkte'))
     if (isNeu) document.title = 'Neue Produkte — Shoppen in Braunschweig'
     else if (slug && aktiveKat) document.title = `${aktiveKat.name} — Shoppen in Braunschweig`
 
-    // Alle freigegebenen Produkte der Kategorie laden (Verfügbarkeit clientseitig)
     let query = supabase
       .from('produkte')
       .select('*, shops(name, slug)')
@@ -269,13 +301,11 @@ async function init () {
 
     if (aktiveKat) query = query.eq('kategorie_id', aktiveKat.id)
     else if (slug && !isNeu) query = query.eq('kategorie_id', '00000000-0000-0000-0000-000000000000')
-    // isNeu: keine Kategorie-Einschränkung — alle Produkte laden, clientseitig filtern
 
     const { data, error } = await query
     if (error) throw error
     alleProdukte = data || []
 
-    // Ratings + Wunschliste für alle geladenen Produkte holen
     const produktIds = alleProdukte.map(p => p.id)
     ;[shopRatings, wunschlisteIds] = await Promise.all([
       fetchProductRatings(supabase, produktIds),
