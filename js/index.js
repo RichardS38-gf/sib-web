@@ -143,7 +143,54 @@ async function ladeProdukte () {
   }
 }
 
+// ── Newsletter-Anmeldung im Hero ──
+function isValidEmail (email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+async function initHeroNewsletter () {
+  const form = document.getElementById('hero-newsletter-form')
+  const feedback = document.getElementById('hero-newsletter-feedback')
+  if (!form) return
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    feedback.innerHTML = ''
+    const email = form.email.value.trim().toLowerCase()
+
+    if (!isValidEmail(email)) {
+      feedback.innerHTML = '<div class="error-msg">Bitte gib eine gültige E-Mail-Adresse ein.</div>'
+      return
+    }
+
+    const submitBtn = form.querySelector('button[type="submit"]')
+    submitBtn.disabled = true
+    submitBtn.textContent = 'Wird angemeldet…'
+
+    try {
+      const { error } = await supabase
+        .from('newsletter_abonnenten')
+        .insert({ email, aktiv: true })
+
+      if (error) {
+        if (error.code === '23505') {
+          form.innerHTML = '<div class="success-msg">✓ Du bist bereits angemeldet.</div>'
+          return
+        }
+        throw error
+      }
+      form.innerHTML = '<div class="success-msg">✓ Du bist dabei! Ab dem nächsten Newsletter hörst du von uns.</div>'
+    } catch (err) {
+      console.error('Newsletter:', err)
+      feedback.innerHTML = '<div class="error-msg">Anmeldung fehlgeschlagen. Bitte versuche es später erneut.</div>'
+      submitBtn.disabled = false
+      submitBtn.textContent = 'Newsletter abonnieren'
+    }
+  })
+}
+
 initMobileMenu()
 initHeaderSearch()
 ladeKategorien()
 ladeProdukte()
+initHeroNewsletter()

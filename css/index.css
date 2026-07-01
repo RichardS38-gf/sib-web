@@ -179,6 +179,35 @@
   align-self: flex-start;
 }
 
+/* Hero Newsletter-Formular */
+.hero-newsletter {
+  margin-top: var(--space-2);
+  max-width: 36rem;
+}
+
+.hero-newsletter__row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hero-newsletter__input {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.75rem var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-bg);
+  font-size: var(--text-base);
+  color: var(--color-ink);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.hero-newsletter__input:focus { border-color: var(--color-ink); }
+.hero-newsletter__input::placeholder { color: var(--color-muted); }
+
+.hero-newsletter__btn { white-space: nowrap; flex-shrink: 0; }
+
 /* Asymmetrische, abgerundete Bild-Collage (wie Entwurf) */
 .hero__collage {
   display: flex;

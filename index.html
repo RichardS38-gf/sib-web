@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css?v=3">
   <link rel="stylesheet" href="css/layout.css?v=4">
   <link rel="stylesheet" href="css/components.css?v=12">
-  <link rel="stylesheet" href="css/index.css?v=10">
+  <link rel="stylesheet" href="css/index.css?v=11">
 </head>
 <body>
 
@@ -70,7 +70,13 @@
             <span class="badge badge--outline hero__eyebrow">lokal shoppen</span>
             <h1 class="hero__headline">Entdecke lokale <span class="hero__accent">Geschäfte</span> in Braunschweig</h1>
             <p class="hero__subtext">Unterstütze lokale Händler und finde einzigartige Produkte aus deiner Nachbarschaft — ohne das Haus zu verlassen.</p>
-            <a class="btn btn--primary hero__cta" href="newsletter.html">Newsletter abonnieren</a>
+            <form class="hero-newsletter" id="hero-newsletter-form" novalidate>
+              <div class="hero-newsletter__row">
+                <input class="hero-newsletter__input" type="email" name="email" placeholder="deine@email.de" required autocomplete="email" aria-label="E-Mail-Adresse">
+                <button class="btn btn--primary hero-newsletter__btn" type="submit">Newsletter abonnieren</button>
+              </div>
+              <div id="hero-newsletter-feedback" aria-live="polite"></div>
+            </form>
           </div>
           <div class="hero__collage" aria-hidden="true">
             <img class="hero__collage-img" src="Bilder/Group 635900.png" alt="">
@@ -185,6 +191,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/index.js?v=7"></script>
+  <script type="module" src="js/index.js?v=8"></script>
 </body>
 </html>
