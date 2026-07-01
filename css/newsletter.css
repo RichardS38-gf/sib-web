@@ -69,6 +69,17 @@
   align-items: center;
 }
 
+.nl-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('../Bilder/mehdi-raeisi-8IOIkqSTKEI-unsplash.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.35;
+  z-index: 0;
+}
+
 .nl-hero__bg {
   position: absolute;
   inset: 0;
