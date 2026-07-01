@@ -1,0 +1,106 @@
+/* kontakt.css — SIB */
+
+/* ── Layout: Info links, Formular rechts ── */
+.kontakt-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .kontakt-layout {
+    grid-template-columns: 1fr 1.6fr;
+    gap: var(--space-6);
+    align-items: start;
+  }
+}
+
+/* ── Linke Spalte ── */
+.kontakt-info__title,
+.kontakt-form-wrap__title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+  color: var(--color-ink);
+}
+
+.kontakt-info__text {
+  color: var(--color-muted);
+  font-weight: 300;
+  line-height: 1.7;
+  margin-bottom: var(--space-4);
+}
+
+.kontakt-info__email {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-bottom: var(--space-4);
+}
+
+.kontakt-info__email svg {
+  flex-shrink: 0;
+  fill: var(--color-ink);
+}
+
+.kontakt-info__hint {
+  padding: var(--space-3);
+  background: var(--color-bg-soft);
+  border-left: 3px solid var(--color-line);
+}
+
+.kontakt-info__hint p {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* ── Rechte Spalte: Formular ── */
+.kontakt-form__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+@media (min-width: 480px) {
+  .kontakt-form__row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.kontakt-form .form-group {
+  margin-bottom: var(--space-3);
+}
+
+.kontakt-form textarea.form-input {
+  resize: vertical;
+  min-height: 140px;
+}
+
+/* ── Feedback ── */
+#kontakt-feedback {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding: var(--space-2);
+}
+
+#kontakt-feedback.is-success {
+  background: #f0fff4;
+  border: 1px solid #ccffcc;
+  color: #006600;
+}
+
+#kontakt-feedback.is-error {
+  background: #fff0f0;
+  border: 1px solid #ffcccc;
+  color: #cc0000;
+}
