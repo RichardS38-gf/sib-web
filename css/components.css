@@ -376,6 +376,8 @@
 .site-footer__logo-img {
   height: 52px;
   width: auto;
+  max-width: 180px;
+  object-fit: contain;
   display: block;
 }
 
