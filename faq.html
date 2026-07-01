@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/base.css?v=3">
-  <link rel="stylesheet" href="css/layout.css?v=3">
+  <link rel="stylesheet" href="css/layout.css?v=4">
   <link rel="stylesheet" href="css/components.css?v=12">
   <link rel="stylesheet" href="css/faq.css?v=2">
 </head>
@@ -129,11 +129,13 @@
     </section>
 
     <!-- Noch Fragen? (dunkel) -->
-    <section class="section section--dark faq-cta">
+    <section class="section section--dark">
       <div class="container">
-        <h2 class="faq-cta__headline">Noch Fragen?</h2>
-        <p class="faq-cta__text">Wir helfen dir gerne weiter.</p>
-        <a class="btn btn--light" href="mailto:support@shoppeninbraunschweig.de">Schreib uns</a>
+        <div class="glass-card">
+          <h2>Noch Fragen?</h2>
+          <p style="color:rgba(250,250,248,0.85);font-weight:300;max-width:30rem;margin:0 auto var(--space-4)">Wir helfen dir gerne weiter.</p>
+          <a class="btn btn--light" href="mailto:support@shoppeninbraunschweig.de">Schreib uns</a>
+        </div>
       </div>
     </section>
   </main>
@@ -141,13 +143,11 @@
   <!-- ── Footer ── -->
   <footer class="site-footer">
     <div class="container">
-      <div class="site-footer__top">
-        <div class="site-footer__brand">
-          <img class="site-footer__logo-img" src="https://ezruwstzpncunbjzwdfk.supabase.co/storage/v1/object/public/produkt-bilder/Group%20635898.-fotor-enhance-2026031913012.jpg" alt="Shoppen in Braunschweig">
-          <p class="site-footer__slogan">Unterstütze lokale Geschäfte in Braunschweig — online shoppen, lokal kaufen.</p>
-        </div>
+      <div class="site-footer__brand">
+        <img class="site-footer__logo-img" src="https://ezruwstzpncunbjzwdfk.supabase.co/storage/v1/object/public/produkt-bilder/Group%20635898.-fotor-enhance-2026031913012.jpg" alt="Shoppen in Braunschweig">
+      </div>
 
-        <div class="site-footer__grid">
+      <div class="site-footer__grid">
         <div class="site-footer__col">
           <p class="site-footer__col-title">Seiten</p>
           <ul>
@@ -177,7 +177,6 @@
           <ul>
             <li><a href="mailto:support@shoppeninbraunschweig.de">support@shoppeninbraunschweig.de</a></li>
           </ul>
-        </div>
         </div>
       </div>
 
