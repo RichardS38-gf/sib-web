@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Newsletter — Shoppen in Braunschweig</title>
-  <meta name="description" content="Einmal im Monat die neuesten Produkte aus Braunschweiger Geschäften — direkt in dein Postfach.">
+  <title>Juli 2026 — Shoppen in Braunschweig</title>
+  <meta name="description" content="Neue Produkte, Sonderangebote und frische Geschäfte aus Braunschweig — Juli 2026.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/reset.css">
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/base.css?v=3">
   <link rel="stylesheet" href="css/layout.css?v=4">
   <link rel="stylesheet" href="css/components.css?v=14">
-  <link rel="stylesheet" href="css/newsletter.css?v=2">
+  <link rel="stylesheet" href="css/newsletter.css?v=3">
 </head>
 <body>
 
@@ -23,19 +23,15 @@
       <div class="site-header__inner">
         <a class="site-header__logo" href="index.html" aria-label="Shoppen in Braunschweig — Startseite">
           <img src="Bilder/Group_635898.-fotor-enhance-2026031913012-removebg-preview.png" alt="Shoppen in Braunschweig">
-          <span class="site-header__logo-text" style="display:none">Shoppen in&nbsp;Braunschweig</span>
         </a>
-
         <form class="site-header__search" role="search" action="suche.html" method="get">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.7 20.3l-5.4-5.4a7.5 7.5 0 1 0-1.4 1.4l5.4 5.4a1 1 0 0 0 1.4-1.4zM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z"/></svg>
           <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
         </form>
-
         <nav class="site-header__nav" aria-label="Hauptnavigation">
           <a href="kategorie.html">Artikel</a>
           <a href="geschaefte.html">Geschäfte</a>
         </nav>
-
         <div class="site-header__actions">
           <a class="site-header__textlink site-header__desktop-only" href="haendler-login.html">Mein Konto</a>
           <a class="btn btn--light site-header__desktop-only" href="haendler-werden.html">Registrieren</a>
@@ -44,8 +40,6 @@
           </button>
         </div>
       </div>
-
-      <!-- Mobile-Menü -->
       <div class="site-header__mobile" id="mobile-menu" hidden>
         <form class="site-header__mobile-search" role="search" action="suche.html" method="get">
           <input type="search" name="q" placeholder="Produkte oder Geschäfte suchen…" aria-label="Suchen">
@@ -60,23 +54,240 @@
   </header>
 
   <main>
-    <section class="section section--dark">
-      <div class="container">
-        <div class="glass-card">
-          <span class="badge" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;margin-bottom:var(--space-3);display:inline-block">Newsletter</span>
-          <h1 style="color:var(--color-on-dark);font-size:clamp(2rem,3.5vw,3rem);margin-bottom:var(--space-3)">Lokale Produkte.<br>Direkt in dein Postfach.</h1>
-          <p style="color:rgba(250,250,248,0.75);font-weight:300;font-size:var(--text-lg);max-width:36rem;margin:0 auto var(--space-4)">Einmal im Monat die neuesten Produkte aus Braunschweiger Geschäften. Kein Spam, jederzeit abmeldbar.</p>
 
-          <form class="newsletter-form" id="newsletter-form" novalidate style="max-width:28rem;margin:0 auto">
-            <div class="form-group" style="margin-bottom:var(--space-2)">
-              <input class="form-input" type="email" id="newsletter-email" name="email" placeholder="deine@email.de" required autocomplete="email" style="border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.12);color:#fff">
-            </div>
-            <button class="btn btn--light btn--full" type="submit">Jetzt anmelden</button>
-            <div id="newsletter-feedback" aria-live="polite" style="margin-top:var(--space-2)"></div>
-          </form>
+    <!-- ── 1. HERO ── -->
+    <section class="nl-hero">
+      <div class="nl-hero__bg" aria-hidden="true">
+        <span class="nl-hero__year">2026</span>
+      </div>
+      <div class="container nl-hero__inner">
+        <div class="nl-hero__meta">
+          <span class="nl-eyebrow">Monatlicher Überblick</span>
+          <span class="nl-eyebrow nl-eyebrow--muted">Ausgabe 07 · Juli 2026</span>
+        </div>
+        <h1 class="nl-hero__title">Was Braunschweig<br><em>diesen Monat</em> bewegt.</h1>
+        <p class="nl-hero__sub">Neue Produkte, frische Gesichter und die besten Angebote aus dem lokalen Einzelhandel — kurz und knapp für dich zusammengestellt.</p>
+        <div class="nl-hero__scroll" aria-hidden="true">
+          <span>Entdecken</span>
+          <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
         </div>
       </div>
     </section>
+
+    <!-- ── 2. NEUE PRODUKTE ── -->
+    <section class="section nl-section">
+      <div class="container">
+        <div class="nl-section-head">
+          <div>
+            <p class="nl-label">Neu eingetroffen</p>
+            <h2 class="nl-section-head__title">Produkte des Monats</h2>
+          </div>
+          <a class="nl-section-head__link" href="kategorie.html?slug=neu">Alle neuen Produkte →</a>
+        </div>
+
+        <!-- Produkte hier manuell eintragen -->
+        <div class="nl-produkte-grid">
+
+          <a class="nl-produkt-card" href="produkt.html?id=PRODUKT-ID-HIER">
+            <div class="nl-produkt-card__img-wrap">
+              <img src="Bilder/placeholder-produkt.jpg" alt="Produktname" loading="lazy">
+              <span class="nl-produkt-card__badge">Neu</span>
+            </div>
+            <div class="nl-produkt-card__body">
+              <p class="nl-produkt-card__shop">Amelie Fair Fashion</p>
+              <p class="nl-produkt-card__name">Produktname hier eintragen</p>
+              <p class="nl-produkt-card__price">49,00 €</p>
+            </div>
+          </a>
+
+          <a class="nl-produkt-card" href="produkt.html?id=PRODUKT-ID-HIER">
+            <div class="nl-produkt-card__img-wrap">
+              <img src="Bilder/placeholder-produkt.jpg" alt="Produktname" loading="lazy">
+              <span class="nl-produkt-card__badge">Neu</span>
+            </div>
+            <div class="nl-produkt-card__body">
+              <p class="nl-produkt-card__shop">Amelie Fair Fashion</p>
+              <p class="nl-produkt-card__name">Produktname hier eintragen</p>
+              <p class="nl-produkt-card__price">34,90 €</p>
+            </div>
+          </a>
+
+          <a class="nl-produkt-card" href="produkt.html?id=PRODUKT-ID-HIER">
+            <div class="nl-produkt-card__img-wrap">
+              <img src="Bilder/placeholder-produkt.jpg" alt="Produktname" loading="lazy">
+              <span class="nl-produkt-card__badge">Neu</span>
+            </div>
+            <div class="nl-produkt-card__body">
+              <p class="nl-produkt-card__shop">Amelie Fair Fashion</p>
+              <p class="nl-produkt-card__name">Produktname hier eintragen</p>
+              <p class="nl-produkt-card__price">89,00 €</p>
+            </div>
+          </a>
+
+          <a class="nl-produkt-card" href="produkt.html?id=PRODUKT-ID-HIER">
+            <div class="nl-produkt-card__img-wrap">
+              <img src="Bilder/placeholder-produkt.jpg" alt="Produktname" loading="lazy">
+              <span class="nl-produkt-card__badge">Neu</span>
+            </div>
+            <div class="nl-produkt-card__body">
+              <p class="nl-produkt-card__shop">Amelie Fair Fashion</p>
+              <p class="nl-produkt-card__name">Produktname hier eintragen</p>
+              <p class="nl-produkt-card__price">22,00 €</p>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 3. SONDERANGEBOTE ── -->
+    <section class="section section--dark nl-section nl-section--dark">
+      <div class="container">
+        <div class="nl-section-head nl-section-head--dark">
+          <div>
+            <p class="nl-label nl-label--light">Nur diesen Monat</p>
+            <h2 class="nl-section-head__title">Sonderangebote &amp; Sale</h2>
+          </div>
+          <a class="nl-section-head__link nl-section-head__link--light" href="kategorie.html?sale=1">Alle Angebote →</a>
+        </div>
+
+        <div class="nl-sale-grid">
+
+          <!-- Sale-Artikel manuell eintragen -->
+          <a class="nl-sale-card" href="produkt.html?id=PRODUKT-ID-HIER">
+            <div class="nl-sale-card__img-wrap">
+              <img src="Bilder/placeholder-produkt.jpg" alt="Produktname" loading="lazy">
+            </div>
+            <div class="nl-sale-card__body">
+              <p class="nl-sale-card__shop">Amelie Fair Fashion</p>
+              <p class="nl-sale-card__name">Produktname hier eintragen</p>
+              <div class="nl-sale-card__prices">
+                <span class="nl-sale-card__price-new">39,00 €</span>
+                <span class="nl-sale-card__price-old">79,00 €</span>
+                <span class="nl-sale-card__discount">−51 %</span>
+              </div>
+            </div>
+          </a>
+
+          <a class="nl-sale-card" href="produkt.html?id=PRODUKT-ID-HIER">
+            <div class="nl-sale-card__img-wrap">
+              <img src="Bilder/placeholder-produkt.jpg" alt="Produktname" loading="lazy">
+            </div>
+            <div class="nl-sale-card__body">
+              <p class="nl-sale-card__shop">Amelie Fair Fashion</p>
+              <p class="nl-sale-card__name">Produktname hier eintragen</p>
+              <div class="nl-sale-card__prices">
+                <span class="nl-sale-card__price-new">19,90 €</span>
+                <span class="nl-sale-card__price-old">34,90 €</span>
+                <span class="nl-sale-card__discount">−43 %</span>
+              </div>
+            </div>
+          </a>
+
+          <a class="nl-sale-card" href="produkt.html?id=PRODUKT-ID-HIER">
+            <div class="nl-sale-card__img-wrap">
+              <img src="Bilder/placeholder-produkt.jpg" alt="Produktname" loading="lazy">
+            </div>
+            <div class="nl-sale-card__body">
+              <p class="nl-sale-card__shop">Amelie Fair Fashion</p>
+              <p class="nl-sale-card__name">Produktname hier eintragen</p>
+              <div class="nl-sale-card__prices">
+                <span class="nl-sale-card__price-new">59,00 €</span>
+                <span class="nl-sale-card__price-old">99,00 €</span>
+                <span class="nl-sale-card__discount">−40 %</span>
+              </div>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 4. NEUE SHOPS ── -->
+    <section class="section nl-section">
+      <div class="container">
+        <div class="nl-section-head">
+          <div>
+            <p class="nl-label">Neu dabei</p>
+            <h2 class="nl-section-head__title">Willkommen in der Familie</h2>
+          </div>
+        </div>
+
+        <div class="nl-shops-grid">
+
+          <!-- Neuen Shop manuell eintragen -->
+          <a class="nl-shop-card" href="shop.html?slug=shop-slug-hier">
+            <div class="nl-shop-card__logo-wrap">
+              <img src="Bilder/placeholder-shop-logo.jpg" alt="Shop-Name" loading="lazy">
+            </div>
+            <div class="nl-shop-card__body">
+              <p class="nl-shop-card__name">Shop-Name hier eintragen</p>
+              <p class="nl-shop-card__desc">Kurze Beschreibung des Shops hier eintragen — was machen sie, was ist besonders, warum sollte man vorbeischauen?</p>
+              <span class="nl-shop-card__cta">Shop entdecken →</span>
+            </div>
+          </a>
+
+          <!-- Weiteren Shop einfügen (diesen Block kopieren) -->
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 5. NEWS ── -->
+    <section class="section section--soft nl-section">
+      <div class="container">
+        <div class="nl-section-head">
+          <div>
+            <p class="nl-label">Aus der Stadt</p>
+            <h2 class="nl-section-head__title">News &amp; Aktuelles</h2>
+          </div>
+        </div>
+
+        <div class="nl-news-grid">
+
+          <!-- News-Kachel manuell eintragen -->
+          <article class="nl-news-card">
+            <span class="nl-news-card__tag">Umzug</span>
+            <h3 class="nl-news-card__title">Shop XY zieht um</h3>
+            <p class="nl-news-card__text">Ab dem 1. August findet ihr uns in der Musterstraße 12. Das Geschäft bleibt während des Umzugs geöffnet.</p>
+            <p class="nl-news-card__date">15. Juli 2026</p>
+          </article>
+
+          <article class="nl-news-card">
+            <span class="nl-news-card__tag">Neueröffnung</span>
+            <h3 class="nl-news-card__title">Neue Boutique in der Innenstadt</h3>
+            <p class="nl-news-card__text">Ab nächster Woche erwartet euch ein neues Modegeschäft in bester Lage. Kommt zur Eröffnungsfeier am Samstag!</p>
+            <p class="nl-news-card__date">22. Juli 2026</p>
+          </article>
+
+          <article class="nl-news-card">
+            <span class="nl-news-card__tag">Event</span>
+            <h3 class="nl-news-card__title">Sommerfest der Händler</h3>
+            <p class="nl-news-card__text">Am letzten Julisamstag laden alle Händler zu einem gemeinsamen Sommerfest ein — mit Rabatten, Musik und mehr.</p>
+            <p class="nl-news-card__date">26. Juli 2026</p>
+          </article>
+
+          <!-- Weitere News-Kachel (diesen Block kopieren) -->
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 6. CTA ── -->
+    <section class="section section--dark nl-cta">
+      <div class="container">
+        <div class="glass-card nl-cta__card">
+          <p class="nl-label nl-label--light">Braunschweig wartet</p>
+          <h2 class="nl-cta__title">Jetzt lokal shoppen.</h2>
+          <p class="nl-cta__sub">Entdecke alle Produkte lokaler Braunschweiger Händler — bequem online reservieren, vor Ort abholen.</p>
+          <div class="nl-cta__btns">
+            <a class="btn btn--light" href="kategorie.html">Alle Produkte</a>
+            <a class="btn btn--outline-light" href="geschaefte.html">Geschäfte entdecken</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- ── Footer ── -->
@@ -119,6 +330,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/newsletter.js?v=2"></script>
+  <script type="module" src="js/newsletter.js?v=3"></script>
 </body>
 </html>
