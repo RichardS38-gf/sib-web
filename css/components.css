@@ -280,7 +280,7 @@
   flex-shrink: 0;
 }
 
-.site-header__logo img { height: 32px; width: auto; }
+.site-header__logo img { height: 44px; width: auto; }
 
 .site-header__search {
   flex: 1;
