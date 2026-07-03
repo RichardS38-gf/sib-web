@@ -82,25 +82,35 @@ async function ladeShops () {
   const container = document.getElementById('nl-shops-grid')
   if (!container) return
   try {
-    const { data, error } = await supabase
-      .from('shops')
-      .select('id, name, slug, logo_url, beschreibung')
-      .eq('name', 'Amelie Fair Fashion')
-      .limit(1)
-    if (error) throw error
-    const shops = data || []
+    const [shopRes, prodRes] = await Promise.all([
+      supabase.from('shops').select('*').eq('name', 'Amelie Fair Fashion').limit(1),
+      supabase.from('produkte').select('shop_id')
+    ])
+    if (shopRes.error) throw shopRes.error
+    const shops = shopRes.data || []
     if (shops.length === 0) { container.innerHTML = ''; return }
+    const produkte = prodRes.data || []
+    const anzahlByShop = {}
+    produkte.forEach(p => { if (p.shop_id) anzahlByShop[p.shop_id] = (anzahlByShop[p.shop_id] || 0) + 1 })
+    const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     container.innerHTML = shops.map(s => {
+      const slug = encodeURIComponent(s.slug || s.id)
+      const banner = s.banner_url
+        ? `<img class="haendler-card__banner" src="${esc(s.banner_url)}" alt="${esc(s.name)}" loading="lazy">`
+        : '<div class="haendler-card__banner"></div>'
       const logo = s.logo_url
-        ? `<img src="${s.logo_url}" alt="${s.name}" loading="lazy">`
-        : `<div style="width:100%;height:100%;background:var(--color-bg-soft)"></div>`
+        ? `<img class="haendler-card__logo" src="${esc(s.logo_url)}" alt="${esc(s.name)}" loading="lazy">`
+        : '<div class="haendler-card__logo"></div>'
       return `
-        <a class="nl-shop-card" href="shop.html?slug=${encodeURIComponent(s.slug || s.id)}">
-          <div class="nl-shop-card__logo-wrap">${logo}</div>
-          <div class="nl-shop-card__body">
-            <p class="nl-shop-card__name">${s.name}</p>
-            <p class="nl-shop-card__desc">${s.beschreibung || ''}</p>
-            <span class="nl-shop-card__cta">Shop entdecken &rarr;</span>
+        <a class="haendler-card" href="shop.html?slug=${slug}">
+          ${banner}
+          <div class="haendler-card__body">
+            <div class="haendler-card__head">
+              ${logo}
+              <span class="haendler-card__name">${esc(s.name)}</span>
+            </div>
+            ${s.adresse ? `<p class="haendler-card__adresse">${esc(s.adresse)}</p>` : ''}
+            <p class="haendler-card__count">${anzahlByShop[s.id] || 0} Artikel</p>
           </div>
         </a>`
     }).join('')
