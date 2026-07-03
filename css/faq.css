@@ -43,7 +43,7 @@
   font-size: var(--text-sm);
   font-weight: 300;
   color: rgba(250,250,248,0.6);
-  margin-top: var(--space-4);
+  margin-top: var(--space-2);
   margin-bottom: var(--space-2);
 }
 .faq-layout {
