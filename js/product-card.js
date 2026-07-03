@@ -70,7 +70,10 @@ export function renderProductCard (p, shopName, rating = null, wunschliste = fal
   const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
   const sale = isSaleAktiv(p)
   const preisHtml = sale
-    ? `<span class="product-card__price-alt">${esc(preis)}</span><span class="product-card__price product-card__price--sale">${euro.format(p.angebotspreis)}</span>`
+    ? (() => {
+        const ersparnis = euro.format(p.preis - p.angebotspreis)
+        return `<span class="product-card__price-alt">${esc(preis)}</span><span class="product-card__price product-card__price--sale">${euro.format(p.angebotspreis)}</span><span class="product-card__badge product-card__badge--ersparnis">−${ersparnis}</span>`
+      })()
     : `<span class="product-card__price">${esc(preis)}</span>`
   const shop = shopName || p.shops?.name || 'Lokaler Händler'
 

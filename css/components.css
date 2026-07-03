@@ -110,6 +110,20 @@
   border: 1.5px solid var(--color-ink);
 }
 
+.product-card__badge--ersparnis {
+  position: static;
+  display: inline-block;
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  vertical-align: baseline;
+}
+
 .product-card__wish {
   position: absolute;
   top: 0.6rem;

@@ -65,11 +65,11 @@ async function ladeSaleBilder () {
     const preisWrap = card.querySelector('.nl-sale-card__prices')
     if (!preisWrap) return
     if (p.angebotspreis && p.angebotspreis < p.preis) {
-      const rabatt = Math.round((1 - p.angebotspreis / p.preis) * 100)
+      const ersparnis = euro.format(p.preis - p.angebotspreis)
       preisWrap.innerHTML = `
         <span class="nl-sale-card__price-new">${euro.format(p.angebotspreis)}</span>
         <span class="nl-sale-card__price-old">${euro.format(p.preis)}</span>
-        <span class="nl-sale-card__discount">-${rabatt} %</span>
+        <span class="nl-sale-card__discount">-${ersparnis}</span>
       `
     } else {
       preisWrap.innerHTML = `<span class="nl-sale-card__price-new">${euro.format(p.preis)}</span>`
