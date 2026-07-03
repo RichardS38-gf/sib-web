@@ -1,9 +1,26 @@
 /* ueber-uns.css — SIB Über-uns-Seite */
 
-/* ── 1. Hero (dunkel + Glas) ── */
-.ueber-hero { text-align: center; }
+/* -- 1. Hero (dunkel + Glas) -- */
+.ueber-hero {
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ueber-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('../Bilder/baninho-braunschweig-7440762_1920.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.35;
+  z-index: 0;
+}
 
 .ueber-hero .container {
+  position: relative;
+  z-index: 1;
   max-width: 680px;
   padding: var(--space-5) var(--space-4);
   background: rgba(255, 255, 255, 0.10);
