@@ -513,8 +513,9 @@
   position: absolute;
   top: 0.6rem;
   left: 0.6rem;
-  background: var(--color-ink);
-  color: #fff;
+  background: #fff;
+  color: var(--color-ink);
+  border: 1.5px solid var(--color-ink);
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
