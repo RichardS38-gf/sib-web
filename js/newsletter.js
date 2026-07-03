@@ -3,7 +3,10 @@
 import { supabase } from './supabase.js'
 import { renderProductCard, initWunschlisteButtons, fetchWunschlisteIds, fetchProductRatings } from './product-card.js'
 
-// IDs der kuratierten Produkte dieses Monats
+const SALE_IDS = [
+  'd8485a10-a907-4ae5-9aa9-246b8ea2dae7' // Leder-Handtasche
+]
+
 const PRODUKT_IDS = [
   '55563f59-dae1-4883-9be8-31dabc79b600',
   '5da6f0ff-43c1-40c9-90c1-4f6333c28d6e',
@@ -56,3 +59,16 @@ async function ladeProdukte () {
 }
 
 ladeProdukte()
+ladeSaleBilder()
+
+async function ladeSaleBilder () {
+  const { data } = await supabase
+    .from('produkte')
+    .select('id, bilder')
+    .in('id', SALE_IDS)
+  if (!data) return
+  data.forEach(p => {
+    const card = document.querySelector(`a[href="produkt.html?id=${p.id}"] .nl-sale-card__img-wrap img`)
+    if (card && p.bilder?.[0]) card.src = p.bilder[0]
+  })
+}
