@@ -503,6 +503,27 @@
   margin-top: 0.25rem;
 }
 
+/* ── Shop-Karte in Newsletter: NEU-Badge ── */
+#nl-shops-grid .haendler-card {
+  position: relative;
+}
+
+#nl-shops-grid .haendler-card::after {
+  content: 'NEU';
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  background: var(--color-ink);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  z-index: 2;
+}
+
 /* ── CTA ── */
 .nl-cta__card {
   text-align: center;
