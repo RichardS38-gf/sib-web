@@ -3,10 +3,6 @@
 import { supabase } from './supabase.js'
 import { renderProductCard, initWunschlisteButtons, fetchWunschlisteIds, fetchProductRatings } from './product-card.js'
 
-const SHOP_IDS = [
-  '3ec3bc53-c142-4de7-b229-43a6b8ff7a2e' // Amelie Fair Fashion
-]
-
 const SALE_IDS = [
   'd8485a10-a907-4ae5-9aa9-246b8ea2dae7' // Leder-Handtasche
 ]
@@ -89,9 +85,10 @@ async function ladeShops () {
     const { data, error } = await supabase
       .from('shops')
       .select('id, name, slug, logo_url, beschreibung')
-      .in('id', SHOP_IDS)
+      .eq('name', 'Amelie Fair Fashion')
+      .limit(1)
     if (error) throw error
-    const shops = (data || [])
+    const shops = data || []
     if (shops.length === 0) { container.innerHTML = ''; return }
     container.innerHTML = shops.map(s => {
       const logo = s.logo_url
