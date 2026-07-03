@@ -345,9 +345,9 @@
 
 .nl-sale-card__prices {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .nl-sale-card__price-new {
