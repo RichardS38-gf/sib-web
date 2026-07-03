@@ -371,6 +371,28 @@
   border-radius: 4px;
 }
 
+.nl-sale-card__rating {
+  font-size: 0.72rem;
+  color: rgba(250, 250, 248, 0.6);
+  margin: 0.25rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nl-sale-card__rating--empty {
+  color: rgba(250, 250, 248, 0.3);
+}
+
+.nl-sale-card__stars {
+  color: #f5a623;
+  font-size: 0.8rem;
+}
+
+.nl-sale-card__rating-count {
+  opacity: 0.7;
+}
+
 /* ── NEUE SHOPS ── */
 .nl-shops-grid {
   display: grid;

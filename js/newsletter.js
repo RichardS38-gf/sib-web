@@ -49,14 +49,14 @@ async function ladeProdukte () {
   }
 }
 
-// Sale-Karten: Bild + Preise dynamisch befüllen
+// Sale-Karten: Bild + Preise + Rating dynamisch befüllen
 async function ladeSaleBilder () {
-  const { data } = await supabase
-    .from('produkte')
-    .select('id, bilder, preis, angebotspreis')
-    .in('id', SALE_IDS)
-  if (!data) return
   const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
+  const [{ data }, ratings] = await Promise.all([
+    supabase.from('produkte').select('id, bilder, preis, angebotspreis').in('id', SALE_IDS),
+    fetchProductRatings(supabase, SALE_IDS)
+  ])
+  if (!data) return
   data.forEach(p => {
     const card = document.querySelector(`a[href="produkt.html?id=${p.id}"]`)
     if (!card) return
@@ -74,6 +74,13 @@ async function ladeSaleBilder () {
     } else {
       preisWrap.innerHTML = `<span class="nl-sale-card__price-new">${euro.format(p.preis)}</span>`
     }
+    // Rating unter Produktname einfügen
+    const r = ratings[p.id]
+    const ratingHtml = r && r.anzahl > 0
+      ? `<p class="nl-sale-card__rating"><span class="nl-sale-card__stars">★</span> ${(r.summe / r.anzahl).toFixed(1).replace('.', ',')} <span class="nl-sale-card__rating-count">(${r.anzahl})</span></p>`
+      : `<p class="nl-sale-card__rating nl-sale-card__rating--empty"><span class="nl-sale-card__stars">★</span> Noch keine Bewertungen</p>`
+    const name = card.querySelector('.nl-sale-card__name')
+    if (name) name.insertAdjacentHTML('afterend', ratingHtml)
   })
 }
 
