@@ -64,11 +64,27 @@ ladeSaleBilder()
 async function ladeSaleBilder () {
   const { data } = await supabase
     .from('produkte')
-    .select('id, bilder')
+    .select('id, bilder, preis, angebotspreis')
     .in('id', SALE_IDS)
   if (!data) return
+  const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
   data.forEach(p => {
-    const card = document.querySelector(`a[href="produkt.html?id=${p.id}"] .nl-sale-card__img-wrap img`)
-    if (card && p.bilder?.[0]) card.src = p.bilder[0]
+    const card = document.querySelector(`a[href="produkt.html?id=${p.id}"]`)
+    if (!card) return
+    // Bild
+    const img = card.querySelector('.nl-sale-card__img-wrap img')
+    if (img && p.bilder?.[0]) img.src = p.bilder[0]
+    // Preise
+    const preisWrap = card.querySelector('.nl-sale-card__prices')
+    if (preisWrap && p.angebotspreis && p.angebotspreis < p.preis) {
+      const rabatt = Math.round((1 - p.angebotspreis / p.preis) * 100)
+      preisWrap.innerHTML = `
+        <span class="nl-sale-card__price-new">${euro.format(p.angebotspreis)}</span>
+        <span class="nl-sale-card__price-old">${euro.format(p.preis)}</span>
+        <span class="nl-sale-card__discount">−${rabatt} %</span>
+      `
+    } else if (preisWrap && p.preis) {
+      preisWrap.innerHTML = `<span class="nl-sale-card__price-new">${euro.format(p.preis)}</span>`
+    }
   })
 }
