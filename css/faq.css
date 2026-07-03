@@ -1,29 +1,97 @@
-/* faq.css — SIB FAQ-Seite */
+/* faq.css v3 -- SIB FAQ zweispaltig */
 
-/* ── Seiten-Header ── */
-.page-head {
+/* Hero */
+.faq-hero { padding: var(--space-6) 0; }
+.faq-hero__card { text-align: left; max-width: 600px; margin: 0; }
+.faq-hero__title { font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 800; letter-spacing: -0.03em; color: var(--color-on-dark); margin-bottom: var(--space-2); }
+.faq-hero__sub { font-size: var(--text-lg); font-weight: 300; color: rgba(250,250,248,0.7); }
+
+/* Layout */
+.faq-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .faq-layout {
+    grid-template-columns: 220px 1fr;
+    gap: var(--space-6);
+    align-items: start;
+  }
+}
+
+/* Seitennavigation */
+.faq-nav {
+  position: sticky;
+  top: 80px;
+}
+
+.faq-nav nav {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
   margin-bottom: var(--space-4);
 }
 
-.page-head__title {
-  font-size: var(--text-4xl);
+.faq-nav__item {
+  display: block;
+  width: 100%;
+  padding: var(--space-3) var(--space-3);
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  border-bottom: 1px solid var(--color-line);
 }
 
-/* ── Abschnittstitel ── */
-.faq-section__title {
-  font-size: var(--text-2xl);
-  margin-top: var(--space-5);
+.faq-nav__item:last-child { border-bottom: none; }
+
+.faq-nav__item:hover {
+  background: var(--color-bg-soft);
+  color: var(--color-ink);
+}
+
+.faq-nav__item.is-active {
+  background: var(--color-bg-soft);
+  color: var(--color-ink);
+  font-weight: 600;
+  border-left-color: var(--color-ink);
+}
+
+.faq-nav__cta {
+  padding: var(--space-3);
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.faq-nav__cta p {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  font-weight: 300;
   margin-bottom: var(--space-2);
 }
 
-/* ── Akkordeon ── */
-.faq-list {
-  border-top: 1px solid var(--color-line);
+/* Panel */
+.faq-panel__title {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-4);
+  color: var(--color-ink);
 }
 
-.faq-item {
-  border-bottom: 1px solid var(--color-line);
-}
+/* Akkordeon */
+.faq-list { border-top: 1px solid var(--color-line); }
+.faq-item { border-bottom: 1px solid var(--color-line); }
 
 .faq-question {
   display: flex;
@@ -36,15 +104,15 @@
   padding: var(--space-3) 0;
   text-align: left;
   font-family: var(--font-sans);
-  font-size: var(--text-lg);
-  font-weight: 400;
+  font-size: var(--text-base);
+  font-weight: 500;
   color: var(--color-ink);
   cursor: pointer;
+  transition: opacity 0.15s;
 }
 
 .faq-question:hover { opacity: 0.7; }
 
-/* Plus/Minus-Icon (reines CSS) */
 .faq-icon {
   position: relative;
   flex-shrink: 0;
@@ -60,17 +128,9 @@
   transition: transform var(--transition), opacity var(--transition);
 }
 
-.faq-icon::before {
-  top: 7px; left: 0;
-  width: 16px; height: 2px;
-}
+.faq-icon::before { top: 7px; left: 0; width: 16px; height: 2px; }
+.faq-icon::after { top: 0; left: 7px; width: 2px; height: 16px; }
 
-.faq-icon::after {
-  top: 0; left: 7px;
-  width: 2px; height: 16px;
-}
-
-/* Offen: Minus (vertikaler Strich ausgeblendet) */
 .faq-question[aria-expanded="true"] .faq-icon::after {
   transform: scaleY(0);
   opacity: 0;
@@ -83,35 +143,21 @@
 
 .faq-answer p {
   font-weight: 300;
-  color: var(--color-ink);
+  color: var(--color-muted);
+  line-height: 1.7;
 }
 
 .faq-answer a {
+  color: var(--color-ink);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-/* ── Noch Fragen? (dunkel + Glas) ── */
-.faq-cta { text-align: center; }
-
-.faq-cta .container {
-  max-width: 620px;
-  padding: var(--space-5) var(--space-4);
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
-
-.faq-cta__headline {
-  color: var(--color-on-dark);
-  font-size: var(--text-3xl);
-  margin-bottom: var(--space-2);
-}
-
-.faq-cta__text {
-  color: rgba(250, 250, 248, 0.75);
-  font-weight: 300;
-  margin-bottom: var(--space-4);
+/* Mobile: Nav wird horizontal */
+@media (max-width: 767px) {
+  .faq-nav { position: static; }
+  .faq-nav nav { display: flex; }
+  .faq-nav__item { border-bottom: none; border-left: none; border-bottom: 3px solid transparent; flex: 1; text-align: center; }
+  .faq-nav__item.is-active { border-bottom-color: var(--color-ink); border-left: none; }
+  .faq-nav__cta { display: none; }
 }

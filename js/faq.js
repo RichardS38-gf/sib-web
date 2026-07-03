@@ -1,44 +1,51 @@
-// js/faq.js — SIB FAQ-Seite
-// Akkordeon: nur eine Antwort gleichzeitig offen.
+// js/faq.js v2 -- SIB FAQ zweispaltig
 
-import { initHeaderSearch } from './header.js'
-
-function initMobileMenu () {
-  const burger = document.querySelector('.site-header__burger')
-  const menu = document.getElementById('mobile-menu')
-  if (!burger || !menu) return
+// Mobile-Menue
+const burger = document.querySelector('.site-header__burger')
+const mobileMenu = document.getElementById('mobile-menu')
+if (burger && mobileMenu) {
   burger.addEventListener('click', () => {
     const open = burger.getAttribute('aria-expanded') === 'true'
     burger.setAttribute('aria-expanded', String(!open))
-    burger.setAttribute('aria-label', open ? 'Menü öffnen' : 'Menü schließen')
-    menu.hidden = open
+    mobileMenu.hidden = open
   })
 }
 
-function initAkkordeon () {
-  const fragen = Array.from(document.querySelectorAll('.faq-question'))
+// Tab-Navigation
+const navBtns = document.querySelectorAll('.faq-nav__item')
+const panels = document.querySelectorAll('.faq-panel')
 
-  fragen.forEach((frage) => {
-    frage.addEventListener('click', () => {
-      const offen = frage.getAttribute('aria-expanded') === 'true'
+navBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const cat = btn.dataset.category
 
-      // Alle schließen
-      fragen.forEach((f) => {
-        f.setAttribute('aria-expanded', 'false')
-        const a = f.nextElementSibling
-        if (a) a.hidden = true
-      })
+    navBtns.forEach(b => b.classList.remove('is-active'))
+    btn.classList.add('is-active')
 
-      // Geklickte öffnen, wenn sie vorher zu war
-      if (!offen) {
-        frage.setAttribute('aria-expanded', 'true')
-        const antwort = frage.nextElementSibling
-        if (antwort) antwort.hidden = false
-      }
+    panels.forEach(p => {
+      const isTarget = p.id === `faq-${cat}`
+      p.hidden = !isTarget
+      p.classList.toggle('is-active', isTarget)
     })
   })
-}
+})
 
-initMobileMenu()
-initHeaderSearch()
-initAkkordeon()
+// Akkordeon
+document.querySelectorAll('.faq-question').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const expanded = btn.getAttribute('aria-expanded') === 'true'
+    const answer = btn.nextElementSibling
+
+    // Schliesse alle anderen in diesem Panel
+    const panel = btn.closest('.faq-panel')
+    panel.querySelectorAll('.faq-question[aria-expanded="true"]').forEach(other => {
+      if (other !== btn) {
+        other.setAttribute('aria-expanded', 'false')
+        other.nextElementSibling.hidden = true
+      }
+    })
+
+    btn.setAttribute('aria-expanded', String(!expanded))
+    answer.hidden = expanded
+  })
+})
