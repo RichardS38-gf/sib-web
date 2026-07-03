@@ -549,8 +549,35 @@
 }
 
 /* ── CTA ── */
+.nl-cta {
+  position: relative;
+  overflow: hidden;
+}
+
+.nl-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('../Bilder/andreas-felske-z5fkzpT4e9k-unsplash.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.3;
+  z-index: 0;
+}
+
+.nl-cta .container {
+  position: relative;
+  z-index: 1;
+}
+
 .nl-cta__card {
   text-align: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: var(--space-6) var(--space-4);
 }
 
 .nl-cta__title {
