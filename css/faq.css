@@ -26,6 +26,15 @@
   z-index: 1;
 }
 
+.faq-hero__intro {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: rgba(250,250,248,0.5);
+  margin-bottom: var(--space-1);
+  letter-spacing: 0.01em;
+}
+
 .faq-hero__card { text-align: left; max-width: 600px; margin: 0; }
 .faq-hero__title { font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 800; letter-spacing: -0.03em; color: var(--color-on-dark); margin-bottom: var(--space-2); }
 .faq-hero__sub { font-size: var(--text-lg); font-weight: 300; color: rgba(250,250,248,0.7); }
