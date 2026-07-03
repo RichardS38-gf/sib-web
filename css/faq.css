@@ -30,7 +30,13 @@
 .faq-hero__title { font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 800; letter-spacing: -0.03em; color: var(--color-on-dark); margin-bottom: var(--space-2); }
 .faq-hero__sub { font-size: var(--text-lg); font-weight: 300; color: rgba(250,250,248,0.7); }
 
-/* Layout */
+.faq-hero__hint {
+  font-size: var(--text-sm);
+  font-weight: 300;
+  color: rgba(250,250,248,0.6);
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
+}
 .faq-layout {
   display: grid;
   grid-template-columns: 1fr;
