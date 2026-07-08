@@ -2,9 +2,11 @@
 
 /* -- 1. Hero (dunkel + Glas) -- */
 .ueber-hero {
-  text-align: center;
   position: relative;
   overflow: hidden;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
 }
 
 .ueber-hero::before {
@@ -14,20 +16,26 @@
   background-image: url('../Bilder/baninho-braunschweig-7440762_1920.jpg');
   background-size: cover;
   background-position: center;
-  opacity: 0.35;
+  opacity: 0.45;
   z-index: 0;
 }
 
 .ueber-hero .container {
   position: relative;
   z-index: 1;
-  max-width: 680px;
-  padding: var(--space-5) var(--space-4);
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  max-width: unset;
+  padding: var(--space-7) var(--space-4);
+  background: none;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.ueber-hero__card {
+  max-width: 640px;
+  margin: 0;
+  text-align: left;
 }
 
 .ueber-hero__headline {
