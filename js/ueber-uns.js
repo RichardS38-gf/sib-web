@@ -16,15 +16,12 @@ function initMobileMenu () {
 function initHighlight () {
   const el = document.querySelector('.ueber-problem__highlight')
   if (!el) return
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        setTimeout(() => el.classList.add('is-visible'), 300)
-        observer.disconnect()
-      }
-    })
-  }, { threshold: 0.5 })
-  observer.observe(el)
+  function pulse () {
+    el.classList.remove('is-visible')
+    setTimeout(() => el.classList.add('is-visible'), 400)
+  }
+  pulse()
+  setInterval(pulse, 2500)
 }
 
 initMobileMenu()

@@ -76,7 +76,7 @@
 }
 
 .ueber-problem__highlight {
-  color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.15);
   transition: color 0.9s ease;
 }
 
