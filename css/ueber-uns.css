@@ -150,7 +150,7 @@
 .ueber-collage {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 280px 280px;
+  grid-template-rows: calc(42.5vh) calc(42.5vh);
   gap: 0;
 }
 
