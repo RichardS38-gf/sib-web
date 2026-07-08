@@ -101,9 +101,11 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-3);
+  max-width: 100%;
 }
 
 @media (min-width: 640px) {
+  .ueber-problem { max-width: 100%; }
   .ueber-problem__icons { grid-template-columns: repeat(4, 1fr); }
 }
 
