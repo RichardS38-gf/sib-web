@@ -257,14 +257,18 @@
   background-image: url('../Bilder/tem-rysh-F6-U5fGAOik-unsplash.jpg');
   background-size: cover;
   background-position: center;
-  opacity: 0.3;
+  opacity: 0.5;
   z-index: 0;
 }
 
 .ueber-haendler .container {
   position: relative;
   z-index: 1;
+}
+
+.ueber-haendler__inner {
   max-width: 620px;
+  margin: 0 auto;
   padding: var(--space-5) var(--space-4);
   background: rgba(255, 255, 255, 0.10);
   border: 1px solid rgba(255, 255, 255, 0.22);
@@ -272,7 +276,6 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
-
 .ueber-haendler__headline {
   color: var(--color-on-dark);
   font-size: var(--text-3xl);
