@@ -23,7 +23,6 @@
 .ueber-hero .container {
   position: relative;
   z-index: 1;
-  max-width: unset;
   padding-top: var(--space-7);
   padding-bottom: var(--space-7);
   background: none;
