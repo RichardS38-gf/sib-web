@@ -24,7 +24,8 @@
   position: relative;
   z-index: 1;
   max-width: unset;
-  padding: var(--space-7) var(--space-4);
+  padding-top: var(--space-7);
+  padding-bottom: var(--space-7);
   background: none;
   border: none;
   border-radius: 0;
