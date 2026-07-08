@@ -70,21 +70,69 @@
   max-width: 38ch;
 }
 
-/* ── 2. Problem / Textblock ── */
-.ueber-block { max-width: 60rem; }
-
-.ueber-block__headline {
-  font-family: var(--font-sans);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  font-size: var(--text-3xl);
-  margin-bottom: var(--space-3);
+/* -- 2. Problem -- */
+.ueber-problem {
+  max-width: 860px;
 }
 
-.ueber-text {
+.ueber-problem__quote {
+  font-family: var(--font-sans);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  line-height: 1.2;
+  border-left: 3px solid var(--color-ink);
+  padding-left: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.ueber-problem__text {
   font-size: var(--text-lg);
   font-weight: 300;
+  color: var(--color-muted);
+  line-height: 1.7;
   max-width: 60ch;
+  padding-left: calc(var(--space-4) + 3px);
+  margin-bottom: var(--space-5);
+}
+
+.ueber-problem__icons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .ueber-problem__icons { grid-template-columns: repeat(4, 1fr); }
+}
+
+.ueber-problem__icon-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: var(--space-3);
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.ueber-problem__icon-card:hover {
+  border-color: var(--color-ink);
+  transform: translateY(-2px);
+}
+
+.ueber-problem__icon-card svg {
+  color: var(--color-ink);
+  flex-shrink: 0;
+}
+
+.ueber-problem__icon-card span {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ink);
 }
 
 /* ── 3. Lösung / Schritte ── */
