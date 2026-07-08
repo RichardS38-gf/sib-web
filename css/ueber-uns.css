@@ -276,9 +276,25 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
-.ueber-haendler__headline {
+.ueber-haendler__badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.6);
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: var(--space-3);
+}
+
+.ueber-haendler__title {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
   color: var(--color-on-dark);
-  font-size: var(--text-3xl);
+  line-height: 1.1;
   margin-bottom: var(--space-2);
 }
 
