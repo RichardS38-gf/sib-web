@@ -75,6 +75,15 @@
   max-width: 860px;
 }
 
+.ueber-problem__highlight {
+  color: rgba(255,255,255,0.2);
+  transition: color 0.9s ease;
+}
+
+.ueber-problem__highlight.is-visible {
+  color: #fff;
+}
+
 .ueber-problem__quote {
   font-family: var(--font-sans);
   font-size: clamp(1.6rem, 3vw, 2.4rem);
