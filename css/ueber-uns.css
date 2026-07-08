@@ -150,10 +150,8 @@
 .ueber-collage {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 220px 220px;
-  gap: 8px;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  grid-template-rows: 280px 280px;
+  gap: 0;
 }
 
 .ueber-collage__tall {
