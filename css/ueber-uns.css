@@ -243,10 +243,27 @@
   max-width: 22ch;
 }
 
-/* ── 4. Für Händler (dunkel + Glas) ── */
-.ueber-haendler { text-align: center; }
+/* -- 4. Fuer Haendler (dunkel + Bild) -- */
+.ueber-haendler {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+.ueber-haendler::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('../Bilder/tem-rysh-F6-U5fGAOik-unsplash.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.3;
+  z-index: 0;
+}
 
 .ueber-haendler .container {
+  position: relative;
+  z-index: 1;
   max-width: 620px;
   padding: var(--space-5) var(--space-4);
   background: rgba(255, 255, 255, 0.10);
