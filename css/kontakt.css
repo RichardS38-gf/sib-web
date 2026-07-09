@@ -110,8 +110,18 @@
   font-size: clamp(2rem, 3.5vw, 3rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: var(--color-on-dark);
   line-height: 1.05;
+}
+
+.kontakt-info__title-solid {
+  color: var(--color-on-dark);
+}
+
+.kontakt-info__title-outline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--color-on-dark);
 }
 
 .kontakt-info__list {
