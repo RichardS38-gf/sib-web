@@ -74,9 +74,24 @@
 
 .login {
   background-color: var(--color-dark);
+  position: relative;
+  overflow: hidden;
+}
+
+.login::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('../Bilder/la-spri-JTgMt4dyXm4-unsplash.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.25;
+  z-index: 0;
 }
 
 .login .container {
+  position: relative;
+  z-index: 1;
   display: flex;
   justify-content: center;
 }
