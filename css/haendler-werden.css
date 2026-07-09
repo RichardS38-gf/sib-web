@@ -99,6 +99,7 @@
 
 .hw-form__headline {
   font-size: var(--text-3xl);
+  margin-top: var(--space-4);
   margin-bottom: var(--space-4);
 }
 
