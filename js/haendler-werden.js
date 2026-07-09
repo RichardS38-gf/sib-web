@@ -41,7 +41,7 @@ function setzeRolle (rolle) {
     heroHeadline.innerHTML = 'Dein Geschäft.<br>Online sichtbar.'
     heroSubtext.textContent = 'Registriere dein Geschäft auf Shoppen in Braunschweig und erreiche tausende lokale Käufer.'
   } else {
-    heroHeadline.innerHTML = 'Lokal einkaufen.<br>Online entdecken.'
+    heroHeadline.innerHTML = '<em>Lokal</em> einkaufen.<br><em>Online</em> entdecken.'
     heroSubtext.textContent = 'Erstelle dein kostenloses Konto bei Shoppen in Braunschweig.'
   }
 }
