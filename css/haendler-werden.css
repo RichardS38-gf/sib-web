@@ -52,6 +52,12 @@
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: var(--radius-md);
   padding: var(--space-3);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.hw-vorteil:hover {
+  transform: scale(1.04);
+  border-color: rgba(255,255,255,0.25);
 }
 
 .hw-vorteil::before { display: none; }
