@@ -59,6 +59,7 @@
 .kontakt-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  min-height: 500px;
 }
 
 .kontakt-split__inner {
@@ -67,15 +68,30 @@
 
 .kontakt-split__left {
   background: var(--color-dark);
-  padding: var(--space-7) var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.kontakt-split__left-inner {
+  width: 100%;
+  max-width: 570px;
+  padding: var(--space-7) var(--space-5) var(--space-7) var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  justify-content: center;
 }
 
 .kontakt-split__right {
   background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.kontakt-split__right-inner {
+  width: 100%;
+  max-width: 570px;
   padding: var(--space-7) var(--space-5);
 }
 
@@ -83,15 +99,44 @@
   .kontakt-split {
     grid-template-columns: 1fr;
   }
-  .kontakt-split__left {
-    padding: var(--space-5) var(--space-4);
-  }
-  .kontakt-split__right {
+  .kontakt-split__left-inner,
+  .kontakt-split__right-inner {
+    max-width: 100%;
     padding: var(--space-5) var(--space-4);
   }
 }
 
-/* ── Rechte Spalte: Formular ── */
+.kontakt-info__title {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-on-dark);
+}
+
+.kontakt-info__text {
+  color: rgba(250,250,248,0.6);
+  font-weight: 300;
+  line-height: 1.7;
+  font-size: var(--text-sm);
+}
+
+.kontakt-info__email {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: rgba(250,250,248,0.85);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.kontakt-info__email svg {
+  flex-shrink: 0;
+  fill: rgba(250,250,248,0.85);
+}
+
+
 .kontakt-form__row {
   display: grid;
   grid-template-columns: 1fr;
