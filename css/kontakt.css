@@ -110,8 +110,17 @@
   font-size: clamp(2rem, 3.5vw, 3rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: var(--color-on-dark);
   line-height: 1.05;
+}
+
+.kontakt-info__title-solid {
+  color: var(--color-on-dark);
+}
+
+.kontakt-info__title-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255,255,255,0.35);
+  text-stroke: 1.5px rgba(255,255,255,0.35);
 }
 
 .kontakt-info__list {
@@ -120,6 +129,7 @@
   flex-direction: column;
   gap: var(--space-3);
   flex: 1;
+  margin-top: var(--space-2);
 }
 
 .kontakt-info__list li {
