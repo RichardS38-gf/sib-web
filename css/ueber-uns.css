@@ -181,25 +181,25 @@
   background: var(--color-dark);
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: var(--space-3);
+  justify-content: center;
+  padding: var(--space-5);
 }
 
 .ueber-collage__label {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: rgba(255,255,255,0.35);
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-2);
   display: block;
 }
 
 .ueber-collage__statement {
-  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
   font-weight: 800;
   color: var(--color-on-dark);
-  line-height: 1.25;
+  line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
@@ -207,14 +207,16 @@
   background: #f0ede8;
   display: flex;
   align-items: center;
-  padding: var(--space-3);
+  justify-content: flex-start;
+  padding: var(--space-5);
 }
 
 .ueber-collage__sub {
-  font-size: var(--text-sm);
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
   font-weight: 300;
-  color: #555;
-  line-height: 1.7;
+  color: #444;
+  line-height: 1.75;
+  max-width: 38ch;
 }
 
 
