@@ -22,8 +22,10 @@
   margin-bottom: var(--space-5);
 }
 
-@media (min-width: 1024px) {
-  .hw-hero__headline { font-size: var(--text-5xl); }
+.hw-hero__headline em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
 }
 
 /* -- Vorteils-Karten -- */
