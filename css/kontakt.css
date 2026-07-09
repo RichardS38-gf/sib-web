@@ -1,6 +1,61 @@
-/* kontakt.css — SIB */
+/* kontakt.css v2 -- SIB Kontaktseite */
 
-/* ── Layout: Info links, Formular rechts ── */
+/* Hero */
+.kontakt-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 340px;
+  display: flex;
+  align-items: center;
+}
+
+.kontakt-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('../Bilder/firmbee-com-SpVHcbuKi6E-unsplash.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.35;
+  z-index: 0;
+}
+
+.kontakt-hero .container {
+  position: relative;
+  z-index: 1;
+  padding-top: var(--space-7);
+  padding-bottom: var(--space-7);
+}
+
+.kontakt-hero__card {
+  max-width: 600px;
+  margin: 0;
+  text-align: left;
+}
+
+.kontakt-hero__title {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-on-dark);
+  margin-bottom: var(--space-2);
+}
+
+.kontakt-hero__divider {
+  width: 40px;
+  height: 2px;
+  background: rgba(250,250,248,0.25);
+  margin-bottom: var(--space-3);
+}
+
+.kontakt-hero__sub {
+  font-size: var(--text-lg);
+  font-weight: 300;
+  color: rgba(250,250,248,0.7);
+  line-height: 1.65;
+}
+
+/* Layout: Info links, Formular rechts */
 .kontakt-layout {
   display: grid;
   grid-template-columns: 1fr;
