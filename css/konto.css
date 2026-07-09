@@ -1,4 +1,59 @@
-/* konto.css — Käufer-Konto, ergänzt dashboard.css */
+/* konto.css -- Kaeufer-Konto, ergaenzt dashboard.css */
+
+/* Hero */
+.konto-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+}
+
+.konto-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('../Bilder/la-spri-JTgMt4dyXm4-unsplash.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.4;
+  z-index: 0;
+}
+
+.konto-hero .container {
+  position: relative;
+  z-index: 1;
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-6);
+}
+
+.konto-hero__card {
+  max-width: 600px;
+  margin: 0;
+  text-align: left;
+}
+
+.konto-hero__title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-on-dark);
+  margin-bottom: var(--space-2);
+}
+
+.konto-hero__divider {
+  width: 40px;
+  height: 2px;
+  background: rgba(250,250,248,0.25);
+  margin-bottom: var(--space-3);
+}
+
+.konto-hero__sub {
+  font-size: var(--text-base);
+  font-weight: 300;
+  color: rgba(250,250,248,0.7);
+  line-height: 1.6;
+}
 
 .dash-chat__msg.out .dash-chat__bubble {
   background: var(--color-ink);
