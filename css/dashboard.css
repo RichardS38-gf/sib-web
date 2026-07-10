@@ -765,6 +765,21 @@ textarea.form-input {
   accent-color: var(--color-ink);
 }
 
+.dash-newsletter-row-save {
+  background: none;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.8rem;
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dash-newsletter-row-save:hover { border-color: var(--color-ink); }
+.dash-newsletter-row-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.dash-newsletter-row-feedback { font-size: var(--text-xs); }
+
 /* Sonderangebot: Streichpreis + Zeitraum, klappt unter der Zeile auf */
 .dash-newsletter-sale-form {
   padding: 0 0 var(--space-3) calc(56px + var(--space-3));

@@ -439,6 +439,8 @@ async function ladeNewsletterTab () {
                 <input type="checkbox" class="dash-newsletter-check" data-produkt="${esc(p.id)}" data-typ="sale" data-saved="${saleAktiv ? 'true' : 'false'}" ${saleAktiv ? 'checked' : ''}>
                 <span>Sonderangebot</span>
               </label>
+              <button class="dash-newsletter-row-save" type="button" data-produkt="${esc(p.id)}">Speichern</button>
+              <span class="dash-newsletter-row-feedback" data-produkt="${esc(p.id)}" aria-live="polite"></span>
             </div>
           </div>
           <div class="dash-newsletter-sale-form" data-produkt="${esc(p.id)}" ${saleAktiv ? '' : 'hidden'}>
@@ -485,11 +487,17 @@ async function ladeNewsletterTab () {
             }
           }
         })
-      } else {
-        cb.addEventListener('change', () => {
-          toggleNewsletterEintrag(cb.dataset.produkt, cb.dataset.typ, monatStr, cb.checked, cb)
-        })
       }
+      // 'neu'-Checkbox speichert nicht mehr sofort -- erst per Zeilen-Speichern-Button
+    })
+
+    el.querySelectorAll('.dash-newsletter-row-save').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const produktId = btn.dataset.produkt
+        const cb = el.querySelector(`.dash-newsletter-check[data-produkt="${CSS.escape(produktId)}"][data-typ="neu"]`)
+        const feedback = el.querySelector(`.dash-newsletter-row-feedback[data-produkt="${CSS.escape(produktId)}"]`)
+        speichereNeuStatus(produktId, monatStr, cb, btn, feedback)
+      })
     })
 
     el.querySelectorAll('.dash-newsletter-sale-save').forEach((btn) => {
@@ -610,6 +618,32 @@ async function toggleNewsletterEintrag (produktId, typ, monatStr, checked, cb) {
     window.alert('Änderung konnte nicht gespeichert werden.')
   } finally {
     cb.disabled = false
+  }
+}
+
+// "Neu eingetroffen"-Häkchen wird erst beim Klick auf den Zeilen-Speichern-Button
+// tatsächlich gespeichert -- kein Sofort-Speichern mehr beim Anklicken der Checkbox.
+async function speichereNeuStatus (produktId, monatStr, cb, btn, feedbackEl) {
+  const checked = cb.checked
+  btn.disabled = true
+  if (feedbackEl) feedbackEl.innerHTML = ''
+  try {
+    if (checked) {
+      const { error } = await supabase.from('newsletter_eintraege')
+        .insert({ produkt_id: produktId, shop_id: shop.id, typ: 'neu', monat: monatStr })
+      if (error && error.code !== '23505') throw error
+    } else {
+      const { error } = await supabase.from('newsletter_eintraege')
+        .delete().eq('produkt_id', produktId).eq('typ', 'neu').eq('monat', monatStr)
+      if (error) throw error
+    }
+    if (feedbackEl) feedbackEl.innerHTML = '<span class="success-msg">Gespeichert.</span>'
+  } catch (err) {
+    console.error('Neu-eingetroffen-Status speichern fehlgeschlagen:', err)
+    cb.checked = !checked
+    if (feedbackEl) feedbackEl.innerHTML = '<span class="error-msg">Speichern fehlgeschlagen.</span>'
+  } finally {
+    btn.disabled = false
   }
 }
 
