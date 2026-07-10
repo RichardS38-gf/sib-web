@@ -209,6 +209,12 @@
   letter-spacing: -0.02em;
 }
 
+.ueber-collage__statement em {
+  font-family: 'Playfair Display', serif !important;
+  font-style: italic;
+  font-weight: 400;
+}
+
 .ueber-collage__sub-cell {
   background: #f0ede8;
   display: flex;
@@ -223,6 +229,18 @@
   color: #444;
   line-height: 1.75;
   max-width: 38ch;
+}
+
+.ueber-collage__sub::after {
+  content: '|';
+  animation: blink 0.7s step-end infinite;
+  color: #999;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 

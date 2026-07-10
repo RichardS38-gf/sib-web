@@ -50,6 +50,44 @@ function initTimeline () {
   runLoop()
 }
 
+function initTypewriter () {
+  const el = document.getElementById('collage-typewriter')
+  if (!el) return
+
+  const text = 'Wir leben in Braunschweig. Wir kaufen hier ein. Und wir wollten nicht zusehen, wie gute Läden verschwinden, weil der Online-Handel sie unsichtbar macht.'
+  const TYPE_SPEED = 35
+  const DELETE_SPEED = 15
+  const PAUSE_FULL = 3500
+  const PAUSE_EMPTY = 600
+
+  let i = 0
+  let deleting = false
+
+  function tick () {
+    if (!deleting) {
+      el.textContent = text.slice(0, i + 1)
+      i++
+      if (i === text.length) {
+        deleting = true
+        setTimeout(tick, PAUSE_FULL)
+        return
+      }
+      setTimeout(tick, TYPE_SPEED)
+    } else {
+      el.textContent = text.slice(0, i - 1)
+      i--
+      if (i === 0) {
+        deleting = false
+        setTimeout(tick, PAUSE_EMPTY)
+        return
+      }
+      setTimeout(tick, DELETE_SPEED)
+    }
+  }
+
+  setTimeout(tick, 800)
+}
+
 function initHighlight () {
   const el = document.querySelector('.ueber-problem__highlight')
   if (!el) return
@@ -64,4 +102,5 @@ function initHighlight () {
 initMobileMenu()
 initHeaderSearch()
 initTimeline()
+initTypewriter()
 initHighlight()
