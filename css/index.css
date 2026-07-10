@@ -245,7 +245,7 @@
 }
 
 @media (min-width: 1024px) {
-  .hero__grid { grid-template-columns: 1.1fr 0.9fr; }
+  .hero__grid { grid-template-columns: 1fr 1.2fr; }
   .hero__headline { font-size: var(--text-5xl); }
 }
 
