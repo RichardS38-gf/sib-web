@@ -143,6 +143,12 @@
 }
 
 /* Akzentwort in der Headline (statt Blau: gedämpftes Grau) */
+.hero__serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+
 .hero__accent { color: var(--color-muted); }
 
 .hero__subtext {
