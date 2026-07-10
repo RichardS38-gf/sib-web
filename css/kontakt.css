@@ -118,7 +118,7 @@
 }
 
 .kontakt-info__title-outline {
-  font-family: var(--font-serif);
+  font-family: 'Playfair Display', serif !important;
   font-style: italic;
   font-weight: 400;
   color: var(--color-on-dark);
