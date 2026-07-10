@@ -517,8 +517,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: var(--color-ink);
-  color: #fff;
+  background: #fff;
+  color: var(--color-ink);
+  border: 1.5px solid var(--color-ink);
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-pill);
   align-self: flex-start;
