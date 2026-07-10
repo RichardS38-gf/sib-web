@@ -154,6 +154,17 @@ export function initProduktModal () {
   })
   document.getElementById('pmodal-form').addEventListener('submit', handleSpeichern)
 
+  // Enter in einem einzeiligen Feld (Titel, Preis, Angebot, Features, ...) darf
+  // das Formular NICHT automatisch abschicken -- sonst schließt/speichert das
+  // Modal ungewollt mitten in der Eingabe (Browser-Standardverhalten bei Enter
+  // in einem Textfeld). Nur die Textarea (Beschreibung) darf Enter normal
+  // verarbeiten (Zeilenumbruch).
+  document.getElementById('pmodal-form').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault()
+    }
+  })
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') schliesseProduktModal()
   })
