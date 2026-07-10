@@ -1111,21 +1111,33 @@ textarea.form-input {
   gap: var(--space-2);
 }
 
+.pmodal-angebot-bis-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pmodal-angebot-bis-wrap .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
 .pmodal-angebot-remove {
   background: none;
-  border: 1px solid var(--color-line);
+  border: 1px solid #ef4444;
   border-radius: var(--radius-sm);
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   cursor: pointer;
-  color: var(--color-muted);
-  font-size: 0.7rem;
+  color: #ef4444;
+  font-size: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
-.pmodal-angebot-remove:hover { color: var(--color-ink); border-color: var(--color-ink); }
+.pmodal-angebot-remove:hover { background: #ef4444; color: #fff; }
 
 .pmodal-row--3 {
   grid-template-columns: 1fr 1fr 1fr;

@@ -54,10 +54,7 @@ export function initProduktModal () {
 
           <!-- Angebotspreis + Zeitraum -->
           <div class="pmodal-section pmodal-angebot-section">
-            <div class="pmodal-angebot-head">
-              <p class="pmodal-label pmodal-label--muted">Angebot (optional)</p>
-              <button type="button" class="pmodal-angebot-remove" id="pmodal-angebot-remove" title="Angebot entfernen">&#x2715;</button>
-            </div>
+            <p class="pmodal-label pmodal-label--muted">Angebot (optional)</p>
             <div class="pmodal-row pmodal-row--3">
               <div class="pmodal-field pmodal-field--sm">
                 <label class="pmodal-label" for="pmodal-angebotspreis">Angebotspreis (€)</label>
@@ -69,7 +66,10 @@ export function initProduktModal () {
               </div>
               <div class="pmodal-field">
                 <label class="pmodal-label" for="pmodal-angebot-bis">Gültig bis</label>
-                <input class="form-input" id="pmodal-angebot-bis" name="angebot_bis" type="date">
+                <div class="pmodal-angebot-bis-wrap">
+                  <input class="form-input" id="pmodal-angebot-bis" name="angebot_bis" type="date">
+                  <button type="button" class="pmodal-angebot-remove" id="pmodal-angebot-remove" title="Angebot entfernen">&#x2715;</button>
+                </div>
               </div>
             </div>
             <p class="pmodal-hint">Wird im Shop als Streichpreis angezeigt, solange der Zeitraum aktiv ist.</p>
