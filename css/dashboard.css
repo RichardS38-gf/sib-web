@@ -1001,6 +1001,12 @@ textarea.form-input {
   gap: var(--space-3);
 }
 
+#pmodal-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 .pmodal-section {
   display: flex;
   flex-direction: column;
@@ -1092,7 +1098,7 @@ textarea.form-input {
   padding-bottom: 0.5rem;
 }
 
-.pmodal-textarea { resize: vertical; min-height: 80px; }
+.pmodal-textarea { resize: vertical; min-height: 140px; }
 
 .pmodal-check {
   display: flex;
@@ -1236,6 +1242,7 @@ textarea.form-input {
 
 .pmodal-details-bild-preview {
   margin-bottom: 0.5rem;
+  text-align: center;
 }
 
 .pmodal-details-bild-preview img {
@@ -1243,20 +1250,22 @@ textarea.form-input {
   border-radius: 6px;
   object-fit: cover;
   display: block;
+  margin: 0 auto;
 }
 
 .pmodal-details-bild-remove {
   background: none;
-  border: 1px solid var(--color-line);
+  border: 1px solid #ef4444;
   border-radius: var(--radius-sm);
-  padding: 0.2rem 0.6rem;
+  padding: 0.25rem 0.75rem;
   font-size: var(--text-xs);
-  color: var(--color-muted);
+  color: #ef4444;
   cursor: pointer;
-  margin-top: 0.3rem;
+  margin: 0.4rem auto 0;
   display: block;
+  width: fit-content;
 }
-.pmodal-details-bild-remove:hover { color: var(--color-ink); border-color: var(--color-ink); }
+.pmodal-details-bild-remove:hover { background: #ef4444; color: #fff; }
 
 .pmodal-hint-inline {
   font-size: var(--text-xs);

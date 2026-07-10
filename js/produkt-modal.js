@@ -101,7 +101,7 @@ export function initProduktModal () {
             <span class="pmodal-upload-hint" id="pmodal-details-bild-status"></span>
           </div>
 
-          <!-- Kategorie + Verfügbar -->
+          <!-- Kategorie + Verfügbarkeit -->
           <div class="pmodal-row">
             <div class="pmodal-field">
               <label class="pmodal-label" for="pmodal-kategorie">Kategorie</label>
@@ -109,7 +109,8 @@ export function initProduktModal () {
                 <option value="">Keine Kategorie</option>
               </select>
             </div>
-            <div class="pmodal-field pmodal-field--check">
+            <div class="pmodal-field">
+              <label class="pmodal-label">Verfügbarkeit</label>
               <label class="pmodal-check">
                 <input type="checkbox" id="pmodal-verfuegbar" name="verfuegbar" checked>
                 <span>Verfügbar</span>
