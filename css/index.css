@@ -129,12 +129,12 @@
   color: var(--color-ink);
   border: none;
   border-radius: var(--radius-pill);
-  font-family: var(--font-sans);
+  font-family: 'Pacifico', cursive;
   font-style: normal;
-  font-weight: 600;
-  font-size: var(--text-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-weight: 400;
+  font-size: var(--text-base);
+  text-transform: none;
+  letter-spacing: 0;
   position: relative;
   overflow: hidden;
 }
