@@ -453,13 +453,15 @@ async function ladeNewsletterTab () {
               </div>
               <div class="dash-newsletter-sale-form__field">
                 <label for="nl-sale-bis-${esc(p.id)}">Gültig bis</label>
-                <input class="form-input dash-newsletter-sale-bis" id="nl-sale-bis-${esc(p.id)}" type="date" value="${p.angebot_bis || ''}">
+                <div class="dash-newsletter-sale-bis-wrap">
+                  <input class="form-input dash-newsletter-sale-bis" id="nl-sale-bis-${esc(p.id)}" type="date" value="${p.angebot_bis || ''}">
+                  <button class="dash-newsletter-sale-remove" type="button" title="Sonderangebot entfernen">&#x2715;</button>
+                </div>
               </div>
             </div>
             <p class="dash-newsletter-sale-hint">Wird auch im Shop als Streichpreis angezeigt, solange der Zeitraum aktiv ist.</p>
             <div class="dash-newsletter-sale-form__bar">
               <button class="btn btn--outline dash-newsletter-sale-save" type="button">Speichern</button>
-              <button class="dash-newsletter-sale-remove" type="button" title="Sonderangebot entfernen">&#x2715;</button>
               <span class="dash-newsletter-sale-feedback" aria-live="polite"></span>
             </div>
           </div>

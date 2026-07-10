@@ -793,6 +793,17 @@ textarea.form-input {
   color: var(--color-muted);
 }
 
+.dash-newsletter-sale-bis-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dash-newsletter-sale-bis-wrap .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
 .dash-newsletter-sale-hint {
   font-size: var(--text-xs);
   color: var(--color-muted);
@@ -811,19 +822,20 @@ textarea.form-input {
 
 .dash-newsletter-sale-remove {
   background: none;
-  border: 1px solid var(--color-line);
+  border: 1px solid #ef4444;
   border-radius: var(--radius-sm);
   width: 28px;
   height: 28px;
   min-width: 28px;
   cursor: pointer;
-  color: var(--color-muted);
+  color: #ef4444;
   font-size: 0.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
-.dash-newsletter-sale-remove:hover { color: #ef4444; border-color: #ef4444; }
+.dash-newsletter-sale-remove:hover { background: #ef4444; color: #fff; }
 
 .dash-newsletter-sale-feedback { font-size: var(--text-xs); }
 
