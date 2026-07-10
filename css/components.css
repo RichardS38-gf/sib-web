@@ -41,6 +41,56 @@
 
 .btn--full { width: 100%; justify-content: center; }
 
+/* MoviePass-Stil: abgerundete Eck-Aussparungen */
+.btn--pass {
+  border-radius: 0;
+  position: relative;
+}
+
+.btn--pass::before,
+.btn--pass::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  top: -5px;
+}
+
+.btn--pass::before { left: -5px; }
+.btn--pass::after  { right: -5px; }
+
+.btn--pass .btn-pass-b::before,
+.btn--pass .btn-pass-b::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  bottom: -5px;
+}
+
+.btn--pass .btn-pass-b::before { left: -5px; }
+.btn--pass .btn-pass-b::after  { right: -5px; }
+
+/* Light auf dunkel */
+.btn--pass.btn--light::before,
+.btn--pass.btn--light::after,
+.btn--pass.btn--light .btn-pass-b::before,
+.btn--pass.btn--light .btn-pass-b::after { background: var(--color-dark); }
+
+/* Primary auf hell */
+.btn--pass.btn--primary::before,
+.btn--pass.btn--primary::after,
+.btn--pass.btn--primary .btn-pass-b::before,
+.btn--pass.btn--primary .btn-pass-b::after { background: var(--color-bg); }
+
+/* Primary auf soft bg */
+.btn--pass.btn--primary.btn--on-soft::before,
+.btn--pass.btn--primary.btn--on-soft::after,
+.btn--pass.btn--primary.btn--on-soft .btn-pass-b::before,
+.btn--pass.btn--primary.btn--on-soft .btn-pass-b::after { background: var(--color-bg-soft); }
+
 /* ── Produkt-Karte ── */
 .product-card {
   display: flex;
