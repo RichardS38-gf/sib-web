@@ -88,7 +88,8 @@
   font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-muted);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   margin-bottom: var(--space-2);
 }
 .pdp-info__shop:hover { color: var(--color-ink); }
