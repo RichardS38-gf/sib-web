@@ -8,6 +8,7 @@ let onSaveCallback = null
 let aktuellesProduktId = null
 let bildUrls = []
 let featuresList = []
+const MAX_FEATURES = 5
 
 // ── Modal-HTML einmalig in den DOM injizieren ──
 export function initProduktModal () {
@@ -144,6 +145,7 @@ export function initProduktModal () {
     document.getElementById('pmodal-angebot-bis').value = ''
   })
   document.getElementById('pmodal-add-feature').addEventListener('click', () => {
+    if (featuresList.length >= MAX_FEATURES) return
     featuresList.push('')
     renderFeatures()
     // Fokus auf das neue Feld
@@ -194,6 +196,7 @@ function renderThumbs () {
 // ── Features ──
 function renderFeatures () {
   const container = document.getElementById('pmodal-features-list')
+  const addBtn = document.getElementById('pmodal-add-feature')
   if (!container) return
   container.innerHTML = featuresList.map((text, i) => `
     <div class="pmodal-feature-row">
@@ -212,6 +215,12 @@ function renderFeatures () {
       renderFeatures()
     })
   })
+
+  if (addBtn) {
+    const erreicht = featuresList.length >= MAX_FEATURES
+    addBtn.hidden = erreicht
+    addBtn.disabled = erreicht
+  }
 }
 
 function escAttr (v) {
@@ -360,7 +369,7 @@ export function oeffneProduktModal ({ produkt = null, onSave } = {}) {
   onSaveCallback = onSave || null
   aktuellesProduktId = produkt?.id || null
   bildUrls = Array.isArray(produkt?.bilder) ? [...produkt.bilder.filter(Boolean)] : []
-  featuresList = Array.isArray(produkt?.highlights) ? [...produkt.highlights] : []
+  featuresList = Array.isArray(produkt?.highlights) ? [...produkt.highlights].slice(0, MAX_FEATURES) : []
 
   document.getElementById('pmodal-title').textContent = produkt ? 'Produkt bearbeiten' : 'Produkt anlegen'
   document.getElementById('pmodal-titel').value = produkt?.titel || ''

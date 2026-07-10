@@ -1065,6 +1065,7 @@ textarea.form-input {
   color: var(--color-muted);
   transition: border-color 0.2s, color 0.2s;
   width: fit-content;
+  align-self: center;
 }
 .pmodal-upload-area:hover {
   border-color: var(--color-ink);
