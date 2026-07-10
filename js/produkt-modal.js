@@ -248,8 +248,9 @@ async function handleSpeichern (e) {
   const angebotVon = document.getElementById('pmodal-angebot-von').value || null
   const angebotBis = document.getElementById('pmodal-angebot-bis').value || null
 
-  // Features: nur nicht-leere Einträge übernehmen
-  const highlights = featuresList.map((f) => f.trim()).filter(Boolean)
+  // Features: direkt aus DOM-Feldern lesen statt aus featuresList
+  const highlightInputs = document.querySelectorAll('.pmodal-feature-input')
+  const highlights = Array.from(highlightInputs).map((inp) => inp.value.trim()).filter(Boolean)
 
   const daten = {
     titel,
