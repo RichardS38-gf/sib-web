@@ -85,7 +85,8 @@
 
 .pdp-info__shop {
   display: block;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
+  font-weight: 500;
   color: var(--color-muted);
   text-decoration: none;
   margin-bottom: var(--space-2);
