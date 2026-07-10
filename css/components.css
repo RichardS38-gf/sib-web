@@ -385,6 +385,10 @@
   color: var(--color-on-dark);
 }
 
+.site-header__textlink {
+  font-size: var(--text-sm);
+}
+
 @media (min-width: 768px) {
   .site-header__nav { display: flex; }
 }
