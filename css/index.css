@@ -256,12 +256,14 @@
   color: var(--color-ink);
   text-decoration: underline;
   text-underline-offset: 3px;
-  transition: transform 0.15s ease;
   display: inline-block;
+  transition: transform 0.15s ease, opacity 0.15s ease, letter-spacing 0.15s ease;
 }
+
 .section-link:hover {
-  opacity: 0.6;
-  transform: scale(1.06);
+  opacity: 0.7;
+  transform: scale(1.1);
+  letter-spacing: 0.02em;
 }
 
 /* Produkt-Tabs entfernt */

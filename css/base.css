@@ -28,19 +28,18 @@ p {
   color: var(--color-ink);
 }
 
-a:hover { opacity: 0.7; transition: opacity var(--transition); }
-
 .section-link {
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 3px;
-  display: inline-block;
+  display: inline-block !important;
+  will-change: transform;
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
 .section-link:hover {
-  opacity: 0.6;
-  transform: scale(1.06);
+  opacity: 0.6 !important;
+  transform: scale(1.12) !important;
 }
 
 strong { font-weight: 500; }
