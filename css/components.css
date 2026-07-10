@@ -290,12 +290,25 @@
   cursor: pointer;
 }
 
-.category-card__image {
+.category-card__img-wrap {
   width: 100%;
   aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.category-card__image {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: 50%;
   background-color: var(--color-bg-soft);
+  transition: transform 0.3s ease;
+  display: block;
+}
+
+.category-card:hover .category-card__image {
+  transform: scale(1.1);
 }
 
 .category-card__name {

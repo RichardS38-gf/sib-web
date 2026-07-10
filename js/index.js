@@ -53,8 +53,8 @@ async function ladeKategorien () {
     container.innerHTML = kategorien.map((k) => {
       const slug = encodeURIComponent(k.slug || k.id)
       const bild = k.bild_url
-        ? `<img class="category-card__image" src="${esc(k.bild_url)}" alt="${esc(k.name)}" loading="lazy">`
-        : '<div class="category-card__image"></div>'
+        ? `<div class="category-card__img-wrap"><img class="category-card__image" src="${esc(k.bild_url)}" alt="${esc(k.name)}" loading="lazy"></div>`
+        : '<div class="category-card__img-wrap"><div class="category-card__image"></div></div>'
       return `
         <a class="category-card" href="kategorie.html?slug=${slug}">
           ${bild}
