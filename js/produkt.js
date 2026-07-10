@@ -277,10 +277,35 @@ async function sendeBestaetigungsMail (payload) {
 }
 
 // ── Reservierung speichern ──
-function initReservierung (produkt) {
+async function initReservierung (produkt) {
   const form = document.getElementById('reservierung-form')
   const feedback = document.getElementById('reservierung-feedback')
   if (!form) return
+
+  // Login-Status prüfen und Felder vorausfüllen
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) {
+    const { data: kunde } = await supabase
+      .from('kunden')
+      .select('vorname, nachname, email')
+      .eq('id', session.user.id)
+      .maybeSingle()
+
+    const nameFeld = form.querySelector('[name="name"]')
+    const emailFeld = form.querySelector('[name="email"]')
+
+    if (kunde) {
+      const vollerName = [kunde.vorname, kunde.nachname].filter(Boolean).join(' ')
+      if (vollerName) nameFeld.value = vollerName
+      if (kunde.email) emailFeld.value = kunde.email
+    } else if (session.user.email) {
+      emailFeld.value = session.user.email
+    }
+
+    // Felder ausblenden wenn bereits befüllt
+    if (nameFeld.value) nameFeld.closest('.form-group').hidden = true
+    if (emailFeld.value) emailFeld.closest('.form-group').hidden = true
+  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
