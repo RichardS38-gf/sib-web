@@ -459,6 +459,7 @@ async function ladeNewsletterTab () {
             <p class="dash-newsletter-sale-hint">Wird auch im Shop als Streichpreis angezeigt, solange der Zeitraum aktiv ist.</p>
             <div class="dash-newsletter-sale-form__bar">
               <button class="btn btn--outline dash-newsletter-sale-save" type="button">Speichern</button>
+              <button class="dash-newsletter-sale-remove" type="button" title="Sonderangebot entfernen">&#x2715;</button>
               <span class="dash-newsletter-sale-feedback" aria-live="polite"></span>
             </div>
           </div>
@@ -495,6 +496,15 @@ async function ladeNewsletterTab () {
         const produktId = form.dataset.produkt
         const cb = el.querySelector(`.dash-newsletter-check[data-produkt="${CSS.escape(produktId)}"][data-typ="sale"]`)
         speichereSaleAngebot(produktId, monatStr, form, cb)
+      })
+    })
+
+    el.querySelectorAll('.dash-newsletter-sale-remove').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const form = btn.closest('.dash-newsletter-sale-form')
+        const produktId = form.dataset.produkt
+        const cb = el.querySelector(`.dash-newsletter-check[data-produkt="${CSS.escape(produktId)}"][data-typ="sale"]`)
+        entferneSaleAngebot(produktId, monatStr, form, cb)
       })
     })
   } catch (err) {
@@ -540,6 +550,43 @@ async function speichereSaleAngebot (produktId, monatStr, formEl, cb) {
   } finally {
     btn.disabled = false
     btn.textContent = 'Speichern'
+  }
+}
+
+// Sonderangebot komplett entfernen: Streichpreis + Zeitraum auf dem Produkt
+// löschen (spiegelt sich automatisch im Produkt-Bearbeiten-Modal wider),
+// Häkchen raus, Newsletter-Eintrag löschen.
+async function entferneSaleAngebot (produktId, monatStr, formEl, cb) {
+  if (!window.confirm('Sonderangebot wirklich entfernen? Der Streichpreis wird dabei gelöscht.')) return
+
+  const feedback = formEl.querySelector('.dash-newsletter-sale-feedback')
+  const btn = formEl.querySelector('.dash-newsletter-sale-remove')
+  if (feedback) feedback.innerHTML = ''
+  btn.disabled = true
+
+  try {
+    const { error: upErr } = await supabase.from('produkte')
+      .update({ angebotspreis: null, angebot_von: null, angebot_bis: null })
+      .eq('id', produktId)
+    if (upErr) throw upErr
+
+    const { error: delErr } = await supabase.from('newsletter_eintraege')
+      .delete().eq('produkt_id', produktId).eq('typ', 'sale').eq('monat', monatStr)
+    if (delErr) throw delErr
+
+    formEl.querySelector('.dash-newsletter-sale-preis').value = ''
+    formEl.querySelector('.dash-newsletter-sale-von').value = ''
+    formEl.querySelector('.dash-newsletter-sale-bis').value = ''
+    formEl.hidden = true
+    if (cb) {
+      cb.checked = false
+      cb.dataset.saved = 'false'
+    }
+  } catch (err) {
+    console.error('Sonderangebot entfernen fehlgeschlagen:', err)
+    if (feedback) feedback.innerHTML = '<span class="error-msg">Entfernen fehlgeschlagen.</span>'
+  } finally {
+    btn.disabled = false
   }
 }
 

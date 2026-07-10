@@ -54,7 +54,10 @@ export function initProduktModal () {
 
           <!-- Angebotspreis + Zeitraum -->
           <div class="pmodal-section pmodal-angebot-section">
-            <p class="pmodal-label pmodal-label--muted">Angebot (optional)</p>
+            <div class="pmodal-angebot-head">
+              <p class="pmodal-label pmodal-label--muted">Angebot (optional)</p>
+              <button type="button" class="pmodal-angebot-remove" id="pmodal-angebot-remove" title="Angebot entfernen">&#x2715;</button>
+            </div>
             <div class="pmodal-row pmodal-row--3">
               <div class="pmodal-field pmodal-field--sm">
                 <label class="pmodal-label" for="pmodal-angebotspreis">Angebotspreis (€)</label>
@@ -133,6 +136,11 @@ export function initProduktModal () {
   document.getElementById('pmodal-details-bild-input').addEventListener('change', handleDetailsBildUpload)
   document.getElementById('pmodal-details-bild-remove').addEventListener('click', () => {
     setzeDetailsBildPreview(null)
+  })
+  document.getElementById('pmodal-angebot-remove').addEventListener('click', () => {
+    document.getElementById('pmodal-angebotspreis').value = ''
+    document.getElementById('pmodal-angebot-von').value = ''
+    document.getElementById('pmodal-angebot-bis').value = ''
   })
   document.getElementById('pmodal-add-feature').addEventListener('click', () => {
     featuresList.push('')
