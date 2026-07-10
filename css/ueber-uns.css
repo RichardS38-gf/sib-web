@@ -55,6 +55,12 @@
   margin-bottom: var(--space-3);
 }
 
+.ueber-hero__title em {
+  font-family: 'Playfair Display', serif !important;
+  font-style: italic;
+  font-weight: 400;
+}
+
 .ueber-hero__divider {
   width: 40px;
   height: 2px;
