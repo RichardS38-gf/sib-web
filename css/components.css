@@ -66,6 +66,15 @@
   animation: heartbeat-light 1.8s ease-out infinite;
 }
 
+/* Registrieren im Header immer heartbeat */
+.site-header__desktop-only.btn--light {
+  animation: heartbeat-light 1.8s ease-out infinite;
+}
+
+.btn--heartbeat.btn--outline {
+  animation: heartbeat 1.8s ease-out infinite;
+}
+
 /* ── Produkt-Karte ── */
 .product-card {
   display: flex;

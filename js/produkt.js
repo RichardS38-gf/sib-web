@@ -182,7 +182,7 @@ function renderDetail (produkt, varianten = []) {
         <label class="form-label" for="kunde-email">E-Mail</label>
         <input class="form-input" type="email" id="kunde-email" name="email" required autocomplete="email">
       </div>
-      <button class="btn btn--primary btn--full pdp-cta" type="submit">
+      <button class="btn btn--primary btn--full btn--heartbeat pdp-cta" type="submit">
         Reservieren
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/></svg>
       </button>
