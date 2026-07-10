@@ -711,13 +711,16 @@ textarea.form-input {
   flex-direction: column;
 }
 
+.dash-newsletter-item {
+  border-bottom: 1px solid var(--color-line);
+}
+
 .dash-newsletter-row {
   display: grid;
   grid-template-columns: 56px 1fr auto;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-line);
 }
 
 .dash-newsletter__img {
@@ -762,9 +765,57 @@ textarea.form-input {
   accent-color: var(--color-ink);
 }
 
+/* Sonderangebot: Streichpreis + Zeitraum, klappt unter der Zeile auf */
+.dash-newsletter-sale-form {
+  padding: 0 0 var(--space-3) calc(56px + var(--space-3));
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dash-newsletter-sale-form[hidden] { display: none; }
+
+.dash-newsletter-sale-form__row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  max-width: 34rem;
+}
+
+.dash-newsletter-sale-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dash-newsletter-sale-form__field label {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.dash-newsletter-sale-hint {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.dash-newsletter-sale-form__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dash-newsletter-sale-save {
+  padding: 0.4rem 0.9rem;
+  font-size: var(--text-xs);
+}
+
+.dash-newsletter-sale-feedback { font-size: var(--text-xs); }
+
 @media (max-width: 640px) {
   .dash-newsletter-row { grid-template-columns: 44px 1fr; }
   .dash-newsletter-row__checks { grid-column: 1 / -1; margin-top: 0.4rem; }
+  .dash-newsletter-sale-form { padding-left: 0; }
+  .dash-newsletter-sale-form__row { grid-template-columns: 1fr; max-width: none; }
 }
 
 /* ─── Bewertungen-Tab ─── */

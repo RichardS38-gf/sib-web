@@ -393,7 +393,7 @@ async function ladeNewsletterTab () {
   try {
     const [{ data: produkte, error: pErr }, { data: eintraege, error: eErr }] = await Promise.all([
       supabase.from('produkte')
-        .select('id, titel, preis, bilder')
+        .select('id, titel, preis, bilder, angebotspreis, angebot_von, angebot_bis')
         .eq('shop_id', shop.id)
         .eq('freigegeben', true)
         .eq('verfuegbar', true)
@@ -420,34 +420,126 @@ async function ladeNewsletterTab () {
         ? `<img class="dash-newsletter__img" src="${esc(p.bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
         : '<div class="dash-newsletter__img"></div>'
       const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
+      const saleAktiv = gesetzt.sale.has(p.id)
+
       return `
-        <div class="dash-newsletter-row">
-          ${bild}
-          <div class="dash-newsletter-row__body">
-            <p class="dash-newsletter-row__title">${esc(p.titel)}</p>
-            <p class="dash-newsletter-row__price">${esc(preis)}</p>
+        <div class="dash-newsletter-item">
+          <div class="dash-newsletter-row">
+            ${bild}
+            <div class="dash-newsletter-row__body">
+              <p class="dash-newsletter-row__title">${esc(p.titel)}</p>
+              <p class="dash-newsletter-row__price">${esc(preis)}</p>
+            </div>
+            <div class="dash-newsletter-row__checks">
+              <label class="dash-check">
+                <input type="checkbox" class="dash-newsletter-check" data-produkt="${esc(p.id)}" data-typ="neu" ${gesetzt.neu.has(p.id) ? 'checked' : ''}>
+                <span>Neu eingetroffen</span>
+              </label>
+              <label class="dash-check">
+                <input type="checkbox" class="dash-newsletter-check" data-produkt="${esc(p.id)}" data-typ="sale" data-saved="${saleAktiv ? 'true' : 'false'}" ${saleAktiv ? 'checked' : ''}>
+                <span>Sonderangebot</span>
+              </label>
+            </div>
           </div>
-          <div class="dash-newsletter-row__checks">
-            <label class="dash-check">
-              <input type="checkbox" class="dash-newsletter-check" data-produkt="${esc(p.id)}" data-typ="neu" ${gesetzt.neu.has(p.id) ? 'checked' : ''}>
-              <span>Neu eingetroffen</span>
-            </label>
-            <label class="dash-check">
-              <input type="checkbox" class="dash-newsletter-check" data-produkt="${esc(p.id)}" data-typ="sale" ${gesetzt.sale.has(p.id) ? 'checked' : ''}>
-              <span>Sonderangebot</span>
-            </label>
+          <div class="dash-newsletter-sale-form" data-produkt="${esc(p.id)}" ${saleAktiv ? '' : 'hidden'}>
+            <div class="dash-newsletter-sale-form__row">
+              <div class="dash-newsletter-sale-form__field">
+                <label for="nl-sale-preis-${esc(p.id)}">Angebotspreis (€) *</label>
+                <input class="form-input dash-newsletter-sale-preis" id="nl-sale-preis-${esc(p.id)}" type="number" min="0" step="0.01" value="${p.angebotspreis ?? ''}">
+              </div>
+              <div class="dash-newsletter-sale-form__field">
+                <label for="nl-sale-von-${esc(p.id)}">Gültig ab</label>
+                <input class="form-input dash-newsletter-sale-von" id="nl-sale-von-${esc(p.id)}" type="date" value="${p.angebot_von || ''}">
+              </div>
+              <div class="dash-newsletter-sale-form__field">
+                <label for="nl-sale-bis-${esc(p.id)}">Gültig bis</label>
+                <input class="form-input dash-newsletter-sale-bis" id="nl-sale-bis-${esc(p.id)}" type="date" value="${p.angebot_bis || ''}">
+              </div>
+            </div>
+            <p class="dash-newsletter-sale-hint">Wird auch im Shop als Streichpreis angezeigt, solange der Zeitraum aktiv ist.</p>
+            <div class="dash-newsletter-sale-form__bar">
+              <button class="btn btn--outline dash-newsletter-sale-save" type="button">Speichern</button>
+              <span class="dash-newsletter-sale-feedback" aria-live="polite"></span>
+            </div>
           </div>
         </div>`
     }).join('')}</div>`
 
     el.querySelectorAll('.dash-newsletter-check').forEach((cb) => {
-      cb.addEventListener('change', () => {
-        toggleNewsletterEintrag(cb.dataset.produkt, cb.dataset.typ, monatStr, cb.checked, cb)
+      if (cb.dataset.typ === 'sale') {
+        cb.addEventListener('change', () => {
+          const form = el.querySelector(`.dash-newsletter-sale-form[data-produkt="${CSS.escape(cb.dataset.produkt)}"]`)
+          if (cb.checked) {
+            if (form) {
+              form.hidden = false
+              form.querySelector('.dash-newsletter-sale-preis')?.focus()
+            }
+          } else {
+            if (form) form.hidden = true
+            if (cb.dataset.saved === 'true') {
+              toggleNewsletterEintrag(cb.dataset.produkt, 'sale', monatStr, false, cb)
+              cb.dataset.saved = 'false'
+            }
+          }
+        })
+      } else {
+        cb.addEventListener('change', () => {
+          toggleNewsletterEintrag(cb.dataset.produkt, cb.dataset.typ, monatStr, cb.checked, cb)
+        })
+      }
+    })
+
+    el.querySelectorAll('.dash-newsletter-sale-save').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const form = btn.closest('.dash-newsletter-sale-form')
+        const produktId = form.dataset.produkt
+        const cb = el.querySelector(`.dash-newsletter-check[data-produkt="${CSS.escape(produktId)}"][data-typ="sale"]`)
+        speichereSaleAngebot(produktId, monatStr, form, cb)
       })
     })
   } catch (err) {
     console.error('Newsletter-Tab konnte nicht geladen werden:', err)
     el.innerHTML = '<p class="dash-empty">Newsletter-Daten konnten nicht geladen werden.</p>'
+  }
+}
+
+// Sonderangebot speichern: Streichpreis + Zeitraum auf dem Produkt selbst
+// (dieselben Felder wie im Produkt-Bearbeiten-Modal) + Newsletter-Eintrag anlegen
+async function speichereSaleAngebot (produktId, monatStr, formEl, cb) {
+  const feedback = formEl.querySelector('.dash-newsletter-sale-feedback')
+  const btn = formEl.querySelector('.dash-newsletter-sale-save')
+  if (feedback) feedback.innerHTML = ''
+
+  const angebotspreisRaw = formEl.querySelector('.dash-newsletter-sale-preis').value
+  const von = formEl.querySelector('.dash-newsletter-sale-von').value || null
+  const bis = formEl.querySelector('.dash-newsletter-sale-bis').value || null
+
+  if (!angebotspreisRaw) {
+    if (feedback) feedback.innerHTML = '<span class="error-msg">Bitte einen Angebotspreis angeben.</span>'
+    return
+  }
+
+  btn.disabled = true
+  btn.textContent = 'Wird gespeichert…'
+
+  try {
+    const { error: upErr } = await supabase.from('produkte')
+      .update({ angebotspreis: parseFloat(angebotspreisRaw), angebot_von: von, angebot_bis: bis })
+      .eq('id', produktId)
+    if (upErr) throw upErr
+
+    const { error: insErr } = await supabase.from('newsletter_eintraege')
+      .insert({ produkt_id: produktId, shop_id: shop.id, typ: 'sale', monat: monatStr })
+    if (insErr && insErr.code !== '23505') throw insErr
+
+    if (cb) cb.dataset.saved = 'true'
+    if (feedback) feedback.innerHTML = '<span class="success-msg">Gespeichert.</span>'
+  } catch (err) {
+    console.error('Sonderangebot speichern fehlgeschlagen:', err)
+    if (feedback) feedback.innerHTML = '<span class="error-msg">Speichern fehlgeschlagen.</span>'
+  } finally {
+    btn.disabled = false
+    btn.textContent = 'Speichern'
   }
 }
 
