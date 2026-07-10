@@ -610,6 +610,12 @@
   margin-bottom: var(--space-2);
 }
 
+.nl-cta__title em {
+  font-family: 'Playfair Display', serif !important;
+  font-style: italic;
+  font-weight: 400;
+}
+
 .nl-cta__sub {
   font-size: var(--text-lg);
   font-weight: 300;
