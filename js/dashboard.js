@@ -5,6 +5,7 @@
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
 import { initProduktModal, oeffneProduktModal } from './produkt-modal.js'
+import { naechsteAusgabe, monatDatum, monatName, ausgabeNummer } from './newsletter-zeitraum.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -377,6 +378,98 @@ function initProduktForm () {
       }
     })
   })
+}
+
+// ── TAB: Newsletter ──
+async function ladeNewsletterTab () {
+  const el = document.getElementById('newsletter-content')
+  const zielEl = document.getElementById('newsletter-ziel')
+  if (!el) return
+
+  const ziel = naechsteAusgabe()
+  const monatStr = monatDatum(ziel)
+  if (zielEl) zielEl.textContent = `Für Ausgabe ${String(ausgabeNummer(ziel)).padStart(2, '0')} · ${monatName(ziel)} ${ziel.jahr}`
+
+  try {
+    const [{ data: produkte, error: pErr }, { data: eintraege, error: eErr }] = await Promise.all([
+      supabase.from('produkte')
+        .select('id, titel, preis, bilder')
+        .eq('shop_id', shop.id)
+        .eq('freigegeben', true)
+        .eq('verfuegbar', true)
+        .order('titel'),
+      supabase.from('newsletter_eintraege')
+        .select('produkt_id, typ')
+        .eq('shop_id', shop.id)
+        .eq('monat', monatStr)
+    ])
+    if (pErr) throw pErr
+    if (eErr) throw eErr
+
+    const produkteListe = produkte || []
+    if (produkteListe.length === 0) {
+      el.innerHTML = '<p class="dash-empty">Noch keine freigegebenen Produkte, die du im Newsletter zeigen kannst.</p>'
+      return
+    }
+
+    const gesetzt = { neu: new Set(), sale: new Set() }
+    ;(eintraege || []).forEach((e) => { gesetzt[e.typ]?.add(e.produkt_id) })
+
+    el.innerHTML = `<div class="dash-newsletter-liste">${produkteListe.map((p) => {
+      const bild = p.bilder?.[0]
+        ? `<img class="dash-newsletter__img" src="${esc(p.bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
+        : '<div class="dash-newsletter__img"></div>'
+      const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
+      return `
+        <div class="dash-newsletter-row">
+          ${bild}
+          <div class="dash-newsletter-row__body">
+            <p class="dash-newsletter-row__title">${esc(p.titel)}</p>
+            <p class="dash-newsletter-row__price">${esc(preis)}</p>
+          </div>
+          <div class="dash-newsletter-row__checks">
+            <label class="dash-check">
+              <input type="checkbox" class="dash-newsletter-check" data-produkt="${esc(p.id)}" data-typ="neu" ${gesetzt.neu.has(p.id) ? 'checked' : ''}>
+              <span>Neu eingetroffen</span>
+            </label>
+            <label class="dash-check">
+              <input type="checkbox" class="dash-newsletter-check" data-produkt="${esc(p.id)}" data-typ="sale" ${gesetzt.sale.has(p.id) ? 'checked' : ''}>
+              <span>Sonderangebot</span>
+            </label>
+          </div>
+        </div>`
+    }).join('')}</div>`
+
+    el.querySelectorAll('.dash-newsletter-check').forEach((cb) => {
+      cb.addEventListener('change', () => {
+        toggleNewsletterEintrag(cb.dataset.produkt, cb.dataset.typ, monatStr, cb.checked, cb)
+      })
+    })
+  } catch (err) {
+    console.error('Newsletter-Tab konnte nicht geladen werden:', err)
+    el.innerHTML = '<p class="dash-empty">Newsletter-Daten konnten nicht geladen werden.</p>'
+  }
+}
+
+async function toggleNewsletterEintrag (produktId, typ, monatStr, checked, cb) {
+  cb.disabled = true
+  try {
+    if (checked) {
+      const { error } = await supabase.from('newsletter_eintraege')
+        .insert({ produkt_id: produktId, shop_id: shop.id, typ, monat: monatStr })
+      if (error && error.code !== '23505') throw error // 23505 = existiert schon, kein Problem
+    } else {
+      const { error } = await supabase.from('newsletter_eintraege')
+        .delete().eq('produkt_id', produktId).eq('typ', typ).eq('monat', monatStr)
+      if (error) throw error
+    }
+  } catch (err) {
+    console.error('Newsletter-Eintrag konnte nicht gespeichert werden:', err)
+    cb.checked = !checked
+    window.alert('Änderung konnte nicht gespeichert werden.')
+  } finally {
+    cb.disabled = false
+  }
 }
 
 // ── TAB 4: Nachrichten ──
@@ -848,6 +941,7 @@ async function init () {
 
   ladeReservierungen()
   ladeProdukte()
+  ladeNewsletterTab()
   ladeBewertungen()
   ladeNachrichten()
   fuelleShopForm()

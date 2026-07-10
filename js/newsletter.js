@@ -1,17 +1,25 @@
-// js/newsletter.js v5 — SIB Monatsausgabe
+// js/newsletter.js v6 — SIB Monatsausgabe (aktualisiert sich automatisch)
+//
+// Monat, Ausgabe-Nummer und Inhalte werden nicht mehr hart im Code hinterlegt.
+// - Monat/Ausgabe kommen aus js/newsletter-zeitraum.js (rein aus dem Datum berechnet).
+// - "Neu eingetroffen" + "Sonderangebote" kommen aus der Tabelle
+//   newsletter_eintraege, die Händler über ihr Dashboard pflegen.
+// - "Neu beigetreten" sind alle aktiven Shops, die in den letzten
+//   NEU_SHOPS_WOCHEN Wochen angelegt wurden.
 
 import { supabase } from './supabase.js'
 import { renderProductCard, initWunschlisteButtons, fetchWunschlisteIds, fetchProductRatings } from './product-card.js'
+import { aktuelleAusgabe, monatDatum, monatName, ausgabeNummer } from './newsletter-zeitraum.js'
 
-const SALE_IDS = [
-  'd8485a10-a907-4ae5-9aa9-246b8ea2dae7' // Leder-Handtasche
-]
+// Wie viele Wochen zurück ein Shop noch als "neu beigetreten" gilt.
+const NEU_SHOPS_WOCHEN = 4
 
-const PRODUKT_IDS = [
-  '55563f59-dae1-4883-9be8-31dabc79b600',
-  '5da6f0ff-43c1-40c9-90c1-4f6333c28d6e',
-  'd8485a10-a907-4ae5-9aa9-246b8ea2dae7'
-]
+const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
+
+function esc (value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
 
 // Mobile-Menue
 const burger = document.querySelector('.site-header__burger')
@@ -24,83 +32,142 @@ if (burger && mobileMenu) {
   })
 }
 
-// Produkte laden
-async function ladeProdukte () {
+// ── Hero + Meta: Monat/Ausgabe automatisch setzen ──
+function setzeAusgabeMeta () {
+  const ausgabe = aktuelleAusgabe()
+  const monat = monatName(ausgabe)
+  const nummer = String(ausgabeNummer(ausgabe)).padStart(2, '0')
+
+  const bg = document.getElementById('nl-monat-bg')
+  if (bg) bg.textContent = monat
+
+  const label = document.getElementById('nl-ausgabe')
+  if (label) label.textContent = `Ausgabe ${nummer} · ${monat} ${ausgabe.jahr}`
+
+  document.title = `${monat} ${ausgabe.jahr} — Shoppen in Braunschweig`
+  const metaDesc = document.querySelector('meta[name="description"]')
+  if (metaDesc) {
+    metaDesc.setAttribute('content', `Neue Produkte, Sonderangebote und frische Geschäfte aus Braunschweig — ${monat} ${ausgabe.jahr}.`)
+  }
+
+  return monatDatum(ausgabe)
+}
+
+// Neu eingetroffene Artikel — von Händlern für diese Ausgabe eingetragen
+async function ladeProdukte (monatStr) {
   const container = document.getElementById('nl-produkte-grid')
   if (!container) return
   try {
     const { data, error } = await supabase
-      .from('produkte')
-      .select('*, shops(name, slug)')
-      .in('id', PRODUKT_IDS)
+      .from('newsletter_eintraege')
+      .select('produkte!inner(*, shops(name, slug))')
+      .eq('typ', 'neu')
+      .eq('monat', monatStr)
+      .eq('produkte.freigegeben', true)
+      .eq('produkte.verfuegbar', true)
     if (error) throw error
-    const sortiert = PRODUKT_IDS.map(id => (data || []).find(p => p.id === id)).filter(Boolean)
+
+    const produkte = (data || []).map((e) => e.produkte).filter(Boolean)
+    if (produkte.length === 0) {
+      container.innerHTML = '<p class="nl-empty">Diesen Monat noch keine neuen Artikel — schau bald wieder vorbei.</p>'
+      return
+    }
+
+    const ids = produkte.map((p) => p.id)
     const [ratings, wunschlisteIds] = await Promise.all([
-      fetchProductRatings(supabase, sortiert.map(p => p.id)),
+      fetchProductRatings(supabase, ids),
       fetchWunschlisteIds(supabase)
     ])
-    container.innerHTML = sortiert.map(p =>
-      renderProductCard(p, p.shops?.name || 'Amelie Fair Fashion', ratings[p.id] || null, wunschlisteIds.has(p.id))
+    container.innerHTML = produkte.map((p) =>
+      renderProductCard(p, p.shops?.name, ratings[p.id] || null, wunschlisteIds.has(p.id))
     ).join('')
     initWunschlisteButtons(supabase, container)
   } catch (err) {
     console.error('Newsletter-Produkte:', err)
-    container.innerHTML = ''
+    container.innerHTML = '<p class="nl-empty">Artikel konnten nicht geladen werden.</p>'
   }
 }
 
-// Sale-Karten: Bild + Preise + Rating dynamisch befüllen
-async function ladeSaleBilder () {
-  const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
-  const [{ data }, ratings] = await Promise.all([
-    supabase.from('produkte').select('id, bilder, preis, angebotspreis').in('id', SALE_IDS),
-    fetchProductRatings(supabase, SALE_IDS)
-  ])
-  if (!data) return
-  data.forEach(p => {
-    const card = document.querySelector(`a[href="produkt.html?id=${p.id}"]`)
-    if (!card) return
-    const img = card.querySelector('.nl-sale-card__img-wrap img')
-    if (img && p.bilder?.[0]) img.src = p.bilder[0]
-    const preisWrap = card.querySelector('.nl-sale-card__prices')
-    if (!preisWrap) return
-    if (p.angebotspreis && p.angebotspreis < p.preis) {
-      const ersparnis = euro.format(p.preis - p.angebotspreis)
-      preisWrap.innerHTML = `
-        <span class="nl-sale-card__price-new">${euro.format(p.angebotspreis)}</span>
-        <span class="nl-sale-card__price-old">${euro.format(p.preis)}</span>
-        <span class="nl-sale-card__discount">-${ersparnis}</span>
-      `
-    } else {
-      preisWrap.innerHTML = `<span class="nl-sale-card__price-new">${euro.format(p.preis)}</span>`
+// Sonderangebote & Sale — ebenfalls von Händlern für diese Ausgabe eingetragen
+async function ladeSale (monatStr) {
+  const container = document.getElementById('nl-sale-grid')
+  if (!container) return
+  try {
+    const { data, error } = await supabase
+      .from('newsletter_eintraege')
+      .select('produkte!inner(*, shops(name))')
+      .eq('typ', 'sale')
+      .eq('monat', monatStr)
+      .eq('produkte.freigegeben', true)
+      .eq('produkte.verfuegbar', true)
+    if (error) throw error
+
+    const produkte = (data || []).map((e) => e.produkte).filter(Boolean)
+    if (produkte.length === 0) {
+      container.innerHTML = '<p class="nl-empty nl-empty--dark">Diesen Monat keine Sonderangebote.</p>'
+      return
     }
-    // Rating unter Produktname einfügen
-    const r = ratings[p.id]
-    const ratingHtml = r && r.anzahl > 0
-      ? `<p class="nl-sale-card__rating"><span class="nl-sale-card__stars">★</span> ${(r.summe / r.anzahl).toFixed(1).replace('.', ',')} <span class="nl-sale-card__rating-count">(${r.anzahl})</span></p>`
-      : `<p class="nl-sale-card__rating nl-sale-card__rating--empty"><span class="nl-sale-card__stars">★</span> Noch keine Bewertungen</p>`
-    const name = card.querySelector('.nl-sale-card__name')
-    if (name) name.insertAdjacentHTML('afterend', ratingHtml)
-  })
+
+    const ratings = await fetchProductRatings(supabase, produkte.map((p) => p.id))
+
+    container.innerHTML = produkte.map((p) => {
+      const bild = p.bilder?.[0] || ''
+      let preisHtml = `<span class="nl-sale-card__price-new">${euro.format(p.preis)}</span>`
+      if (p.angebotspreis && p.angebotspreis < p.preis) {
+        const ersparnis = euro.format(p.preis - p.angebotspreis)
+        preisHtml = `
+          <span class="nl-sale-card__price-new">${euro.format(p.angebotspreis)}</span>
+          <span class="nl-sale-card__price-old">${euro.format(p.preis)}</span>
+          <span class="nl-sale-card__discount">-${ersparnis}</span>`
+      }
+      const r = ratings[p.id]
+      const ratingHtml = r && r.anzahl > 0
+        ? `<p class="nl-sale-card__rating"><span class="nl-sale-card__stars">★</span> ${(r.summe / r.anzahl).toFixed(1).replace('.', ',')} <span class="nl-sale-card__rating-count">(${r.anzahl})</span></p>`
+        : `<p class="nl-sale-card__rating nl-sale-card__rating--empty"><span class="nl-sale-card__stars">★</span> Noch keine Bewertungen</p>`
+
+      return `
+        <a class="nl-sale-card" href="produkt.html?id=${encodeURIComponent(p.id)}">
+          <div class="nl-sale-card__img-wrap">
+            <img src="${esc(bild)}" alt="${esc(p.titel)}" loading="lazy">
+          </div>
+          <div class="nl-sale-card__body">
+            <p class="nl-sale-card__shop">${esc(p.shops?.name || 'Lokaler Händler')}</p>
+            <p class="nl-sale-card__name">${esc(p.titel)}</p>
+            ${ratingHtml}
+            <div class="nl-sale-card__prices">${preisHtml}</div>
+          </div>
+        </a>`
+    }).join('')
+  } catch (err) {
+    console.error('Newsletter-Sale:', err)
+    container.innerHTML = '<p class="nl-empty nl-empty--dark">Angebote konnten nicht geladen werden.</p>'
+  }
 }
 
-// Shops laden
+// Neu beigetretene Shops: aktiv + in den letzten NEU_SHOPS_WOCHEN Wochen angelegt
 async function ladeShops () {
   const container = document.getElementById('nl-shops-grid')
   if (!container) return
   try {
-    const [shopRes, prodRes] = await Promise.all([
-      supabase.from('shops').select('*').eq('name', 'Amelie Fair Fashion').limit(1),
-      supabase.from('produkte').select('shop_id')
-    ])
-    if (shopRes.error) throw shopRes.error
-    const shops = shopRes.data || []
-    if (shops.length === 0) { container.innerHTML = ''; return }
-    const produkte = prodRes.data || []
+    const seit = new Date(Date.now() - NEU_SHOPS_WOCHEN * 7 * 24 * 60 * 60 * 1000).toISOString()
+    const { data: shops, error } = await supabase
+      .from('shops')
+      .select('*')
+      .eq('aktiv', true)
+      .gte('erstellt_am', seit)
+      .order('erstellt_am', { ascending: false })
+    if (error) throw error
+
+    if (!shops || shops.length === 0) {
+      container.innerHTML = '<p class="nl-empty">Diesen Monat keine neuen Geschäfte — schau gerne bei allen unseren Händlern vorbei.</p>'
+      return
+    }
+
+    const { data: produkte } = await supabase.from('produkte').select('shop_id')
     const anzahlByShop = {}
-    produkte.forEach(p => { if (p.shop_id) anzahlByShop[p.shop_id] = (anzahlByShop[p.shop_id] || 0) + 1 })
-    const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-    container.innerHTML = shops.map(s => {
+    ;(produkte || []).forEach((p) => { if (p.shop_id) anzahlByShop[p.shop_id] = (anzahlByShop[p.shop_id] || 0) + 1 })
+
+    container.innerHTML = shops.map((s) => {
       const slug = encodeURIComponent(s.slug || s.id)
       const banner = s.banner_url
         ? `<img class="haendler-card__banner" src="${esc(s.banner_url)}" alt="${esc(s.name)}" loading="lazy">`
@@ -123,10 +190,11 @@ async function ladeShops () {
     }).join('')
   } catch (err) {
     console.error('Newsletter-Shops:', err)
-    container.innerHTML = ''
+    container.innerHTML = '<p class="nl-empty">Geschäfte konnten nicht geladen werden.</p>'
   }
 }
 
-ladeProdukte()
-ladeSaleBilder()
+const monatStr = setzeAusgabeMeta()
+ladeProdukte(monatStr)
+ladeSale(monatStr)
 ladeShops()

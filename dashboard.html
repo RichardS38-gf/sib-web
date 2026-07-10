@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css?v=3">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/dashboard.css?v=12">
+  <link rel="stylesheet" href="css/dashboard.css?v=13">
 </head>
 <body>
 
@@ -81,6 +81,7 @@
           <div class="dash-tabs" role="tablist">
             <button class="dash-tab is-active" data-tab="einstellungen" role="tab">Shop-Einstellungen</button>
             <button class="dash-tab" data-tab="produkte" role="tab">Produkte</button>
+            <button class="dash-tab" data-tab="newsletter" role="tab">Newsletter</button>
             <button class="dash-tab" data-tab="reservierungen" role="tab">Reservierungen</button>
             <button class="dash-tab" data-tab="bewertungen" role="tab">Bewertungen</button>
             <button class="dash-tab" data-tab="nachrichten" role="tab">Nachrichten <span class="dash-tab__badge" id="nachrichten-badge" hidden></span></button>
@@ -134,6 +135,18 @@
             </form>
 
             <div id="produkte-content">
+              <div class="loading">Produkte werden geladen…</div>
+            </div>
+          </div>
+
+          <!-- TAB: Newsletter -->
+          <div class="dash-panel" data-panel="newsletter" hidden>
+            <div class="dash-panel__toolbar">
+              <h2>Newsletter</h2>
+              <span class="dash-newsletter__ziel" id="newsletter-ziel"></span>
+            </div>
+            <p class="dash-newsletter__hint">Wähle aus, welche deiner Artikel in der nächsten Ausgabe unter „Neu eingetroffen“ und „Sonderangebote &amp; Sale“ erscheinen sollen. Änderungen werden sofort gespeichert.</p>
+            <div id="newsletter-content">
               <div class="loading">Produkte werden geladen…</div>
             </div>
           </div>
@@ -335,6 +348,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/dashboard.js?v=9"></script>
+  <script type="module" src="js/dashboard.js?v=10"></script>
 </body>
 </html>

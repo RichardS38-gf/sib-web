@@ -692,6 +692,81 @@ textarea.form-input {
 }
 .dash-file-remove:hover { color: var(--color-ink); border-color: var(--color-ink); }
 
+/* ─── Newsletter-Tab ─── */
+.dash-newsletter__hint {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin-bottom: var(--space-3);
+  max-width: 42rem;
+}
+
+.dash-newsletter__ziel {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.dash-newsletter-liste {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-newsletter-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.dash-newsletter__img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  background-color: var(--color-bg-soft);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.dash-newsletter-row__title {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.dash-newsletter-row__price {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.dash-newsletter-row__checks {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.dash-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dash-check input {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: var(--color-ink);
+}
+
+@media (max-width: 640px) {
+  .dash-newsletter-row { grid-template-columns: 44px 1fr; }
+  .dash-newsletter-row__checks { grid-column: 1 / -1; margin-top: 0.4rem; }
+}
+
 /* ─── Bewertungen-Tab ─── */
 .dash-bewertung-summary {
   display: flex;

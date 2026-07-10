@@ -1,4 +1,4 @@
-/* newsletter.css v3 — SIB Monatsausgabe */
+/* newsletter.css v4 — SIB Monatsausgabe */
 
 @keyframes shimmer {
   0% { left: -75%; }
@@ -204,6 +204,18 @@
   line-height: 1;
   margin-bottom: var(--space-2);
   letter-spacing: -0.02em;
+}
+
+/* ── Leerzustand (kein Inhalt für diese Ausgabe) ── */
+.nl-empty {
+  grid-column: 1 / -1;
+  padding: var(--space-4) 0;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+.nl-empty--dark {
+  color: rgba(250, 250, 248, 0.5);
 }
 
 /* ── NEUE PRODUKTE ── */

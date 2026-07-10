@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Juli 2026 — Shoppen in Braunschweig</title>
-  <meta name="description" content="Neue Produkte, Sonderangebote und frische Geschäfte aus Braunschweig — Juli 2026.">
+  <title>Newsletter — Shoppen in Braunschweig</title>
+  <meta name="description" content="Neue Produkte, Sonderangebote und frische Geschäfte aus Braunschweig — jeden Monat aktuell.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css?v=4">
   <link rel="stylesheet" href="css/layout.css?v=4">
   <link rel="stylesheet" href="css/components.css?v=16">
-  <link rel="stylesheet" href="css/newsletter.css?v=3">
+  <link rel="stylesheet" href="css/newsletter.css?v=4">
   <link rel="stylesheet" href="css/geschaefte.css?v=3">
 </head>
 <body>
@@ -60,13 +60,13 @@
     <!-- ── 1. HERO ── -->
     <section class="nl-hero">
       <div class="nl-hero__bg" aria-hidden="true">
-        <span class="nl-hero__year">Juli</span>
+        <span class="nl-hero__year" id="nl-monat-bg">…</span>
       </div>
       <div class="container nl-hero__inner">
         <div class="glass-card nl-hero__card">
           <div class="nl-hero__meta">
             <span class="nl-eyebrow">Monatlicher Überblick</span>
-            <span class="nl-eyebrow nl-eyebrow--muted">Ausgabe 07 · Juli 2026</span>
+            <span class="nl-eyebrow nl-eyebrow--muted" id="nl-ausgabe">…</span>
           </div>
           <h1 class="nl-hero__title">Was Braunschweig<br><em>diesen Monat</em> bewegt.</h1>
           <p class="nl-hero__sub">Neue Produkte, frische Gesichter und die besten Angebote aus dem lokalen Einzelhandel — kurz und knapp für dich zusammengestellt.</p>
@@ -100,21 +100,8 @@
           <a class="nl-section-head__link nl-section-head__link--light" href="kategorie.html?sale=1">Alle Angebote →</a>
         </div>
 
-        <div class="nl-sale-grid">
-
-          <a class="nl-sale-card" id="nl-sale-card-1" href="produkt.html?id=d8485a10-a907-4ae5-9aa9-246b8ea2dae7">
-            <div class="nl-sale-card__img-wrap">
-              <img src="" alt="Leder-Handtasche" loading="lazy">
-            </div>
-            <div class="nl-sale-card__body">
-              <p class="nl-sale-card__shop">Amelie Fair Fashion</p>
-              <p class="nl-sale-card__name">Leder-Handtasche</p>
-              <div class="nl-sale-card__prices">
-                <span class="nl-sale-card__price-new">129,00 €</span>
-              </div>
-            </div>
-          </a>
-
+        <div class="nl-sale-grid" id="nl-sale-grid">
+          <div class="loading">Angebote werden geladen…</div>
         </div>
       </div>
     </section>
@@ -124,7 +111,7 @@
       <div class="container">
         <div class="nl-section-head">
           <div>
-            <h2 class="nl-section-head__title">Willkommen in der Familie</h2>
+            <h2 class="nl-section-head__title">Neu beigetreten</h2>
           </div>
           <a class="nl-section-head__link" href="geschaefte.html">Alle Geschäfte →</a>
         </div>
@@ -191,6 +178,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/newsletter.js?v=5"></script>
+  <script type="module" src="js/newsletter.js?v=6"></script>
 </body>
 </html>
