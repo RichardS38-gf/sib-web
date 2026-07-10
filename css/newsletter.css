@@ -58,6 +58,13 @@
   text-underline-offset: 3px;
   white-space: nowrap;
   flex-shrink: 0;
+  display: inline-block;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.nl-section-head__link:hover {
+  opacity: 0.6;
+  transform: scale(1.12);
 }
 
 .nl-section-head__link--light {
