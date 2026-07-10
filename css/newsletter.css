@@ -1,5 +1,10 @@
 /* newsletter.css v3 — SIB Monatsausgabe */
 
+@keyframes shimmer {
+  0% { left: -75%; }
+  100% { left: 150%; }
+}
+
 /* ── Gemeinsame Elemente ── */
 .nl-label {
   display: inline-block;
@@ -127,10 +132,28 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: rgba(250, 250, 248, 0.5);
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.nl-eyebrow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 3s infinite;
 }
 
 .nl-eyebrow--muted {
   color: rgba(250, 250, 248, 0.3);
+}
+
+.nl-eyebrow--muted::after {
+  animation-delay: 1.5s;
 }
 
 .nl-hero__title {
