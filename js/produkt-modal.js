@@ -85,6 +85,19 @@ export function initProduktModal () {
             <button type="button" class="pmodal-add-btn" id="pmodal-add-feature">+ Feature hinzufügen</button>
           </div>
 
+          <!-- Details-Bild -->
+          <div class="pmodal-field">
+            <label class="pmodal-label">Details-Bild <span class="pmodal-hint-inline">(wird neben den Features angezeigt)</span></label>
+            <div class="pmodal-details-bild-preview" id="pmodal-details-bild-preview"></div>
+            <label class="pmodal-upload-area pmodal-upload-area--sm">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Bild hochladen</span>
+              <input type="file" id="pmodal-details-bild-input" accept="image/*" style="display:none">
+            </label>
+            <button type="button" class="pmodal-details-bild-remove" id="pmodal-details-bild-remove" hidden>Bild entfernen</button>
+            <span class="pmodal-upload-hint" id="pmodal-details-bild-status"></span>
+          </div>
+
           <!-- Kategorie + Verfügbar -->
           <div class="pmodal-row">
             <div class="pmodal-field">
@@ -117,6 +130,10 @@ export function initProduktModal () {
   el.querySelector('.pmodal-close').addEventListener('click', schliesseProduktModal)
   document.getElementById('pmodal-cancel').addEventListener('click', schliesseProduktModal)
   document.getElementById('pmodal-file-input').addEventListener('change', handleDateiUpload)
+  document.getElementById('pmodal-details-bild-input').addEventListener('change', handleDetailsBildUpload)
+  document.getElementById('pmodal-details-bild-remove').addEventListener('click', () => {
+    setzeDetailsBildPreview(null)
+  })
   document.getElementById('pmodal-add-feature').addEventListener('click', () => {
     featuresList.push('')
     renderFeatures()
@@ -192,6 +209,44 @@ function escAttr (v) {
   return String(v ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
+// ── Details-Bild ──
+function setzeDetailsBildPreview (url) {
+  const preview = document.getElementById('pmodal-details-bild-preview')
+  const removeBtn = document.getElementById('pmodal-details-bild-remove')
+  if (!preview) return
+  if (url) {
+    preview.innerHTML = `<img src="${escAttr(url)}" alt="Details-Bild" style="max-height:120px;border-radius:6px;object-fit:cover;">`
+    preview.dataset.url = url
+    if (removeBtn) removeBtn.hidden = false
+  } else {
+    preview.innerHTML = ''
+    preview.dataset.url = ''
+    if (removeBtn) removeBtn.hidden = true
+  }
+}
+
+async function handleDetailsBildUpload (e) {
+  const datei = e.target.files[0]
+  if (!datei) return
+  const status = document.getElementById('pmodal-details-bild-status')
+  status.textContent = 'Lädt hoch…'
+  try {
+    const ext = datei.name.split('.').pop().toLowerCase()
+    const pfad = `details-bild/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { data, error } = await supabase.storage
+      .from('produkt-bilder')
+      .upload(pfad, datei, { cacheControl: '3600', upsert: false })
+    if (error) throw error
+    const { data: { publicUrl } } = supabase.storage.from('produkt-bilder').getPublicUrl(data.path)
+    setzeDetailsBildPreview(publicUrl)
+    status.textContent = 'Hochgeladen.'
+  } catch (err) {
+    console.error('Details-Bild-Upload fehlgeschlagen:', err)
+    status.textContent = 'Upload fehlgeschlagen.'
+  }
+  e.target.value = ''
+}
+
 // ── Datei-Upload ──
 async function handleDateiUpload (e) {
   const dateien = Array.from(e.target.files)
@@ -262,7 +317,8 @@ async function handleSpeichern (e) {
     highlights: highlights.length ? highlights : null,
     angebotspreis: angebotpreisRaw ? parseFloat(angebotpreisRaw) : null,
     angebot_von: angebotVon,
-    angebot_bis: angebotBis
+    angebot_bis: angebotBis,
+    details_bild_url: document.getElementById('pmodal-details-bild-preview')?.dataset.url || null
   }
 
   try {
@@ -307,6 +363,7 @@ export function oeffneProduktModal ({ produkt = null, onSave } = {}) {
 
   renderThumbs()
   renderFeatures()
+  setzeDetailsBildPreview(produkt?.details_bild_url || null)
   modal.hidden = false
   document.body.style.overflow = 'hidden'
   setTimeout(() => document.getElementById('pmodal-titel').focus(), 50)
