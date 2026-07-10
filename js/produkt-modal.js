@@ -317,14 +317,18 @@ async function handleSpeichern (e) {
     highlights: highlights.length ? highlights : null,
     angebotspreis: angebotpreisRaw ? parseFloat(angebotpreisRaw) : null,
     angebot_von: angebotVon,
-    angebot_bis: angebotBis,
-    details_bild_url: document.getElementById('pmodal-details-bild-preview')?.dataset.url || null
+    angebot_bis: angebotBis
+    // details_bild_url wird separat gespeichert -- Spalte muss in Supabase existieren
+    // details_bild_url: document.getElementById('pmodal-details-bild-preview')?.dataset.url || null
   }
 
   try {
     if (aktuellesProduktId) {
       const { error } = await supabase.from('produkte').update(daten).eq('id', aktuellesProduktId)
-      if (error) throw error
+      if (error) {
+        console.error('Supabase Update Fehler:', error)
+        throw error
+      }
       schliesseProduktModal()
       if (onSaveCallback) onSaveCallback(null)
     } else {
@@ -333,7 +337,7 @@ async function handleSpeichern (e) {
     }
   } catch (err) {
     console.error('Speichern fehlgeschlagen:', err)
-    feedback.innerHTML = '<div class="error-msg">Das Produkt konnte nicht gespeichert werden.</div>'
+    feedback.innerHTML = `<div class="error-msg">Speichern fehlgeschlagen: ${err?.message || JSON.stringify(err)}</div>`
     submitBtn.disabled = false
     submitBtn.textContent = 'Speichern'
   }
