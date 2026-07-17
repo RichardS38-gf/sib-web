@@ -11,9 +11,19 @@
 
 import { supabase } from './supabase.js'
 import JSZip from 'https://cdn.jsdelivr.net/npm/jszip@3/+esm'
+import ExcelJS from 'https://cdn.jsdelivr.net/npm/exceljs@4/+esm'
 
 const GROESSEN = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Einheitsgröße']
 const MAX_HIGHLIGHTS = 5
+const VORLAGE_SPALTEN = 15 // leere Produkt-Spalten in der herunterladbaren Vorlage
+
+// Reihenfolge der Felder von oben nach unten -- gilt für Vorlage UND Einlesen
+const FELD_REIHENFOLGE = [
+  'Produktname', 'Beschreibung', 'Preis', 'Kategorie', 'Verfügbar',
+  'Highlight 1', 'Highlight 2', 'Highlight 3', 'Highlight 4', 'Highlight 5',
+  ...GROESSEN.map((g) => `Größe ${g} Stück`),
+  'Bilder'
+]
 
 function esc (value) {
   return String(value ?? '')
@@ -192,6 +202,80 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
   }
 }
 
+// ── xlsx als Zeilen-Array einlesen (gleiche Struktur wie parseCsv liefert) ──
+async function leseXlsxAlsRows (datei) {
+  const buffer = await datei.arrayBuffer()
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.load(buffer)
+  const sheet = workbook.worksheets[0]
+  const rows = []
+  sheet.eachRow({ includeEmpty: true }, (row) => {
+    const werte = []
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      const wert = cell.value === null || cell.value === undefined ? '' : String(cell.text ?? cell.value)
+      werte.push(wert)
+    })
+    rows.push(werte)
+  })
+  return rows.filter((r) => r.some((v) => v.trim() !== ''))
+}
+
+// ── Vorlage als .xlsx erzeugen -- Kategorie- und Verfügbar-Zeile bekommen ein
+// echtes Dropdown (Datenvalidierung), Kategorien live aus der Datenbank. ──
+async function erzeugeUndLadeVorlage () {
+  const { data: kategorien } = await supabase.from('kategorien').select('name').order('name')
+  const kategorienNamen = (kategorien || []).map((k) => k.name).filter(Boolean)
+
+  const workbook = new ExcelJS.Workbook()
+  const sheet = workbook.addWorksheet('Produkte')
+
+  sheet.addRow(['Feld', ...Array.from({ length: VORLAGE_SPALTEN }, (_, i) => `Produkt ${i + 1}`)])
+  FELD_REIHENFOLGE.forEach((feld) => sheet.addRow([feld]))
+
+  sheet.getColumn(1).width = 26
+  for (let c = 2; c <= VORLAGE_SPALTEN + 1; c++) sheet.getColumn(c).width = 22
+  sheet.getRow(1).font = { bold: true }
+  sheet.getColumn(1).font = { bold: true }
+
+  const zeileVon = (feldName) => 2 + FELD_REIHENFOLGE.indexOf(feldName) // +2: Header-Zeile + 1-indexiert
+
+  if (kategorienNamen.length) {
+    const formel = `"${kategorienNamen.join(',')}"`
+    const zeile = zeileVon('Kategorie')
+    for (let c = 2; c <= VORLAGE_SPALTEN + 1; c++) {
+      sheet.getCell(zeile, c).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: [formel],
+        showErrorMessage: true,
+        errorStyle: 'stop',
+        errorTitle: 'Ungültige Kategorie',
+        error: 'Bitte eine Kategorie aus der Liste auswählen.'
+      }
+    }
+  }
+
+  const verfuegbarZeile = zeileVon('Verfügbar')
+  for (let c = 2; c <= VORLAGE_SPALTEN + 1; c++) {
+    sheet.getCell(verfuegbarZeile, c).dataValidation = {
+      type: 'list',
+      allowBlank: true,
+      formulae: ['"ja,nein"']
+    }
+  }
+
+  const buffer = await workbook.xlsx.writeBuffer()
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'produkt-import-vorlage.xlsx'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 // ── Foto in Supabase Storage hochladen (gleiches Bucket wie im Produkt-Modal) ──
 async function ladeFotoHoch (zipEntry, originalName) {
   const blob = await zipEntry.async('blob')
@@ -215,6 +299,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
   const bestaetigenBtn = document.getElementById('csv-import-bestaetigen')
   const statusEl = document.getElementById('csv-import-status')
   const vorschauEl = document.getElementById('csv-import-vorschau')
+  const vorlageBtn = document.getElementById('csv-vorlage-download')
   if (!toggleBtn || !panel) return
 
   let verarbeiteteProdukte = []
@@ -223,10 +308,25 @@ export function initProduktImport ({ getShop, onImportiert }) {
     panel.hidden = !panel.hidden
   })
 
+  vorlageBtn?.addEventListener('click', async () => {
+    vorlageBtn.disabled = true
+    const alterText = vorlageBtn.textContent
+    vorlageBtn.textContent = 'Vorlage wird erstellt…'
+    try {
+      await erzeugeUndLadeVorlage()
+    } catch (err) {
+      console.error('Vorlage konnte nicht erstellt werden:', err)
+      statusEl.innerHTML = '<span class="error-msg">Vorlage konnte nicht erstellt werden.</span>'
+    } finally {
+      vorlageBtn.disabled = false
+      vorlageBtn.textContent = alterText
+    }
+  })
+
   pruefenBtn.addEventListener('click', async () => {
-    const csvDatei = csvInput.files[0]
-    if (!csvDatei) {
-      statusEl.innerHTML = '<span class="error-msg">Bitte zuerst eine CSV-Datei auswählen.</span>'
+    const datei = csvInput.files[0]
+    if (!datei) {
+      statusEl.innerHTML = '<span class="error-msg">Bitte zuerst eine Datei auswählen.</span>'
       return
     }
 
@@ -236,17 +336,15 @@ export function initProduktImport ({ getShop, onImportiert }) {
     vorschauEl.innerHTML = ''
 
     try {
-      const [text, { data: kategorien }] = await Promise.all([
-        csvDatei.text(),
-        supabase.from('kategorien').select('id, name')
-      ])
-
+      const { data: kategorien } = await supabase.from('kategorien').select('id, name')
       const kategorienByName = new Map()
       ;(kategorien || []).forEach((k) => kategorienByName.set(k.name.toLowerCase(), k.id))
 
-      const rows = parseCsv(text)
+      const istXlsx = datei.name.toLowerCase().endsWith('.xlsx')
+      const rows = istXlsx ? await leseXlsxAlsRows(datei) : parseCsv(await datei.text())
+
       if (rows.length < 2) {
-        statusEl.innerHTML = '<span class="error-msg">Die CSV-Datei enthält keine Feld- oder Produktspalten.</span>'
+        statusEl.innerHTML = '<span class="error-msg">Die Datei enthält keine Feld- oder Produktspalten.</span>'
         return
       }
 

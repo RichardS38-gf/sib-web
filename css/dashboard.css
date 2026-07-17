@@ -750,6 +750,18 @@ textarea.form-input {
   margin-top: 0.2rem;
 }
 
+.dash-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-ink);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+}
+.dash-link-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ─── Newsletter-Tab ─── */
 .dash-newsletter__hint {
   font-size: var(--text-sm);
