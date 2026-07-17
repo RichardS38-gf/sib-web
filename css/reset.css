@@ -8,3 +8,9 @@ p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
 a { color: inherit; text-decoration: none; }
 ul, ol { list-style: none; }
 button { cursor: pointer; border: none; background: none; }
+
+/* Sorgt dafür, dass [hidden] IMMER greift, selbst wenn eine Klasse wie .btn
+   oder .dash-newsletter-sale-form eine eigene display-Regel setzt. Ohne
+   !important gewinnt sonst die später geladene Klassen-Regel gegen das
+   eingebaute [hidden]-Verhalten (gleiche Spezifität, spätere Reihenfolge). */
+[hidden] { display: none !important; }
