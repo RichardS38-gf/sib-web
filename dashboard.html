@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/base.css?v=3">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/dashboard.css?v=22">
+  <link rel="stylesheet" href="css/dashboard.css?v=23">
 </head>
 <body>
 
@@ -99,7 +99,33 @@
           <div class="dash-panel" data-panel="produkte" hidden>
             <div class="dash-panel__toolbar">
               <h2>Deine Produkte</h2>
-              <button class="btn btn--primary btn--heartbeat" id="toggle-produkt-form" type="button">Produkt hinzufügen</button>
+              <div class="dash-panel__toolbar-actions">
+                <button class="btn btn--outline btn--heartbeat" id="toggle-csv-import" type="button">CSV-Import</button>
+                <button class="btn btn--primary btn--heartbeat" id="toggle-produkt-form" type="button">Produkt hinzufügen</button>
+              </div>
+            </div>
+
+            <!-- CSV-Massenimport -->
+            <div class="dash-csv-import" id="csv-import-panel" hidden>
+              <h3>Produkte per CSV importieren</h3>
+              <p class="dash-newsletter__hint">Lade eine CSV-Datei mit deinen Produkten hoch — optional zusammen mit einem ZIP-Ordner, der die passenden Fotos enthält (Dateinamen müssen mit der Spalte „Bilder“ in der CSV übereinstimmen). <a id="csv-vorlage-link" href="produkt-import-vorlage.csv" download>Vorlage herunterladen</a></p>
+
+              <div class="dash-csv-import__row">
+                <label class="form-label" for="csv-import-file">CSV-Datei</label>
+                <input type="file" id="csv-import-file" accept=".csv,text/csv">
+              </div>
+              <div class="dash-csv-import__row">
+                <label class="form-label" for="csv-import-zip">Fotos (ZIP, optional)</label>
+                <input type="file" id="csv-import-zip" accept=".zip">
+              </div>
+
+              <div class="dash-csv-import__actions">
+                <button class="btn btn--outline" id="csv-import-pruefen" type="button">Datei prüfen</button>
+                <button class="btn btn--primary" id="csv-import-bestaetigen" type="button" hidden>Produkte importieren</button>
+                <span class="dash-csv-import__status" id="csv-import-status" aria-live="polite"></span>
+              </div>
+
+              <div id="csv-import-vorschau"></div>
             </div>
 
             <!-- Formular: neues Produkt -->
@@ -349,6 +375,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/dashboard.js?v=15"></script>
+  <script type="module" src="js/dashboard.js?v=16"></script>
 </body>
 </html>

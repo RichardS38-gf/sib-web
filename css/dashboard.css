@@ -692,6 +692,64 @@ textarea.form-input {
 }
 .dash-file-remove:hover { color: var(--color-ink); border-color: var(--color-ink); }
 
+/* ─── CSV-Massenimport ─── */
+.dash-panel__toolbar-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.dash-csv-import {
+  background: var(--color-bg-soft, #f5f5f3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.dash-csv-import h3 {
+  margin-bottom: var(--space-2);
+}
+
+.dash-csv-import .dash-newsletter__hint {
+  margin-bottom: var(--space-3);
+}
+
+.dash-csv-import__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: var(--space-3);
+}
+
+.dash-csv-import__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.dash-csv-import__status {
+  font-size: var(--text-sm);
+}
+
+.dash-csv-row--fehler {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.dash-csv-fehler {
+  color: #ef4444;
+  font-size: var(--text-xs);
+  margin-top: 0.2rem;
+}
+
+.dash-csv-warnung {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  margin-top: 0.2rem;
+}
+
 /* ─── Newsletter-Tab ─── */
 .dash-newsletter__hint {
   font-size: var(--text-sm);

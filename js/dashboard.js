@@ -6,6 +6,7 @@ import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
 import { initProduktModal, oeffneProduktModal } from './produkt-modal.js'
 import { naechsteAusgabe, monatDatum, monatName, ausgabeNummer } from './newsletter-zeitraum.js'
+import { initProduktImport } from './produkt-import.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -1128,6 +1129,7 @@ async function init () {
   initLogout()
   initProduktModal()
   initProduktForm()
+  initProduktImport({ getShop: () => shop, onImportiert: () => ladeProdukte() })
   initShopForm()
 
   ladeReservierungen()
