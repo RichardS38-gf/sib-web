@@ -100,14 +100,6 @@ function parseGanzzahl (str) {
   return Math.max(0, Math.round(n))
 }
 
-function parseDatum (str) {
-  const s = String(str ?? '').trim()
-  const m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
-  if (!m) return null
-  const [, t, mo, j] = m
-  return `${j}-${mo.padStart(2, '0')}-${t.padStart(2, '0')}`
-}
-
 // ── ZIP-Fotos extrahieren ──
 async function extrahiereFotos (zipDatei) {
   const zip = await JSZip.loadAsync(zipDatei)
@@ -151,20 +143,6 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
   const verfuegbarRaw = getFeld(feldMap, 'Verfügbar').toLowerCase()
   const verfuegbar = verfuegbarRaw !== 'nein'
 
-  const angebotspreis = parseDezimal(getFeld(feldMap, 'Angebotspreis'))
-  const angebotVonRaw = getFeld(feldMap, 'Angebot gültig ab')
-  const angebotBisRaw = getFeld(feldMap, 'Angebot gültig bis')
-  let angebotVon = null
-  let angebotBis = null
-  if (angebotVonRaw) {
-    angebotVon = parseDatum(angebotVonRaw)
-    if (!angebotVon) warnungen.push('Datum "Angebot gültig ab" ungültig (erwartet TT.MM.JJJJ) — ignoriert')
-  }
-  if (angebotBisRaw) {
-    angebotBis = parseDatum(angebotBisRaw)
-    if (!angebotBis) warnungen.push('Datum "Angebot gültig bis" ungültig (erwartet TT.MM.JJJJ) — ignoriert')
-  }
-
   const highlights = []
   for (let i = 1; i <= MAX_HIGHLIGHTS; i++) {
     const val = getFeld(feldMap, `Highlight ${i}`)
@@ -205,9 +183,6 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
     kategorieId,
     kategorieName,
     verfuegbar,
-    angebotspreis,
-    angebotVon,
-    angebotBis,
     highlights,
     varianten,
     bildEintraege,
@@ -360,9 +335,6 @@ export function initProduktImport ({ getShop, onImportiert }) {
           verfuegbar: z.verfuegbar,
           bilder: bildUrls,
           highlights: z.highlights.length ? z.highlights : null,
-          angebotspreis: z.angebotspreis,
-          angebot_von: z.angebotVon,
-          angebot_bis: z.angebotBis,
           freigegeben: false
         }).select('id').single()
         if (insErr) throw insErr

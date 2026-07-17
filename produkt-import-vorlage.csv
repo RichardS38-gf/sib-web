@@ -1,12 +1,9 @@
-Feld,Produkt 1,Produkt 2
+﻿Feld,Produkt 1,Produkt 2
 Produktname,Strickpullover mit Kragen,Leder-Handtasche
 Beschreibung,"Geräumiger Pullover aus weicher Baumwolle, ideal für kühle Tage.",Klassische Handtasche aus echtem Leder mit mehreren Fächern.
 Preis,79.99,129.00
 Kategorie,Kleidung,Accessoires
 Verfügbar,ja,ja
-Angebotspreis,60,
-Angebot gültig ab,01.08.2026,
-Angebot gültig bis,31.08.2026,
 Highlight 1,Weiche Baumwolle,Echtes Leder
 Highlight 2,Modernes Design,Mehrere Fächer
 Highlight 3,Pflegeleicht,
