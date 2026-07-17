@@ -1,3 +1,23 @@
-Titel,Beschreibung,Preis,Kategorie,Verfügbar,Angebotspreis,Angebot gültig ab,Angebot gültig bis,Highlight 1,Highlight 2,Highlight 3,Highlight 4,Highlight 5,Größe XS Stück,Größe S Stück,Größe M Stück,Größe L Stück,Größe XL Stück,Größe XXL Stück,Größe XXXL Stück,Größe Einheitsgröße Stück,Bilder
-Strickpullover mit Kragen,"Geräumiger Pullover aus weicher Baumwolle, ideal für kühle Tage.",79.99,Kleidung,ja,60,01.08.2026,31.08.2026,Weiche Baumwolle,Modernes Design,Pflegeleicht,,,,5,10,8,3,,,,strickpullover-1.jpg;strickpullover-2.jpg
-Leder-Handtasche,Klassische Handtasche aus echtem Leder mit mehreren Fächern.,129.00,Accessoires,ja,,,,Echtes Leder,Mehrere Fächer,,,,,,,,,,,1,handtasche-1.jpg
+Feld,Produkt 1,Produkt 2
+Produktname,Strickpullover mit Kragen,Leder-Handtasche
+Beschreibung,"Geräumiger Pullover aus weicher Baumwolle, ideal für kühle Tage.",Klassische Handtasche aus echtem Leder mit mehreren Fächern.
+Preis,79.99,129.00
+Kategorie,Kleidung,Accessoires
+Verfügbar,ja,ja
+Angebotspreis,60,
+Angebot gültig ab,01.08.2026,
+Angebot gültig bis,31.08.2026,
+Highlight 1,Weiche Baumwolle,Echtes Leder
+Highlight 2,Modernes Design,Mehrere Fächer
+Highlight 3,Pflegeleicht,
+Highlight 4,,
+Highlight 5,,
+Größe XS Stück,,
+Größe S Stück,5,
+Größe M Stück,10,
+Größe L Stück,8,
+Größe XL Stück,3,
+Größe XXL Stück,,
+Größe XXXL Stück,,
+Größe Einheitsgröße Stück,,1
+Bilder,strickpullover-1.jpg;strickpullover-2.jpg,handtasche-1.jpg

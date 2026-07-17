@@ -1,9 +1,13 @@
 // js/produkt-import.js — SIB Händler-Dashboard: CSV-Massenimport für Produkte
 // ============================================================
+// CSV-Layout ist TRANSPONIERT (übersichtlicher für Händler in Excel):
+// Spalte A = Feldname (Produktname, Beschreibung, Preis, ...) von oben nach
+// unten, jede weitere Spalte (B, C, D, ...) ist EIN Produkt.
+//
 // Ablauf: Händler lädt eine CSV (+ optional ein ZIP mit Fotos) hoch → Klick auf
 // "Datei prüfen" parst alles clientseitig und zeigt eine Vorschau mit Status
-// pro Zeile (OK / Fehler) → erst nach Bestätigung werden Fotos hochgeladen und
-// die Produkte + Größen-Varianten wirklich in der Datenbank angelegt.
+// pro Produkt-Spalte (OK / Fehler) → erst nach Bestätigung werden Fotos
+// hochgeladen und die Produkte + Größen-Varianten wirklich angelegt.
 
 import { supabase } from './supabase.js'
 import JSZip from 'https://cdn.jsdelivr.net/npm/jszip@3/+esm'
@@ -55,6 +59,28 @@ function parseCsv (text) {
   return rows.filter((r) => r.some((v) => v.trim() !== ''))
 }
 
+// Transponiertes Layout auflösen: Spalte A = Feldname, jede weitere Spalte
+// = ein Produkt. Ergebnis: ein Array von Maps (feldname-lowercase -> Wert),
+// ein Eintrag pro Produkt-Spalte.
+function loeseTransponiertAuf (rows) {
+  const anzahlProdukte = Math.max(0, ...rows.map((r) => r.length - 1))
+  const produkte = []
+  for (let p = 0; p < anzahlProdukte; p++) {
+    const feldMap = {}
+    rows.forEach((r) => {
+      const feldName = (r[0] || '').trim().toLowerCase()
+      if (!feldName) return
+      feldMap[feldName] = (r[p + 1] ?? '').trim()
+    })
+    produkte.push(feldMap)
+  }
+  return produkte
+}
+
+function getFeld (feldMap, name) {
+  return feldMap[name.toLowerCase()] || ''
+}
+
 function parseDezimal (str) {
   const s = String(str ?? '').trim()
   if (!s) return null
@@ -82,20 +108,6 @@ function parseDatum (str) {
   return `${j}-${mo.padStart(2, '0')}-${t.padStart(2, '0')}`
 }
 
-// Header-Zeile in ein Lookup verwandeln: normalisierter Name -> Spalten-Index
-function baueHeaderIndex (headerRow) {
-  const index = {}
-  headerRow.forEach((h, i) => {
-    index[h.trim().toLowerCase()] = i
-  })
-  return index
-}
-
-function getFeld (row, headerIndex, name) {
-  const i = headerIndex[name.toLowerCase()]
-  return i === undefined ? '' : (row[i] ?? '').trim()
-}
-
 // ── ZIP-Fotos extrahieren ──
 async function extrahiereFotos (zipDatei) {
   const zip = await JSZip.loadAsync(zipDatei)
@@ -109,20 +121,24 @@ async function extrahiereFotos (zipDatei) {
   return dateien
 }
 
-// ── Eine CSV-Zeile in ein Produkt-Objekt + Fehlerliste verwandeln ──
-function verarbeiteZeile (row, headerIndex, zeilenNr, kategorienByName, fotoDateien) {
+// ── Eine Produkt-Spalte in ein Produkt-Objekt + Fehlerliste verwandeln ──
+function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
+  // Komplett leere Spalte (z.B. ungenutzte Vorlagen-Spalte) still überspringen
+  const alleLeer = Object.values(feldMap).every((v) => !v)
+  if (alleLeer) return null
+
   const fehler = []
   const warnungen = []
 
-  const titel = getFeld(row, headerIndex, 'Titel')
-  const preisRaw = getFeld(row, headerIndex, 'Preis')
+  const titel = getFeld(feldMap, 'Produktname')
+  const preisRaw = getFeld(feldMap, 'Preis')
   const preis = parseDezimal(preisRaw)
 
-  if (!titel) fehler.push('Titel fehlt')
+  if (!titel) fehler.push('Produktname fehlt')
   if (preis === null || preis < 0) fehler.push('Preis fehlt oder ungültig')
 
   let kategorieId = null
-  const kategorieName = getFeld(row, headerIndex, 'Kategorie')
+  const kategorieName = getFeld(feldMap, 'Kategorie')
   if (kategorieName) {
     const gefunden = kategorienByName.get(kategorieName.toLowerCase())
     if (gefunden) {
@@ -132,32 +148,32 @@ function verarbeiteZeile (row, headerIndex, zeilenNr, kategorienByName, fotoDate
     }
   }
 
-  const verfuegbarRaw = getFeld(row, headerIndex, 'Verfügbar').toLowerCase()
-  const verfuegbar = verfuegbarRaw === 'nein' ? false : true
+  const verfuegbarRaw = getFeld(feldMap, 'Verfügbar').toLowerCase()
+  const verfuegbar = verfuegbarRaw !== 'nein'
 
-  const angebotspreis = parseDezimal(getFeld(row, headerIndex, 'Angebotspreis'))
-  const angebotVonRaw = getFeld(row, headerIndex, 'Angebot gültig ab')
-  const angebotBisRaw = getFeld(row, headerIndex, 'Angebot gültig bis')
+  const angebotspreis = parseDezimal(getFeld(feldMap, 'Angebotspreis'))
+  const angebotVonRaw = getFeld(feldMap, 'Angebot gültig ab')
+  const angebotBisRaw = getFeld(feldMap, 'Angebot gültig bis')
   let angebotVon = null
   let angebotBis = null
   if (angebotVonRaw) {
     angebotVon = parseDatum(angebotVonRaw)
-    if (!angebotVon) warnungen.push(`Datum "Angebot gültig ab" ungültig (erwartet TT.MM.JJJJ) — ignoriert`)
+    if (!angebotVon) warnungen.push('Datum "Angebot gültig ab" ungültig (erwartet TT.MM.JJJJ) — ignoriert')
   }
   if (angebotBisRaw) {
     angebotBis = parseDatum(angebotBisRaw)
-    if (!angebotBis) warnungen.push(`Datum "Angebot gültig bis" ungültig (erwartet TT.MM.JJJJ) — ignoriert`)
+    if (!angebotBis) warnungen.push('Datum "Angebot gültig bis" ungültig (erwartet TT.MM.JJJJ) — ignoriert')
   }
 
   const highlights = []
   for (let i = 1; i <= MAX_HIGHLIGHTS; i++) {
-    const val = getFeld(row, headerIndex, `Highlight ${i}`)
+    const val = getFeld(feldMap, `Highlight ${i}`)
     if (val) highlights.push(val)
   }
 
   const varianten = []
   GROESSEN.forEach((g) => {
-    const raw = getFeld(row, headerIndex, `Größe ${g} Stück`)
+    const raw = getFeld(feldMap, `Größe ${g} Stück`)
     if (!raw) return
     const stk = parseGanzzahl(raw)
     if (stk === null) {
@@ -167,7 +183,7 @@ function verarbeiteZeile (row, headerIndex, zeilenNr, kategorienByName, fotoDate
     varianten.push({ groesse: g, stueckzahl: stk })
   })
 
-  const bilderNamen = getFeld(row, headerIndex, 'Bilder')
+  const bilderNamen = getFeld(feldMap, 'Bilder')
     .split(';').map((s) => s.trim()).filter(Boolean)
   const bildEintraege = [] // { name, zipEntry }
   bilderNamen.forEach((name) => {
@@ -182,10 +198,10 @@ function verarbeiteZeile (row, headerIndex, zeilenNr, kategorienByName, fotoDate
   })
 
   return {
-    zeilenNr,
+    produktNr,
     titel,
     preis,
-    beschreibung: getFeld(row, headerIndex, 'Beschreibung') || null,
+    beschreibung: getFeld(feldMap, 'Beschreibung') || null,
     kategorieId,
     kategorieName,
     verfuegbar,
@@ -226,7 +242,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
   const vorschauEl = document.getElementById('csv-import-vorschau')
   if (!toggleBtn || !panel) return
 
-  let verarbeiteteZeilen = []
+  let verarbeiteteProdukte = []
 
   toggleBtn.addEventListener('click', () => {
     panel.hidden = !panel.hidden
@@ -255,11 +271,9 @@ export function initProduktImport ({ getShop, onImportiert }) {
 
       const rows = parseCsv(text)
       if (rows.length < 2) {
-        statusEl.innerHTML = '<span class="error-msg">Die CSV-Datei enthält keine Produktzeilen.</span>'
+        statusEl.innerHTML = '<span class="error-msg">Die CSV-Datei enthält keine Feld- oder Produktspalten.</span>'
         return
       }
-      const headerIndex = baueHeaderIndex(rows[0])
-      const datenZeilen = rows.slice(1)
 
       let fotoDateien = null
       const zipDatei = zipInput.files[0]
@@ -268,22 +282,29 @@ export function initProduktImport ({ getShop, onImportiert }) {
         fotoDateien = await extrahiereFotos(zipDatei)
       }
 
-      verarbeiteteZeilen = datenZeilen.map((row, i) =>
-        verarbeiteZeile(row, headerIndex, i + 2, kategorienByName, fotoDateien))
+      const produktSpalten = loeseTransponiertAuf(rows)
+      verarbeiteteProdukte = produktSpalten
+        .map((feldMap, i) => verarbeiteProdukt(feldMap, i + 1, kategorienByName, fotoDateien))
+        .filter(Boolean) // komplett leere Spalten raus
 
-      const okAnzahl = verarbeiteteZeilen.filter((z) => z.ok).length
-      const fehlerAnzahl = verarbeiteteZeilen.length - okAnzahl
+      if (verarbeiteteProdukte.length === 0) {
+        statusEl.innerHTML = '<span class="error-msg">Keine ausgefüllten Produkt-Spalten gefunden.</span>'
+        return
+      }
+
+      const okAnzahl = verarbeiteteProdukte.filter((z) => z.ok).length
+      const fehlerAnzahl = verarbeiteteProdukte.length - okAnzahl
 
       vorschauEl.innerHTML = `
         <div class="dash-table-wrap">
           <table class="dash-table">
             <thead>
-              <tr><th>Zeile</th><th>Titel</th><th>Preis</th><th>Kategorie</th><th>Fotos</th><th>Status</th></tr>
+              <tr><th>Produkt</th><th>Name</th><th>Preis</th><th>Kategorie</th><th>Fotos</th><th>Status</th></tr>
             </thead>
             <tbody>
-              ${verarbeiteteZeilen.map((z) => `
+              ${verarbeiteteProdukte.map((z) => `
                 <tr${z.ok ? '' : ' class="dash-csv-row--fehler"'}>
-                  <td>${z.zeilenNr}</td>
+                  <td>${z.produktNr}</td>
                   <td class="is-wrap">${esc(z.titel || '—')}</td>
                   <td>${z.preis !== null ? z.preis.toFixed(2) + ' €' : '—'}</td>
                   <td>${z.kategorieName ? esc(z.kategorieName) : '—'}</td>
@@ -297,7 +318,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
           </table>
         </div>`
 
-      statusEl.innerHTML = `${okAnzahl} von ${verarbeiteteZeilen.length} Zeilen bereit zum Import` +
+      statusEl.innerHTML = `${okAnzahl} von ${verarbeiteteProdukte.length} Produkten bereit zum Import` +
         (fehlerAnzahl ? `, <span class="error-msg">${fehlerAnzahl} mit Fehlern (werden übersprungen)</span>` : '.')
 
       bestaetigenBtn.hidden = okAnzahl === 0
@@ -312,14 +333,14 @@ export function initProduktImport ({ getShop, onImportiert }) {
 
   bestaetigenBtn.addEventListener('click', async () => {
     const shop = getShop()
-    const gueltigeZeilen = verarbeiteteZeilen.filter((z) => z.ok)
-    if (!shop || gueltigeZeilen.length === 0) return
+    const gueltigeProdukte = verarbeiteteProdukte.filter((z) => z.ok)
+    if (!shop || gueltigeProdukte.length === 0) return
 
     bestaetigenBtn.disabled = true
     let importiert = 0
 
-    for (const z of gueltigeZeilen) {
-      statusEl.textContent = `Importiere ${importiert + 1} von ${gueltigeZeilen.length}…`
+    for (const z of gueltigeProdukte) {
+      statusEl.textContent = `Importiere ${importiert + 1} von ${gueltigeProdukte.length}…`
       try {
         const bildUrls = []
         for (const b of z.bildEintraege) {
@@ -354,16 +375,16 @@ export function initProduktImport ({ getShop, onImportiert }) {
 
         importiert++
       } catch (err) {
-        console.error(`Zeile ${z.zeilenNr} konnte nicht importiert werden:`, err)
+        console.error(`Produkt ${z.produktNr} konnte nicht importiert werden:`, err)
       }
     }
 
-    statusEl.innerHTML = `<span class="success-msg">${importiert} von ${gueltigeZeilen.length} Produkten importiert.</span> Neue Produkte sind wie gewohnt erst nach Freigabe sichtbar.`
+    statusEl.innerHTML = `<span class="success-msg">${importiert} von ${gueltigeProdukte.length} Produkten importiert.</span> Neue Produkte sind wie gewohnt erst nach Freigabe sichtbar.`
     bestaetigenBtn.hidden = true
     bestaetigenBtn.disabled = false
     csvInput.value = ''
     zipInput.value = ''
-    verarbeiteteZeilen = []
+    verarbeiteteProdukte = []
 
     if (onImportiert) onImportiert()
   })
