@@ -73,11 +73,15 @@ function parseCsv (text) {
 // = ein Produkt. Ergebnis: ein Array von Maps (feldname-lowercase -> Wert),
 // ein Eintrag pro Produkt-Spalte.
 function loeseTransponiertAuf (rows) {
+  // Erste Zeile ist die Kopfzeile ("Feld, Produkt 1, Produkt 2, ...") und
+  // KEINE Datenzeile -- sonst würde "Produkt 2" selbst als Wert im Feld
+  // "feld" landen und jede Spalte fälschlich als "nicht leer" gelten.
+  const datenZeilen = rows.slice(1)
   const anzahlProdukte = Math.max(0, ...rows.map((r) => r.length - 1))
   const produkte = []
   for (let p = 0; p < anzahlProdukte; p++) {
     const feldMap = {}
-    rows.forEach((r) => {
+    datenZeilen.forEach((r) => {
       const feldName = (r[0] || '').trim().toLowerCase()
       if (!feldName) return
       feldMap[feldName] = (r[p + 1] ?? '').trim()
