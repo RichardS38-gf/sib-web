@@ -15,6 +15,17 @@ const GROESSEN = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Einheitsgröße']
 let shop = null // aktueller Shop des eingeloggten Händlers
 let reservierungenListe = [] // Cache für die E-Mail-Daten beim Bestätigen
 
+const NEWSLETTER_LIMIT = 3
+
+// Wandelt eine Datenbank-Fehlermeldung in einen verständlichen Text um --
+// insbesondere die Limit-Meldung des newsletter_eintraege-Triggers.
+function newsletterFehlerText (err) {
+  if ((err?.message || '').includes('newsletter_limit_erreicht')) {
+    return `Limit erreicht: pro Ausgabe sind maximal ${NEWSLETTER_LIMIT} Artikel möglich.`
+  }
+  return 'Speichern fehlgeschlagen.'
+}
+
 function esc (value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -388,7 +399,6 @@ async function ladeNewsletterTab () {
 
   const ziel = naechsteAusgabe()
   const monatStr = monatDatum(ziel)
-  if (zielEl) zielEl.textContent = `Für Ausgabe ${String(ausgabeNummer(ziel)).padStart(2, '0')} · ${monatName(ziel)} ${ziel.jahr}`
 
   try {
     const [{ data: produkte, error: pErr }, { data: eintraege, error: eErr }] = await Promise.all([
@@ -407,13 +417,20 @@ async function ladeNewsletterTab () {
     if (eErr) throw eErr
 
     const produkteListe = produkte || []
+
+    const gesetzt = { neu: new Set(), sale: new Set() }
+    ;(eintraege || []).forEach((e) => { gesetzt[e.typ]?.add(e.produkt_id) })
+    const beteiligt = new Set([...gesetzt.neu, ...gesetzt.sale])
+    const limitErreicht = beteiligt.size >= NEWSLETTER_LIMIT
+
+    if (zielEl) {
+      zielEl.textContent = `Für Ausgabe ${String(ausgabeNummer(ziel)).padStart(2, '0')} · ${monatName(ziel)} ${ziel.jahr} · ${beteiligt.size}/${NEWSLETTER_LIMIT} Artikel belegt`
+    }
+
     if (produkteListe.length === 0) {
       el.innerHTML = '<p class="dash-empty">Noch keine freigegebenen Produkte, die du im Newsletter zeigen kannst.</p>'
       return
     }
-
-    const gesetzt = { neu: new Set(), sale: new Set() }
-    ;(eintraege || []).forEach((e) => { gesetzt[e.typ]?.add(e.produkt_id) })
 
     el.innerHTML = `<div class="dash-newsletter-liste">${produkteListe.map((p) => {
       const bild = p.bilder?.[0]
@@ -421,9 +438,11 @@ async function ladeNewsletterTab () {
         : '<div class="dash-newsletter__img"></div>'
       const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
       const saleAktiv = gesetzt.sale.has(p.id)
+      const gesperrt = limitErreicht && !beteiligt.has(p.id)
+      const gesperrtAttr = gesperrt ? 'disabled title="Limit von 3 Artikeln pro Ausgabe erreicht"' : ''
 
       return `
-        <div class="dash-newsletter-item">
+        <div class="dash-newsletter-item${gesperrt ? ' dash-newsletter-item--gesperrt' : ''}">
           <div class="dash-newsletter-row">
             ${bild}
             <div class="dash-newsletter-row__body">
@@ -432,14 +451,14 @@ async function ladeNewsletterTab () {
             </div>
             <div class="dash-newsletter-row__checks">
               <label class="dash-check">
-                <input type="checkbox" class="dash-newsletter-check" data-produkt="${esc(p.id)}" data-typ="neu" ${gesetzt.neu.has(p.id) ? 'checked' : ''}>
+                <input type="checkbox" class="dash-newsletter-check" data-produkt="${esc(p.id)}" data-typ="neu" ${gesetzt.neu.has(p.id) ? 'checked' : ''} ${gesperrtAttr}>
                 <span>Neu eingetroffen</span>
               </label>
               <label class="dash-check">
-                <input type="checkbox" class="dash-newsletter-check" data-produkt="${esc(p.id)}" data-typ="sale" data-saved="${saleAktiv ? 'true' : 'false'}" ${saleAktiv ? 'checked' : ''}>
+                <input type="checkbox" class="dash-newsletter-check" data-produkt="${esc(p.id)}" data-typ="sale" data-saved="${saleAktiv ? 'true' : 'false'}" ${saleAktiv ? 'checked' : ''} ${gesperrtAttr}>
                 <span>Sonderangebot</span>
               </label>
-              <button class="dash-newsletter-row-save" type="button" data-produkt="${esc(p.id)}">Speichern</button>
+              <button class="dash-newsletter-row-save" type="button" data-produkt="${esc(p.id)}" ${gesperrt ? 'disabled' : ''}>Speichern</button>
               <span class="dash-newsletter-row-feedback" data-produkt="${esc(p.id)}" aria-live="polite"></span>
             </div>
           </div>
@@ -552,11 +571,10 @@ async function speichereSaleAngebot (produktId, monatStr, formEl, cb) {
       .insert({ produkt_id: produktId, shop_id: shop.id, typ: 'sale', monat: monatStr })
     if (insErr && insErr.code !== '23505') throw insErr
 
-    if (cb) cb.dataset.saved = 'true'
-    if (feedback) feedback.innerHTML = '<span class="success-msg">Gespeichert.</span>'
+    ladeNewsletterTab()
   } catch (err) {
     console.error('Sonderangebot speichern fehlgeschlagen:', err)
-    if (feedback) feedback.innerHTML = '<span class="error-msg">Speichern fehlgeschlagen.</span>'
+    if (feedback) feedback.innerHTML = `<span class="error-msg">${newsletterFehlerText(err)}</span>`
   } finally {
     btn.disabled = false
     btn.textContent = 'Speichern'
@@ -587,11 +605,7 @@ async function entferneSaleAngebot (produktId, monatStr, formEl, cb) {
     formEl.querySelector('.dash-newsletter-sale-preis').value = ''
     formEl.querySelector('.dash-newsletter-sale-von').value = ''
     formEl.querySelector('.dash-newsletter-sale-bis').value = ''
-    formEl.hidden = true
-    if (cb) {
-      cb.checked = false
-      cb.dataset.saved = 'false'
-    }
+    ladeNewsletterTab()
   } catch (err) {
     console.error('Sonderangebot entfernen fehlgeschlagen:', err)
     if (feedback) feedback.innerHTML = '<span class="error-msg">Entfernen fehlgeschlagen.</span>'
@@ -612,10 +626,11 @@ async function toggleNewsletterEintrag (produktId, typ, monatStr, checked, cb) {
         .delete().eq('produkt_id', produktId).eq('typ', typ).eq('monat', monatStr)
       if (error) throw error
     }
+    ladeNewsletterTab()
   } catch (err) {
     console.error('Newsletter-Eintrag konnte nicht gespeichert werden:', err)
     cb.checked = !checked
-    window.alert('Änderung konnte nicht gespeichert werden.')
+    window.alert(newsletterFehlerText(err))
   } finally {
     cb.disabled = false
   }
@@ -638,10 +653,11 @@ async function speichereNeuStatus (produktId, monatStr, cb, btn, feedbackEl) {
       if (error) throw error
     }
     if (feedbackEl) feedbackEl.innerHTML = '<span class="success-msg">Gespeichert.</span>'
+    ladeNewsletterTab()
   } catch (err) {
     console.error('Neu-eingetroffen-Status speichern fehlgeschlagen:', err)
     cb.checked = !checked
-    if (feedbackEl) feedbackEl.innerHTML = '<span class="error-msg">Speichern fehlgeschlagen.</span>'
+    if (feedbackEl) feedbackEl.innerHTML = `<span class="error-msg">${newsletterFehlerText(err)}</span>`
   } finally {
     btn.disabled = false
   }
