@@ -53,6 +53,12 @@ export function initProduktModal () {
             </div>
           </div>
 
+          <!-- EAN -->
+          <div class="pmodal-field">
+            <label class="pmodal-label" for="pmodal-ean">EAN <span class="pmodal-hint-inline">(optional)</span></label>
+            <input class="form-input" id="pmodal-ean" name="ean" type="text" inputmode="numeric" autocomplete="off" placeholder="z.B. 4006381333931">
+          </div>
+
           <!-- Angebotspreis + Zeitraum -->
           <div class="pmodal-section pmodal-angebot-section">
             <p class="pmodal-label pmodal-label--muted">Angebot (optional)</p>
@@ -338,6 +344,7 @@ async function handleSpeichern (e) {
 
   const daten = {
     titel,
+    ean: document.getElementById('pmodal-ean').value.trim() || null,
     preis: parseFloat(preisRaw),
     beschreibung: document.getElementById('pmodal-beschreibung').value.trim() || null,
     kategorie_id: document.getElementById('pmodal-kategorie').value || null,
@@ -384,6 +391,7 @@ export function oeffneProduktModal ({ produkt = null, onSave } = {}) {
 
   document.getElementById('pmodal-title').textContent = produkt ? 'Produkt bearbeiten' : 'Produkt anlegen'
   document.getElementById('pmodal-titel').value = produkt?.titel || ''
+  document.getElementById('pmodal-ean').value = produkt?.ean || ''
   document.getElementById('pmodal-preis').value = produkt?.preis ?? ''
   document.getElementById('pmodal-beschreibung').value = produkt?.beschreibung || ''
   document.getElementById('pmodal-kategorie').value = produkt?.kategorie_id || ''

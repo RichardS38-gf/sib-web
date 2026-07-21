@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { initProduktModal, oeffneProduktModal } from './produkt-modal.js'
+import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=2'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -491,6 +491,7 @@ async function ladeProdukte () {
       return `
         <tr>
           <td class="is-wrap">${esc(p.titel)}</td>
+          <td>${p.ean ? esc(p.ean) : '—'}</td>
           <td class="is-wrap">${esc(p.shops?.name || '—')}</td>
           <td>${esc(preis)}</td>
           <td>${jaNein(verfuegbar)}</td>
@@ -507,7 +508,7 @@ async function ladeProdukte () {
     el.innerHTML = `
       <div class="admin-table-wrap">
         <table class="admin-table">
-          <thead><tr><th>Titel</th><th>Shop</th><th>Preis</th><th>Verfügbar</th><th>Freigabe</th><th>Aktion</th></tr></thead>
+          <thead><tr><th>Titel</th><th>EAN</th><th>Shop</th><th>Preis</th><th>Verfügbar</th><th>Freigabe</th><th>Aktion</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`
@@ -633,6 +634,7 @@ function initProduktCreateForm () {
     const neu = {
       shop_id: shopId,
       titel,
+      ean: form.ean.value.trim() || null,
       beschreibung: form.beschreibung.value.trim() || null,
       preis: parseFloat(preisRaw),
       kategorie_id: form.kategorie_id.value || null,

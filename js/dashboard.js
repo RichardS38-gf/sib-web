@@ -4,9 +4,9 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { initProduktModal, oeffneProduktModal } from './produkt-modal.js'
+import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=2'
 import { naechsteAusgabe, monatDatum, monatName, ausgabeNummer } from './newsletter-zeitraum.js'
-import { initProduktImport } from './produkt-import.js'
+import { initProduktImport } from './produkt-import.js?v=2'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -256,6 +256,7 @@ async function ladeProdukte () {
           ${bild}
           ${freigabeBadge}
           <p class="dash-produkt__title">${esc(p.titel)}</p>
+          ${p.ean ? `<p class="dash-produkt__ean">EAN: ${esc(p.ean)}</p>` : ''}
           <p class="dash-produkt__price">${esc(preis)}</p>
           <p class="dash-produkt__status">${status}</p>
 
