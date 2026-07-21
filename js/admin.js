@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=2'
+import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=3'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -86,7 +86,7 @@ function zeigeAdmin () {
   ladeReservierungen()
   ladeNewsletter()
   ladeBewertungen()
-  fuelleProduktDropdowns()
+  ladeShopsFuerAuswahl()
 }
 
 function initGateForm () {
@@ -517,11 +517,13 @@ async function ladeProdukte () {
       btn.addEventListener('click', () => freigebenProdukt(btn.dataset.freigebenProdukt))
     })
     el.querySelectorAll('[data-edit-produkt]').forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const p = produkte.find((x) => x.id === btn.dataset.editProdukt)
         if (!p) return
+        const shops = cachedShops.length ? cachedShops : await ladeShopsFuerAuswahl()
         oeffneProduktModal({
           produkt: p,
+          shops,
           onSave: () => ladeProdukte()
         })
       })
@@ -572,94 +574,32 @@ async function freigebenProdukt (id) {
   }
 }
 
-// Dropdowns (Händler + Kategorien) für das Admin-Produktformular füllen
-async function fuelleProduktDropdowns () {
-  const shopSelect = document.getElementById('cp-shop')
-  const katSelect = document.getElementById('cp-kategorie')
-  try {
-    const [shopsRes, katRes] = await Promise.all([
-      supabase.from('shops').select('id, name').order('name'),
-      supabase.from('kategorien').select('id, name').order('name')
-    ])
-    if (!shopsRes.error) {
-      ;(shopsRes.data || []).forEach((s) => {
-        const opt = document.createElement('option')
-        opt.value = s.id
-        opt.textContent = s.name
-        shopSelect.appendChild(opt)
-      })
-    }
-    if (!katRes.error) {
-      ;(katRes.data || []).forEach((k) => {
-        const opt = document.createElement('option')
-        opt.value = k.id
-        opt.textContent = k.name
-        katSelect.appendChild(opt)
-      })
-    }
-  } catch (err) {
-    console.error('Dropdowns konnten nicht geladen werden:', err)
-  }
+let cachedShops = [] // fuer die Haendler-Auswahl im Produkt-Modal
+
+async function ladeShopsFuerAuswahl () {
+  const { data, error } = await supabase.from('shops').select('id, name').order('name')
+  if (!error) cachedShops = data || []
+  return cachedShops
 }
 
 function initProduktCreateForm () {
   const toggleBtn = document.getElementById('toggle-produkt-form')
-  const cancelBtn = document.getElementById('cancel-produkt-form')
-  const form = document.getElementById('produkt-create-form')
-  const feedback = document.getElementById('produkt-create-feedback')
-
-  toggleBtn.addEventListener('click', () => {
-    form.hidden = !form.hidden
-    if (!form.hidden) form.titel.focus()
-  })
-  cancelBtn.addEventListener('click', () => {
-    form.reset()
-    feedback.innerHTML = ''
-    form.hidden = true
-  })
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault()
-    feedback.innerHTML = ''
-
-    const shopId = form.shop_id.value
-    const titel = form.titel.value.trim()
-    const preisRaw = form.preis.value
-    if (!shopId || !titel || preisRaw === '') {
-      feedback.innerHTML = '<div class="error-msg">Bitte Händler, Titel und Preis ausfüllen.</div>'
-      return
-    }
-
-    const bildUrl = form.bild_url.value.trim()
-    const neu = {
-      shop_id: shopId,
-      titel,
-      ean: form.ean.value.trim() || null,
-      beschreibung: form.beschreibung.value.trim() || null,
-      preis: parseFloat(preisRaw),
-      kategorie_id: form.kategorie_id.value || null,
-      bilder: bildUrl ? [bildUrl] : [],
-      verfuegbar: true,
-      freigegeben: true // Admin-Produkte gehen sofort live
-    }
-
-    const submitBtn = form.querySelector('button[type="submit"]')
-    submitBtn.disabled = true
-    submitBtn.textContent = 'Wird angelegt…'
-
-    try {
-      const { error } = await supabase.from('produkte').insert(neu)
-      if (error) throw error
-      form.reset()
-      form.hidden = true
-      ladeProdukte()
-    } catch (err) {
-      console.error('Produkt anlegen fehlgeschlagen:', err)
-      feedback.innerHTML = '<div class="error-msg">Das Produkt konnte nicht angelegt werden.</div>'
-    } finally {
-      submitBtn.disabled = false
-      submitBtn.textContent = 'Anlegen'
-    }
+  if (!toggleBtn) return
+  toggleBtn.addEventListener('click', async () => {
+    const shops = cachedShops.length ? cachedShops : await ladeShopsFuerAuswahl()
+    oeffneProduktModal({
+      shops,
+      onSave: async (daten) => {
+        const { shop_id, ...rest } = daten
+        const { error } = await supabase.from('produkte').insert({
+          ...rest,
+          shop_id,
+          freigegeben: true // Admin-Produkte gehen sofort live
+        })
+        if (error) throw error
+        ladeProdukte()
+      }
+    })
   })
 }
 

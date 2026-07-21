@@ -41,6 +41,14 @@ export function initProduktModal () {
 
         <form id="pmodal-form" novalidate>
 
+          <!-- Händler-Auswahl (nur im Admin-Kontext sichtbar) -->
+          <div class="pmodal-field" id="pmodal-shop-group" hidden>
+            <label class="pmodal-label" for="pmodal-shop">Händler *</label>
+            <select class="form-select" id="pmodal-shop" name="shop_id">
+              <option value="">— Händler wählen —</option>
+            </select>
+          </div>
+
           <!-- Titel + Preis -->
           <div class="pmodal-row">
             <div class="pmodal-field">
@@ -330,6 +338,16 @@ async function handleSpeichern (e) {
     return
   }
 
+  const shopGroup = document.getElementById('pmodal-shop-group')
+  let gewaehlteShopId = null
+  if (shopGroup && !shopGroup.hidden) {
+    gewaehlteShopId = document.getElementById('pmodal-shop').value
+    if (!gewaehlteShopId) {
+      feedback.innerHTML = '<div class="error-msg">Bitte einen Händler auswählen.</div>'
+      return
+    }
+  }
+
   const submitBtn = document.getElementById('pmodal-submit')
   submitBtn.disabled = true
   submitBtn.textContent = 'Wird gespeichert…'
@@ -357,6 +375,7 @@ async function handleSpeichern (e) {
     // details_bild_url wird separat gespeichert -- Spalte muss in Supabase existieren
     // details_bild_url: document.getElementById('pmodal-details-bild-preview')?.dataset.url || null
   }
+  if (gewaehlteShopId) daten.shop_id = gewaehlteShopId
 
   try {
     if (aktuellesProduktId) {
@@ -380,7 +399,7 @@ async function handleSpeichern (e) {
 }
 
 // ── Öffentliche API ──
-export function oeffneProduktModal ({ produkt = null, onSave } = {}) {
+export function oeffneProduktModal ({ produkt = null, onSave, shops = null } = {}) {
   const modal = document.getElementById('produkt-modal')
   if (!modal) return
 
@@ -388,6 +407,17 @@ export function oeffneProduktModal ({ produkt = null, onSave } = {}) {
   aktuellesProduktId = produkt?.id || null
   bildUrls = Array.isArray(produkt?.bilder) ? [...produkt.bilder.filter(Boolean)] : []
   featuresList = Array.isArray(produkt?.highlights) ? [...produkt.highlights].slice(0, MAX_FEATURES) : []
+
+  const shopGroup = document.getElementById('pmodal-shop-group')
+  const shopSelect = document.getElementById('pmodal-shop')
+  if (shops && shopGroup && shopSelect) {
+    shopGroup.hidden = false
+    shopSelect.innerHTML = '<option value="">— Händler wählen —</option>' +
+      shops.map((s) => `<option value="${escAttr(s.id)}">${escAttr(s.name)}</option>`).join('')
+    shopSelect.value = produkt?.shop_id || ''
+  } else if (shopGroup) {
+    shopGroup.hidden = true
+  }
 
   document.getElementById('pmodal-title').textContent = produkt ? 'Produkt bearbeiten' : 'Produkt anlegen'
   document.getElementById('pmodal-titel').value = produkt?.titel || ''

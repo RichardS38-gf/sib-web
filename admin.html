@@ -250,47 +250,7 @@
               <button class="btn btn--primary" id="toggle-produkt-form" type="button">Produkt hinzufügen</button>
             </div>
 
-            <form class="admin-shop-form" id="produkt-create-form" hidden>
-              <div class="form-group">
-                <label class="form-label" for="cp-shop">Händler</label>
-                <select class="form-select" id="cp-shop" name="shop_id" required>
-                  <option value="">— Händler wählen —</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="cp-titel">Titel</label>
-                <input class="form-input" type="text" id="cp-titel" name="titel" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="cp-ean">EAN <span style="font-weight:400;color:var(--color-muted)">(optional)</span></label>
-                <input class="form-input" type="text" id="cp-ean" name="ean" inputmode="numeric" placeholder="z.B. 4006381333931">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="cp-beschreibung">Beschreibung</label>
-                <textarea class="form-input" id="cp-beschreibung" name="beschreibung" rows="3"></textarea>
-              </div>
-              <div class="admin-shop-form__row">
-                <div class="form-group">
-                  <label class="form-label" for="cp-preis">Preis (€)</label>
-                  <input class="form-input" type="number" id="cp-preis" name="preis" min="0" step="0.01" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="cp-kategorie">Kategorie</label>
-                  <select class="form-select" id="cp-kategorie" name="kategorie_id">
-                    <option value="">— Bitte wählen —</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="cp-bild">Bild-URL</label>
-                <input class="form-input" type="url" id="cp-bild" name="bild_url" placeholder="https://…">
-              </div>
-              <div class="admin-shop-form__actions">
-                <button class="btn btn--primary" type="submit">Anlegen</button>
-                <button class="btn btn--outline" type="button" id="cancel-produkt-form">Abbrechen</button>
-              </div>
-              <div id="produkt-create-feedback" aria-live="polite"></div>
-            </form>
+            <form class="admin-shop-form" id="produkt-create-form" hidden></form>
 
             <div id="produkte-content">
               <div class="loading">Produkte werden geladen…</div>
@@ -369,6 +329,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/admin.js?v=6"></script>
+  <script type="module" src="js/admin.js?v=7"></script>
 </body>
 </html>
