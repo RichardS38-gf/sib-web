@@ -51,37 +51,26 @@
   font-weight: 300;
   color: rgba(250,250,248,0.9);
   margin-bottom: var(--space-5);
-  overflow: hidden;
 }
 
-.hw-glow-ring {
+.hw-price-badge::after {
+  content: '';
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  overflow: hidden;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 72%);
+  filter: blur(1.5px);
+  offset-path: border-box;
+  offset-distance: 0%;
+  animation: hw-glow-travel 3.5s linear infinite;
   pointer-events: none;
 }
 
-.hw-glow {
-  position: absolute;
-  inset: -20%;
-  opacity: 0;
-  filter: blur(4px);
-  animation: hw-glow-fade 4.4s linear infinite;
-}
-
-.hw-glow--top    { background: radial-gradient(30% 70% at 50% 0%,   rgba(255,255,255,0.95) 0%, transparent 100%); animation-delay: 0s; }
-.hw-glow--right  { background: radial-gradient(70% 30% at 100% 50%, rgba(255,255,255,0.95) 0%, transparent 100%); animation-delay: 1.1s; }
-.hw-glow--bottom { background: radial-gradient(30% 70% at 50% 100%, rgba(255,255,255,0.95) 0%, transparent 100%); animation-delay: 2.2s; }
-.hw-glow--left   { background: radial-gradient(70% 30% at 0% 50%,   rgba(255,255,255,0.95) 0%, transparent 100%); animation-delay: 3.3s; }
-
-@keyframes hw-glow-fade {
-  0%   { opacity: 0; }
-  8%   { opacity: 1; }
-  25%  { opacity: 1; }
-  33%  { opacity: 0; }
-  100% { opacity: 0; }
+@keyframes hw-glow-travel {
+  to { offset-distance: 100%; }
 }
 
 .hw-price-badge strong {
