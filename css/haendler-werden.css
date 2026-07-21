@@ -56,17 +56,18 @@
 .hw-price-badge::before {
   content: '';
   position: absolute;
-  inset: -1px;
+  inset: -6px;
   z-index: -2;
   border-radius: inherit;
-  background: conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.95) 6%, transparent 16%);
-  animation: hw-shimmer-spin 2.6s linear infinite;
+  background: conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.95) 10%, transparent 26%);
+  filter: blur(6px);
+  animation: hw-shimmer-spin 3.2s linear infinite;
 }
 
 .hw-price-badge::after {
   content: '';
   position: absolute;
-  inset: 1px;
+  inset: 1.5px;
   z-index: -1;
   border-radius: inherit;
   background: #0F0F0F;
