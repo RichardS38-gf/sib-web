@@ -180,7 +180,7 @@ function initHaendlerForm () {
     try {
       const logoUrl = await ladeLogoHoch(form.logo.files[0])
 
-      const { error } = await supabase.from('haendler_anfragen').insert({
+      const { data, error } = await supabase.from('haendler_anfragen').insert({
         vorname,
         nachname,
         email,
@@ -189,11 +189,24 @@ function initHaendlerForm () {
         adresse,
         beschreibung: beschreibung || null,
         logo_url: logoUrl
-      })
+      }).select('id').single()
 
       if (error) throw error
 
-      form.innerHTML = '<div class="success-msg">Vielen Dank! Wir melden uns innerhalb von 2 Werktagen bei dir.</div>'
+      submitBtn.textContent = 'Weiterleitung zur Zahlung…'
+
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ anfrageId: data.id, email, geschaeftName })
+      })
+      const checkout = await res.json()
+
+      if (!res.ok || !checkout.url) {
+        throw new Error(checkout.error || 'Checkout-Session konnte nicht erstellt werden')
+      }
+
+      window.location.href = checkout.url
     } catch (err) {
       console.error('Registrierung fehlgeschlagen:', err)
       feedback.innerHTML = '<div class="error-msg">Die Registrierung konnte nicht gesendet werden. Bitte versuche es später erneut.</div>'
@@ -203,8 +216,24 @@ function initHaendlerForm () {
   })
 }
 
+// — Stripe-Rückkehr behandeln (Erfolg / Abbruch aus dem Checkout) —
+function initStripeRueckkehr () {
+  const params = new URLSearchParams(window.location.search)
+  const zahlung = params.get('zahlung')
+  const feedback = document.getElementById('hw-feedback')
+  const haendlerBlock = document.getElementById('haendler-block')
+  if (!zahlung || !feedback || !haendlerBlock) return
+
+  if (zahlung === 'erfolg') {
+    haendlerBlock.innerHTML = '<div class="success-msg">Zahlung erfolgreich! Deine Registrierung ist eingegangen — wir melden uns innerhalb von 2 Werktagen, sobald dein Account freigeschaltet ist.</div>'
+  } else if (zahlung === 'abgebrochen') {
+    feedback.innerHTML = '<div class="error-msg">Die Zahlung wurde abgebrochen. Deine Anfrage ist gespeichert — du kannst die Registrierung jederzeit erneut abschließen, indem du das Formular nochmal absendest.</div>'
+  }
+}
+
 initMobileMenu()
 initHeaderSearch()
 initRollenToggle()
 initKundeForm()
 initHaendlerForm()
+initStripeRueckkehr()

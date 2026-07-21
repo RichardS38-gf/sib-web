@@ -21,6 +21,9 @@ Vorlagen/
 .env.local
 .env
 
+# Node
+node_modules/
+
 # Supabase CLI lokaler Status/Cache
 supabase/.temp/
 
