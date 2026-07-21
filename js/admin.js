@@ -174,7 +174,7 @@ async function ladeHaendler () {
           <td>${esc(s.slug || '—')}</td>
           <td class="is-wrap">${esc(s.adresse || '—')}</td>
           <td>${aktiv ? '<span class="badge">aktiv</span>' : '<span class="badge badge--muted">inaktiv</span>'}</td>
-          <td><button class="admin-link-btn" data-toggle-shop="${esc(s.id)}" data-aktiv="${aktiv}">${toggleLabel}</button></td>
+          <td><button class="admin-link-btn" data-edit-shop="${esc(s.id)}">Bearbeiten</button> <button class="admin-link-btn" data-toggle-shop="${esc(s.id)}" data-aktiv="${aktiv}">${toggleLabel}</button></td>
         </tr>`
     }).join('')
 
@@ -188,6 +188,16 @@ async function ladeHaendler () {
 
     el.querySelectorAll('[data-toggle-shop]').forEach((btn) => {
       btn.addEventListener('click', () => toggleShop(btn.dataset.toggleShop, btn.dataset.aktiv === 'true'))
+    })
+    el.querySelectorAll('[data-edit-shop]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const s = shops.find((x) => x.id === btn.dataset.editShop)
+        if (!s) return
+        setzeShopFormModus(s)
+        const form = document.getElementById('shop-create-form')
+        form.hidden = false
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
     })
   } catch (err) {
     console.error('Händler konnten nicht geladen werden:', err)
@@ -211,8 +221,12 @@ function initShopCreateForm () {
   const cancelBtn = document.getElementById('cancel-shop-form')
   const form = document.getElementById('shop-create-form')
   const feedback = document.getElementById('shop-create-feedback')
+  const submitBtn = document.getElementById('shop-form-submit')
+
+  initShopFormDateiUploads()
 
   toggleBtn.addEventListener('click', () => {
+    setzeShopFormModus(null) // leeres Formular = Anlegen-Modus
     form.hidden = !form.hidden
     if (!form.hidden) form.name.focus()
   })
@@ -227,44 +241,223 @@ function initShopCreateForm () {
     feedback.innerHTML = ''
 
     const name = form.name.value.trim()
-    const slug = form.slug.value.trim()
-    if (!name || !slug) {
-      feedback.innerHTML = '<div class="error-msg">Bitte Name und Slug ausfüllen.</div>'
+    const shopId = document.getElementById('cs-id').value || null
+
+    if (!name) {
+      feedback.innerHTML = '<div class="error-msg">Bitte mindestens den Shop-Namen ausfüllen.</div>'
       return
     }
 
-    const neu = {
+    const logoUrl = document.getElementById('cs-logo-preview')?.dataset.url || null
+    const bannerUrl = document.getElementById('cs-banner-preview')?.dataset.url || null
+    const titelbildUrl = document.getElementById('cs-titelbild-preview')?.dataset.url || null
+    const agbUrl = document.getElementById('cs-agb-current')?.dataset.url || null
+
+    const daten = {
       name,
-      slug,
-      beschreibung: form.beschreibung.value.trim() || null,
+      slug: form.slug.value.trim() || null,
       adresse: form.adresse.value.trim() || null,
-      oeffnungszeiten: form.oeffnungszeiten.value.trim() || null,
-      aktiv: true
+      email: form.email.value.trim() || null,
+      about_headline: form.about_headline.value.trim() || null,
+      beschreibung: form.beschreibung.value.trim() || null,
+      oeffnungszeiten: sammleShopFormOeffnungszeiten(),
+      zahlungsmethoden: form.zahlungsmethoden.value.trim() || null,
+      rueckgaben: form.rueckgaben.value.trim() || null,
+      logo_url: logoUrl,
+      banner_url: bannerUrl,
+      bild_url: titelbildUrl,
+      agb_url: agbUrl,
+      messaging_enabled: document.getElementById('cs-messaging')?.checked ?? false
     }
 
-    const submitBtn = form.querySelector('button[type="submit"]')
     submitBtn.disabled = true
-    submitBtn.textContent = 'Wird angelegt…'
+    submitBtn.textContent = shopId ? 'Wird gespeichert…' : 'Wird angelegt…'
 
     try {
-      const { error } = await supabase.from('shops').insert(neu)
-      if (error) {
-        if (error.code === '23505') {
-          feedback.innerHTML = '<div class="error-msg">Dieser Slug ist bereits vergeben.</div>'
-          return
+      if (shopId) {
+        const { error } = await supabase.from('shops').update(daten).eq('id', shopId)
+        if (error) throw error
+      } else {
+        daten.aktiv = true
+        const { error } = await supabase.from('shops').insert(daten)
+        if (error) {
+          if (error.code === '23505') {
+            feedback.innerHTML = '<div class="error-msg">Dieser Slug ist bereits vergeben.</div>'
+            return
+          }
+          throw error
         }
-        throw error
       }
       form.reset()
       form.hidden = true
       ladeHaendler()
     } catch (err) {
-      console.error('Händler anlegen fehlgeschlagen:', err)
-      feedback.innerHTML = '<div class="error-msg">Der Händler konnte nicht angelegt werden.</div>'
+      console.error('Händler speichern fehlgeschlagen:', err)
+      feedback.innerHTML = '<div class="error-msg">Der Händler konnte nicht gespeichert werden.</div>'
     } finally {
       submitBtn.disabled = false
-      submitBtn.textContent = 'Anlegen'
+      submitBtn.textContent = shopId ? 'Speichern' : 'Anlegen'
     }
+  })
+}
+
+// — Formular in Anlegen- oder Bearbeiten-Modus versetzen und ggf. mit Shop-Daten füllen —
+function setzeShopFormModus (shop) {
+  const form = document.getElementById('shop-create-form')
+  const submitBtn = document.getElementById('shop-form-submit')
+  const heading = document.querySelector('#toggle-shop-form')
+
+  document.getElementById('cs-id').value = shop?.id || ''
+  form.name.value = shop?.name || ''
+  form.slug.value = shop?.slug || ''
+  form.adresse.value = shop?.adresse || ''
+  form.email.value = shop?.email || ''
+  form.about_headline.value = shop?.about_headline || ''
+  form.beschreibung.value = shop?.beschreibung || ''
+  form.zahlungsmethoden.value = shop?.zahlungsmethoden || ''
+  form.rueckgaben.value = shop?.rueckgaben || ''
+
+  fuelleShopFormOeffnungszeiten(shop?.oeffnungszeiten)
+  setzeShopFormBildPreview('cs-logo-preview', shop?.logo_url)
+  setzeShopFormBildPreview('cs-banner-preview', shop?.banner_url)
+  setzeShopFormBildPreview('cs-titelbild-preview', shop?.bild_url)
+  setzeShopFormAgbAnzeige(shop?.agb_url)
+
+  const msgToggle = document.getElementById('cs-messaging')
+  if (msgToggle) msgToggle.checked = !!shop?.messaging_enabled
+
+  submitBtn.textContent = shop ? 'Speichern' : 'Anlegen'
+}
+
+const SHOP_FORM_TAGE = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+
+function fuelleShopFormOeffnungszeiten (rohWert) {
+  let eintraege = []
+  if (Array.isArray(rohWert)) {
+    eintraege = rohWert
+  } else if (typeof rohWert === 'string' && rohWert.trim().startsWith('[')) {
+    try { eintraege = JSON.parse(rohWert) } catch { eintraege = [] }
+  }
+  const byTag = {}
+  eintraege.forEach((e) => { if (e?.tag) byTag[e.tag] = Array.isArray(e.zeiten) ? e.zeiten.join(', ') : (e.zeiten || '') })
+
+  document.querySelectorAll('#cs-oz-grid .dash-oz-row').forEach((row) => {
+    const tag = row.dataset.tag
+    const input = row.querySelector('input')
+    input.value = byTag[tag] || ''
+  })
+}
+
+function sammleShopFormOeffnungszeiten () {
+  const eintraege = []
+  document.querySelectorAll('#cs-oz-grid .dash-oz-row').forEach((row) => {
+    const tag = row.dataset.tag
+    const wert = row.querySelector('input').value.trim()
+    if (!wert) return
+    eintraege.push({ tag, zeiten: [wert] })
+  })
+  return eintraege.length ? eintraege : null
+}
+
+function setzeShopFormBildPreview (containerId, url) {
+  const el = document.getElementById(containerId)
+  if (!el) return
+  el.innerHTML = url ? `<img src="${esc(url)}" alt="Vorschau">` : '<span class="dash-file-preview__empty">Kein Bild</span>'
+  el.dataset.url = url || ''
+}
+
+function setzeShopFormAgbAnzeige (url) {
+  const wrap = document.getElementById('cs-agb-current')
+  const link = document.getElementById('cs-agb-link')
+  if (!wrap || !link) return
+  if (url) {
+    link.href = url
+    wrap.hidden = false
+    wrap.dataset.url = url
+  } else {
+    wrap.hidden = true
+    wrap.dataset.url = ''
+  }
+}
+
+async function ladeShopFormDateiHoch (datei, ordner = '') {
+  const ext = datei.name.split('.').pop().toLowerCase()
+  const pfad = `${ordner}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { data, error } = await supabase.storage
+    .from('produkt-bilder')
+    .upload(pfad, datei, { cacheControl: '3600', upsert: false })
+  if (error) throw error
+  const { data: { publicUrl } } = supabase.storage.from('produkt-bilder').getPublicUrl(data.path)
+  return publicUrl
+}
+
+function initShopFormDateiUploads () {
+  document.getElementById('cs-logo-input')?.addEventListener('change', async (e) => {
+    const datei = e.target.files[0]
+    if (!datei) return
+    const status = document.getElementById('cs-logo-status')
+    status.textContent = 'Lädt hoch…'
+    try {
+      const url = await ladeShopFormDateiHoch(datei, 'shop-logos/')
+      setzeShopFormBildPreview('cs-logo-preview', url)
+      status.textContent = 'Hochgeladen.'
+    } catch (err) {
+      console.error('Logo-Upload fehlgeschlagen:', err)
+      status.textContent = 'Upload fehlgeschlagen.'
+    }
+    e.target.value = ''
+  })
+
+  document.getElementById('cs-banner-input')?.addEventListener('change', async (e) => {
+    const datei = e.target.files[0]
+    if (!datei) return
+    const status = document.getElementById('cs-banner-status')
+    status.textContent = 'Lädt hoch…'
+    try {
+      const url = await ladeShopFormDateiHoch(datei, 'shop-banner/')
+      setzeShopFormBildPreview('cs-banner-preview', url)
+      status.textContent = 'Hochgeladen.'
+    } catch (err) {
+      console.error('Banner-Upload fehlgeschlagen:', err)
+      status.textContent = 'Upload fehlgeschlagen.'
+    }
+    e.target.value = ''
+  })
+
+  document.getElementById('cs-titelbild-input')?.addEventListener('change', async (e) => {
+    const datei = e.target.files[0]
+    if (!datei) return
+    const status = document.getElementById('cs-titelbild-status')
+    status.textContent = 'Lädt hoch…'
+    try {
+      const url = await ladeShopFormDateiHoch(datei, 'shop-titelbild/')
+      setzeShopFormBildPreview('cs-titelbild-preview', url)
+      status.textContent = 'Hochgeladen.'
+    } catch (err) {
+      console.error('Titelbild-Upload fehlgeschlagen:', err)
+      status.textContent = 'Upload fehlgeschlagen.'
+    }
+    e.target.value = ''
+  })
+
+  document.getElementById('cs-agb-input')?.addEventListener('change', async (e) => {
+    const datei = e.target.files[0]
+    if (!datei) return
+    const status = document.getElementById('cs-agb-status')
+    status.textContent = 'Lädt hoch…'
+    try {
+      const url = await ladeShopFormDateiHoch(datei, 'shop-agb/')
+      setzeShopFormAgbAnzeige(url)
+      status.textContent = 'Hochgeladen.'
+    } catch (err) {
+      console.error('AGB-Upload fehlgeschlagen:', err)
+      status.textContent = 'Upload fehlgeschlagen.'
+    }
+    e.target.value = ''
+  })
+
+  document.getElementById('cs-agb-remove')?.addEventListener('click', () => {
+    setzeShopFormAgbAnzeige(null)
   })
 }
 

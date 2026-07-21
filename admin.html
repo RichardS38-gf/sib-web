@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/admin.css?v=1">
+  <link rel="stylesheet" href="css/dashboard.css?v=24">
 </head>
 <body>
 
@@ -112,33 +113,126 @@
               <button class="btn btn--primary" id="toggle-shop-form" type="button">Händler anlegen</button>
             </div>
 
-            <form class="admin-shop-form" id="shop-create-form" hidden>
-              <div class="admin-shop-form__row">
-                <div class="form-group">
-                  <label class="form-label" for="cs-name">Name</label>
-                  <input class="form-input" type="text" id="cs-name" name="name" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="cs-slug">Slug</label>
-                  <input class="form-input" type="text" id="cs-slug" name="slug" placeholder="z. B. amelie-fair-fashion" required>
+            <form class="admin-shop-form dash-shop-form" id="shop-create-form" hidden>
+              <input type="hidden" id="cs-id" name="id" value="">
+
+              <div class="form-group">
+                <label class="form-label" for="cs-name">Shop-Name</label>
+                <input class="form-input" type="text" id="cs-name" name="name" required>
+              </div>
+
+              <div class="form-group" id="cs-slug-group">
+                <label class="form-label" for="cs-slug">Slug (URL)</label>
+                <input class="form-input" type="text" id="cs-slug" name="slug" placeholder="z. B. amelie-fair-fashion">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Logo</label>
+                <div class="dash-file-upload">
+                  <div class="dash-file-preview" id="cs-logo-preview"></div>
+                  <label class="dash-file-btn">
+                    <span>Bild hochladen</span>
+                    <input type="file" id="cs-logo-input" accept="image/*" hidden>
+                  </label>
+                  <span class="dash-file-status" id="cs-logo-status"></span>
                 </div>
               </div>
+
+              <div class="form-group">
+                <label class="form-label">Banner</label>
+                <div class="dash-file-upload">
+                  <div class="dash-file-preview" id="cs-banner-preview"></div>
+                  <label class="dash-file-btn">
+                    <span>Bild hochladen</span>
+                    <input type="file" id="cs-banner-input" accept="image/*" hidden>
+                  </label>
+                  <span class="dash-file-status" id="cs-banner-status"></span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="cs-adresse">Adresse</label>
+                <input class="form-input" type="text" id="cs-adresse" name="adresse">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="cs-email">E-Mail</label>
+                <input class="form-input" type="email" id="cs-email" name="email" placeholder="kontakt@deinshop.de">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="cs-headline">Überschrift (Willkommenstext)</label>
+                <input class="form-input" type="text" id="cs-headline" name="about_headline" placeholder="z.B. Willkommen bei Amelie Fair Fashion ✨">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Titelbild</label>
+                <div class="dash-file-upload">
+                  <div class="dash-file-preview dash-file-preview--wide" id="cs-titelbild-preview"></div>
+                  <label class="dash-file-btn">
+                    <span>Bild hochladen</span>
+                    <input type="file" id="cs-titelbild-input" accept="image/*" hidden>
+                  </label>
+                  <span class="dash-file-status" id="cs-titelbild-status"></span>
+                </div>
+              </div>
+
               <div class="form-group">
                 <label class="form-label" for="cs-beschreibung">Beschreibung</label>
-                <textarea class="form-input" id="cs-beschreibung" name="beschreibung" rows="3"></textarea>
+                <textarea class="form-input" id="cs-beschreibung" name="beschreibung" rows="4"></textarea>
               </div>
-              <div class="admin-shop-form__row">
-                <div class="form-group">
-                  <label class="form-label" for="cs-adresse">Adresse</label>
-                  <input class="form-input" type="text" id="cs-adresse" name="adresse">
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="cs-oeffnungszeiten">Öffnungszeiten</label>
-                  <input class="form-input" type="text" id="cs-oeffnungszeiten" name="oeffnungszeiten" placeholder="z. B. Mo–Fr 10–18 Uhr">
+
+              <div class="form-group">
+                <label class="form-label">Öffnungszeiten</label>
+                <div class="dash-oz-grid" id="cs-oz-grid">
+                  <div class="dash-oz-row" data-tag="Montag"><span class="dash-oz-row__label">Montag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Dienstag"><span class="dash-oz-row__label">Dienstag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Mittwoch"><span class="dash-oz-row__label">Mittwoch</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Donnerstag"><span class="dash-oz-row__label">Donnerstag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Freitag"><span class="dash-oz-row__label">Freitag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Samstag"><span class="dash-oz-row__label">Samstag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
+                  <div class="dash-oz-row" data-tag="Sonntag"><span class="dash-oz-row__label">Sonntag</span><input class="form-input" type="text" placeholder="z.B. 10:00–18:00 oder Geschlossen"></div>
                 </div>
               </div>
+
+              <div class="form-group">
+                <label class="form-label" for="cs-zahlung">Zahlungsmöglichkeiten</label>
+                <textarea class="form-input" id="cs-zahlung" name="zahlungsmethoden" rows="2" placeholder="z.B. Barzahlung, EC-Karte, Kreditkarte"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="cs-rueckgabe">Rückgabe &amp; Umtausch</label>
+                <textarea class="form-input" id="cs-rueckgabe" name="rueckgaben" rows="2" placeholder="z.B. Umtausch innerhalb von 14 Tagen mit Kassenbon"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">AGB (PDF)</label>
+                <div class="dash-file-upload" id="cs-agb-wrap">
+                  <div class="dash-file-current" id="cs-agb-current" hidden>
+                    <a id="cs-agb-link" href="#" target="_blank" rel="noopener">Aktuelle AGB ansehen</a>
+                    <button type="button" class="dash-file-remove" id="cs-agb-remove">Entfernen</button>
+                  </div>
+                  <label class="dash-file-btn">
+                    <span>PDF hochladen</span>
+                    <input type="file" id="cs-agb-input" accept="application/pdf" hidden>
+                  </label>
+                  <span class="dash-file-status" id="cs-agb-status"></span>
+                </div>
+              </div>
+
+              <div class="dash-toggle-row">
+                <div>
+                  <span class="form-label">Direktnachrichten</span>
+                  <p class="dash-toggle-row__desc">Käufer können dem Shop über die Shop-Seite direkt eine Nachricht schicken.</p>
+                </div>
+                <label class="dash-toggle">
+                  <input type="checkbox" id="cs-messaging" name="messaging_enabled">
+                  <span class="dash-toggle__slider"></span>
+                </label>
+              </div>
+
               <div class="admin-shop-form__actions">
-                <button class="btn btn--primary" type="submit">Anlegen</button>
+                <button class="btn btn--primary" type="submit" id="shop-form-submit">Anlegen</button>
                 <button class="btn btn--outline" type="button" id="cancel-shop-form">Abbrechen</button>
               </div>
               <div id="shop-create-feedback" aria-live="polite"></div>
@@ -271,6 +365,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/admin.js?v=4"></script>
+  <script type="module" src="js/admin.js?v=5"></script>
 </body>
 </html>
