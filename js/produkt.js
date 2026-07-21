@@ -154,6 +154,9 @@ function renderDetail (produkt, varianten = []) {
     ? `<div class="pdp-meta-row"><span class="pdp-meta-label">Kategorie</span><span class="pdp-meta-value">${esc(kategorieName)}</span></div>`
     : ''
 
+  // EAN -- Platzhalter 000000000 bis echte EANs für alle Produkte gepflegt sind
+  const eanHtml = `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value">${esc(produkt.ean || '000000000')}</span></div>`
+
   // Größe
   const groesseHtml = hatVarianten
     ? `<div class="pdp-field">
@@ -211,6 +214,7 @@ function renderDetail (produkt, varianten = []) {
         ${preisHtml}
         <hr class="pdp-divider">
         ${kategorieHtml}
+        ${eanHtml}
         ${groesseHtml}
         <form class="pdp-form" id="reservierung-form" novalidate>
           ${formularHtml}
