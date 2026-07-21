@@ -193,20 +193,28 @@ function initHaendlerForm () {
 
       if (error) throw error
 
-      submitBtn.textContent = 'Weiterleitung zur Zahlung…'
+      // Stripe-Checkout: falls noch nicht konfiguriert (Keys fehlen) oder die
+      // Session-Erstellung fehlschlägt, blockieren wir die Registrierung NICHT --
+      // die Anfrage ist bereits gespeichert, Zahlung kann später nachgeholt werden.
+      try {
+        submitBtn.textContent = 'Weiterleitung zur Zahlung…'
+        const res = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ anfrageId: data.id, email, geschaeftName })
+        })
+        const checkout = await res.json()
 
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ anfrageId: data.id, email, geschaeftName })
-      })
-      const checkout = await res.json()
-
-      if (!res.ok || !checkout.url) {
-        throw new Error(checkout.error || 'Checkout-Session konnte nicht erstellt werden')
+        if (res.ok && checkout.url) {
+          window.location.href = checkout.url
+          return
+        }
+        console.warn('Stripe-Checkout nicht verfügbar, Anfrage trotzdem gespeichert:', checkout.error)
+      } catch (stripeErr) {
+        console.warn('Stripe-Checkout nicht erreichbar, Anfrage trotzdem gespeichert:', stripeErr)
       }
 
-      window.location.href = checkout.url
+      form.innerHTML = '<div class="success-msg">Vielen Dank! Wir melden uns innerhalb von 2 Werktagen bei dir, um auch die Zahlung abzuschließen.</div>'
     } catch (err) {
       console.error('Registrierung fehlgeschlagen:', err)
       feedback.innerHTML = '<div class="error-msg">Die Registrierung konnte nicht gesendet werden. Bitte versuche es später erneut.</div>'

@@ -19,7 +19,7 @@ const VORLAGE_SPALTEN = 15 // leere Produkt-Spalten in der herunterladbaren Vorl
 
 // Reihenfolge der Felder von oben nach unten -- gilt für Vorlage UND Einlesen
 const FELD_REIHENFOLGE = [
-  'Produktname', 'Beschreibung', 'Preis', 'Kategorie', 'Verfügbar',
+  'Produktname', 'EAN', 'Beschreibung', 'Preis', 'Kategorie', 'Verfügbar',
   'Highlight 1', 'Highlight 2', 'Highlight 3', 'Highlight 4', 'Highlight 5',
   ...GROESSEN.map((g) => `Größe ${g} Stück`),
   'Bilder'
@@ -137,11 +137,13 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
   const warnungen = []
 
   const titel = getFeld(feldMap, 'Produktname')
+  const ean = getFeld(feldMap, 'EAN') || null
   const preisRaw = getFeld(feldMap, 'Preis')
   const preis = parseDezimal(preisRaw)
 
   if (!titel) fehler.push('Produktname fehlt')
   if (preis === null || preis < 0) fehler.push('Preis fehlt oder ungültig')
+  if (ean && !/^\d{8,14}$/.test(ean)) warnungen.push(`EAN "${ean}" sieht ungültig aus (8-14 Ziffern erwartet) -- wird trotzdem gespeichert`)
 
   let kategorieId = null
   const kategorieName = getFeld(feldMap, 'Kategorie')
@@ -192,6 +194,7 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
   return {
     produktNr,
     titel,
+    ean,
     preis,
     beschreibung: getFeld(feldMap, 'Beschreibung') || null,
     kategorieId,
@@ -376,13 +379,14 @@ export function initProduktImport ({ getShop, onImportiert }) {
         <div class="dash-table-wrap">
           <table class="dash-table">
             <thead>
-              <tr><th>Produkt</th><th>Name</th><th>Preis</th><th>Kategorie</th><th>Fotos</th><th>Status</th></tr>
+              <tr><th>Produkt</th><th>Name</th><th>EAN</th><th>Preis</th><th>Kategorie</th><th>Fotos</th><th>Status</th></tr>
             </thead>
             <tbody>
               ${verarbeiteteProdukte.map((z) => `
                 <tr${z.ok ? '' : ' class="dash-csv-row--fehler"'}>
                   <td>${z.produktNr}</td>
                   <td class="is-wrap">${esc(z.titel || '—')}</td>
+                  <td>${z.ean ? esc(z.ean) : '—'}</td>
                   <td>${z.preis !== null ? z.preis.toFixed(2) + ' €' : '—'}</td>
                   <td>${z.kategorieName ? esc(z.kategorieName) : '—'}</td>
                   <td>${z.bildEintraege.length}/${z.bildEintraege.length + z.warnungen.filter(w => w.includes('nicht im ZIP') || w.includes('kein ZIP')).length}</td>
@@ -431,6 +435,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
         const { data: neuesProdukt, error: insErr } = await supabase.from('produkte').insert({
           shop_id: shop.id,
           titel: z.titel,
+          ean: z.ean,
           preis: z.preis,
           beschreibung: z.beschreibung,
           kategorie_id: z.kategorieId,
