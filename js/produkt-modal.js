@@ -116,6 +116,12 @@ export function initProduktModal () {
             <span class="pmodal-upload-hint" id="pmodal-details-bild-status"></span>
           </div>
 
+          <!-- Farbe -->
+          <div class="pmodal-field">
+            <label class="pmodal-label" for="pmodal-farbe">Farbe <span class="pmodal-hint-inline">(optional)</span></label>
+            <input class="form-input" id="pmodal-farbe" name="farbe" type="text" autocomplete="off" placeholder="z.B. Oliv, Schwarz/Weiß">
+          </div>
+
           <!-- Kategorie + Geschlecht + Verfügbarkeit -->
           <div class="pmodal-row pmodal-row--3">
             <div class="pmodal-field">
@@ -382,6 +388,7 @@ async function handleSpeichern (e) {
     beschreibung: document.getElementById('pmodal-beschreibung').value.trim() || null,
     kategorie_id: document.getElementById('pmodal-kategorie').value || null,
     geschlecht,
+    farbe: document.getElementById('pmodal-farbe').value.trim() || null,
     verfuegbar: document.getElementById('pmodal-verfuegbar').checked,
     bilder: [...bildUrls],
     highlights: highlights.length ? highlights : null,
@@ -458,6 +465,7 @@ export function oeffneProduktModal ({ produkt = null, onSave, shops = null } = {
   document.getElementById('pmodal-beschreibung').value = produkt?.beschreibung || ''
   document.getElementById('pmodal-kategorie').value = produkt?.kategorie_id || ''
   document.getElementById('pmodal-geschlecht').value = produkt?.geschlecht || ''
+  document.getElementById('pmodal-farbe').value = produkt?.farbe || ''
   document.getElementById('pmodal-verfuegbar').checked = produkt?.verfuegbar !== false
   document.getElementById('pmodal-angebotspreis').value = produkt?.angebotspreis ?? ''
   document.getElementById('pmodal-angebot-von').value = produkt?.angebot_von || ''

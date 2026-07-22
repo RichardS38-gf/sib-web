@@ -14,6 +14,9 @@ Bilder/*
 !Bilder/firmbee-com-SpVHcbuKi6E-unsplash.jpg
 !Bilder/la-spri-JTgMt4dyXm4-unsplash.jpg
 Händler/
+# macOS speichert Umlaute zerlegt (NFD) -- der NFC-Eintrag oben greift dann nicht.
+# Dieses Glob matcht den Ordner unabhaengig von der Unicode-Normalisierung.
+Ha*ndler/
 Infos/
 Vorlagen/
 

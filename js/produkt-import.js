@@ -20,7 +20,7 @@ const VORLAGE_SPALTEN = 15 // leere Produkt-Spalten in der herunterladbaren Vorl
 
 // Reihenfolge der Felder von oben nach unten -- gilt für Vorlage UND Einlesen
 const FELD_REIHENFOLGE = [
-  'Produktname', 'EAN', 'Beschreibung', 'Preis', 'Kategorie', 'Geschlecht', 'Verfügbar',
+  'Produktname', 'EAN', 'Beschreibung', 'Preis', 'Kategorie', 'Geschlecht', 'Farbe', 'Verfügbar',
   'Highlight 1', 'Highlight 2', 'Highlight 3', 'Highlight 4', 'Highlight 5',
   ...GROESSEN.map((g) => `Größe ${g} Stück`),
   'Bilder'
@@ -168,6 +168,9 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
   const verfuegbarRaw = getFeld(feldMap, 'Verfügbar').toLowerCase()
   const verfuegbar = verfuegbarRaw !== 'nein'
 
+  // Farbe: Freitext, optional (z.B. "Oliv" oder "Schwarz/Weiß")
+  const farbe = getFeld(feldMap, 'Farbe') || null
+
   const highlights = []
   for (let i = 1; i <= MAX_HIGHLIGHTS; i++) {
     const val = getFeld(feldMap, `Highlight ${i}`)
@@ -209,6 +212,7 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
     kategorieId,
     kategorieName,
     geschlecht,
+    farbe,
     verfuegbar,
     highlights,
     varianten,
@@ -402,7 +406,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
         <div class="dash-table-wrap">
           <table class="dash-table">
             <thead>
-              <tr><th>Produkt</th><th>Name</th><th>EAN</th><th>Preis</th><th>Kategorie</th><th>Geschlecht</th><th>Fotos</th><th>Status</th></tr>
+              <tr><th>Produkt</th><th>Name</th><th>EAN</th><th>Preis</th><th>Kategorie</th><th>Geschlecht</th><th>Farbe</th><th>Fotos</th><th>Status</th></tr>
             </thead>
             <tbody>
               ${verarbeiteteProdukte.map((z) => `
@@ -413,6 +417,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
                   <td>${z.preis !== null ? z.preis.toFixed(2) + ' €' : '—'}</td>
                   <td>${z.kategorieName ? esc(z.kategorieName) : '—'}</td>
                   <td>${z.geschlecht ? esc(z.geschlecht) : '—'}</td>
+                  <td>${z.farbe ? esc(z.farbe) : '—'}</td>
                   <td>${z.bildEintraege.length}/${z.bildEintraege.length + z.warnungen.filter(w => w.includes('nicht im ZIP') || w.includes('kein ZIP')).length}</td>
                   <td>${z.ok
                     ? `<span class="badge">OK</span>${z.warnungen.length ? `<div class="dash-csv-warnung">${z.warnungen.map(esc).join('<br>')}</div>` : ''}`
@@ -464,6 +469,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
           beschreibung: z.beschreibung,
           kategorie_id: z.kategorieId,
           geschlecht: z.geschlecht,
+          farbe: z.farbe,
           verfuegbar: z.verfuegbar,
           bilder: bildUrls,
           highlights: z.highlights.length ? z.highlights : null,
