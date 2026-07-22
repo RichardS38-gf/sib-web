@@ -395,20 +395,36 @@ async function handleSpeichern (e) {
 
   try {
     if (aktuellesProduktId) {
-      const { error } = await supabase.from('produkte').update(daten).eq('id', aktuellesProduktId)
+      const { data: upd, error } = await supabase
+        .from('produkte')
+        .update(daten)
+        .eq('id', aktuellesProduktId)
+        .select('id')
       if (error) {
         console.error('Supabase Update Fehler:', error)
         throw error
       }
+      if (!upd || upd.length === 0) {
+        throw new Error('Keine Zeile aktualisiert — Produkt nicht gefunden oder keine Berechtigung.')
+      }
+      // Callback VOR dem Schließen sichern -- schliesseProduktModal() setzt ihn auf null
+      const cb = onSaveCallback
       schliesseProduktModal()
-      if (onSaveCallback) onSaveCallback(null)
+      if (cb) cb(null)
     } else {
       await onSaveCallback(daten)
       schliesseProduktModal()
     }
   } catch (err) {
     console.error('Speichern fehlgeschlagen:', err)
-    feedback.innerHTML = `<div class="error-msg">Speichern fehlgeschlagen: ${err?.message || JSON.stringify(err)}</div>`
+    const msg = err?.message || ''
+    const spalteFehlt = err?.code === 'PGRST204' || (/column/i.test(msg) && /geschlecht/i.test(msg))
+    feedback.innerHTML = `<div class="error-msg">${spalteFehlt
+      ? 'Die Datenbank kennt das Feld „Geschlecht" noch nicht — bitte die Migration supabase/migration-geschlecht.sql in Supabase ausführen.'
+      : `Speichern fehlgeschlagen: ${msg || JSON.stringify(err)}`}</div>`
+    feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  } finally {
+    // Button IMMER zurücksetzen -- verhindert dauerhaft hängendes "Wird gespeichert…"
     submitBtn.disabled = false
     submitBtn.textContent = 'Speichern'
   }
