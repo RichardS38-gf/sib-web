@@ -154,6 +154,11 @@ function renderDetail (produkt, varianten = []) {
     ? `<div class="pdp-meta-row"><span class="pdp-meta-label">Kategorie</span><span class="pdp-meta-value">${esc(kategorieName)}</span></div>`
     : ''
 
+  // Geschlecht -- nur anzeigen, wenn gesetzt (Bestandsprodukte ohne Wert weglassen)
+  const geschlechtHtml = produkt.geschlecht
+    ? `<div class="pdp-meta-row"><span class="pdp-meta-label">Geschlecht</span><span class="pdp-meta-value">${esc(produkt.geschlecht)}</span></div>`
+    : ''
+
   // EAN -- Platzhalter 000000000 bis echte EANs für alle Produkte gepflegt sind
   const eanHtml = `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value">${esc(produkt.ean || '000000000')}</span></div>`
 
@@ -214,6 +219,7 @@ function renderDetail (produkt, varianten = []) {
         ${preisHtml}
         <hr class="pdp-divider">
         ${kategorieHtml}
+        ${geschlechtHtml}
         ${eanHtml}
         ${groesseHtml}
         <form class="pdp-form" id="reservierung-form" novalidate>

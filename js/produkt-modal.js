@@ -116,12 +116,21 @@ export function initProduktModal () {
             <span class="pmodal-upload-hint" id="pmodal-details-bild-status"></span>
           </div>
 
-          <!-- Kategorie + Verfügbarkeit -->
-          <div class="pmodal-row">
+          <!-- Kategorie + Geschlecht + Verfügbarkeit -->
+          <div class="pmodal-row pmodal-row--3">
             <div class="pmodal-field">
               <label class="pmodal-label" for="pmodal-kategorie">Kategorie</label>
               <select class="form-select" id="pmodal-kategorie" name="kategorie_id">
                 <option value="">Keine Kategorie</option>
+              </select>
+            </div>
+            <div class="pmodal-field">
+              <label class="pmodal-label" for="pmodal-geschlecht">Geschlecht *</label>
+              <select class="form-select" id="pmodal-geschlecht" name="geschlecht" required>
+                <option value="">— Bitte wählen —</option>
+                <option value="Herren">Herren</option>
+                <option value="Damen">Damen</option>
+                <option value="Unisex">Unisex</option>
               </select>
             </div>
             <div class="pmodal-field">
@@ -338,6 +347,12 @@ async function handleSpeichern (e) {
     return
   }
 
+  const geschlecht = document.getElementById('pmodal-geschlecht').value
+  if (!geschlecht) {
+    feedback.innerHTML = '<div class="error-msg">Bitte ein Geschlecht auswählen (Herren, Damen oder Unisex).</div>'
+    return
+  }
+
   const shopGroup = document.getElementById('pmodal-shop-group')
   let gewaehlteShopId = null
   if (shopGroup && !shopGroup.hidden) {
@@ -366,6 +381,7 @@ async function handleSpeichern (e) {
     preis: parseFloat(preisRaw),
     beschreibung: document.getElementById('pmodal-beschreibung').value.trim() || null,
     kategorie_id: document.getElementById('pmodal-kategorie').value || null,
+    geschlecht,
     verfuegbar: document.getElementById('pmodal-verfuegbar').checked,
     bilder: [...bildUrls],
     highlights: highlights.length ? highlights : null,
@@ -425,6 +441,7 @@ export function oeffneProduktModal ({ produkt = null, onSave, shops = null } = {
   document.getElementById('pmodal-preis').value = produkt?.preis ?? ''
   document.getElementById('pmodal-beschreibung').value = produkt?.beschreibung || ''
   document.getElementById('pmodal-kategorie').value = produkt?.kategorie_id || ''
+  document.getElementById('pmodal-geschlecht').value = produkt?.geschlecht || ''
   document.getElementById('pmodal-verfuegbar').checked = produkt?.verfuegbar !== false
   document.getElementById('pmodal-angebotspreis').value = produkt?.angebotspreis ?? ''
   document.getElementById('pmodal-angebot-von').value = produkt?.angebot_von || ''
