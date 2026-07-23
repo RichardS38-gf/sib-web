@@ -62,6 +62,65 @@
 /* Sidebar-Blöcke (Kategorien + Filter) */
 .kat-side-block { margin-bottom: var(--space-4); }
 
+.kat-geschlecht-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* ── Mode & Accessoires: aufklappbare Unterkategorien ── */
+.kategorie-sidebar__item { display: flex; flex-direction: column; }
+
+.kategorie-sidebar__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.kategorie-sidebar__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  color: var(--color-muted);
+  cursor: pointer;
+}
+
+.kategorie-sidebar__toggle svg {
+  width: 13px;
+  height: 13px;
+  transition: transform 0.15s ease;
+}
+
+.kategorie-sidebar__toggle.is-open svg { transform: rotate(90deg); }
+
+.kategorie-sidebar__sub {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0.35rem 0 0.2rem 0.9rem;
+}
+
+.kategorie-sidebar__sub[hidden] { display: none; }
+
+.kategorie-sidebar__sub-link {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  padding: 0.15rem 0;
+}
+
+.kategorie-sidebar__sub-link:hover { opacity: 0.7; }
+
+.kategorie-sidebar__sub-link.is-active {
+  color: var(--color-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* ── Filter-Steuerung ── */
 .kat-preis {
   display: flex;

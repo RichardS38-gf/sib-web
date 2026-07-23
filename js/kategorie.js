@@ -4,6 +4,7 @@
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
 import { renderProductCard, fetchProductRatings, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js'
+import { UNTERKATEGORIEN, MODE_KATEGORIE_NAME, unterkategorieLabel } from './groessen-config.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -55,7 +56,9 @@ const state = {
   nurVerfuegbar: true,
   nurSale: false,
   haendler: '',
-  sort: 'neu'
+  sort: 'neu',
+  geschlechter: new Set(),
+  unterkategorie: ''
 }
 
 // Sidebar
@@ -64,14 +67,46 @@ function renderSidebar (kategorien, slug) {
   const isNeu = slug === 'neu'
   const links = [
     `<a class="kategorie-sidebar__link${!slug ? ' is-active' : ''}" href="kategorie.html">Alle Produkte</a>`,
-    `<a class="kategorie-sidebar__link${isNeu ? ' is-active' : ''}" href="kategorie.html?slug=neu">Neu</a>`,
-    ...kategorien.map((k) => {
-      const ks = encodeURIComponent(k.slug || k.id)
-      const aktiv = slug && !isNeu && k.slug === slug
-      return `<a class="kategorie-sidebar__link${aktiv ? ' is-active' : ''}" href="kategorie.html?slug=${ks}">${esc(k.name)}</a>`
-    })
+    `<a class="kategorie-sidebar__link${isNeu ? ' is-active' : ''}" href="kategorie.html?slug=neu">Neu</a>`
   ]
+
+  kategorien.forEach((k) => {
+    const ks = encodeURIComponent(k.slug || k.id)
+    const aktiv = !!(slug && !isNeu && k.slug === slug)
+
+    if (k.name !== MODE_KATEGORIE_NAME) {
+      links.push(`<a class="kategorie-sidebar__link${aktiv ? ' is-active' : ''}" href="kategorie.html?slug=${ks}">${esc(k.name)}</a>`)
+      return
+    }
+
+    // Mode & Accessoires: Link + aufklappbare Unterkategorien
+    const aufgeklappt = aktiv || !!state.unterkategorie
+    links.push(`
+      <div class="kategorie-sidebar__item">
+        <div class="kategorie-sidebar__row">
+          <a class="kategorie-sidebar__link${aktiv ? ' is-active' : ''}" href="kategorie.html?slug=${ks}">${esc(k.name)}</a>
+          <button type="button" class="kategorie-sidebar__toggle${aufgeklappt ? ' is-open' : ''}" data-toggle-mode aria-label="Unterkategorien anzeigen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+        <div class="kategorie-sidebar__sub" data-mode-sub ${aufgeklappt ? '' : 'hidden'}>
+          ${UNTERKATEGORIEN.map((u) => {
+            const uAktiv = aktiv && state.unterkategorie === u.value
+            return `<a class="kategorie-sidebar__sub-link${uAktiv ? ' is-active' : ''}" href="kategorie.html?slug=${ks}&unterkat=${u.value}">${esc(u.label)}</a>`
+          }).join('')}
+        </div>
+      </div>`)
+  })
+
   nav.innerHTML = links.join('')
+
+  nav.querySelector('[data-toggle-mode]')?.addEventListener('click', (e) => {
+    const btn = e.currentTarget
+    const sub = btn.closest('.kategorie-sidebar__item').querySelector('[data-mode-sub]')
+    const schliessen = !sub.hidden
+    sub.hidden = schliessen
+    btn.classList.toggle('is-open', !schliessen)
+  })
 }
 
 // Filtern + Sortieren
@@ -82,6 +117,8 @@ function gefilterteListe () {
   if (state.nurVerfuegbar) list = list.filter((p) => p.verfuegbar !== false)
   if (state.nurSale) list = list.filter((p) => p.angebot_preis != null && Number(p.angebot_preis) > 0)
   if (state.haendler) list = list.filter((p) => p.shop_id === state.haendler)
+  if (state.geschlechter.size) list = list.filter((p) => state.geschlechter.has(p.geschlecht))
+  if (state.unterkategorie) list = list.filter((p) => p.unterkategorie === state.unterkategorie)
   if (state.min !== null) list = list.filter((p) => preisOf(p) >= state.min)
   if (state.max !== null) list = list.filter((p) => preisOf(p) <= state.max)
 
@@ -118,6 +155,8 @@ function renderTags () {
   if (state.haendler) tags.push({ key: 'haendler', label: haendlerById[state.haendler] || 'Händler' })
   if (!state.nurVerfuegbar) tags.push({ key: 'verfuegbar', label: 'inkl. nicht verfügbare' })
   if (state.nurSale) tags.push({ key: 'sale', label: 'Sale' })
+  state.geschlechter.forEach((g) => tags.push({ key: `geschlecht:${g}`, label: g }))
+  if (state.unterkategorie) tags.push({ key: 'unterkat', label: unterkategorieLabel(state.unterkategorie) })
 
   el.innerHTML = tags.map((t) =>
     `<button class="kat-tag" type="button" data-remove="${t.key}">${esc(t.label)} <span aria-hidden="true">×</span></button>`
@@ -134,6 +173,12 @@ function entferneFilter (key) {
   else if (key === 'haendler') { state.haendler = ''; document.getElementById('filter-haendler').value = '' }
   else if (key === 'verfuegbar') { state.nurVerfuegbar = true; document.getElementById('filter-verfuegbar').checked = true }
   else if (key === 'sale') { state.nurSale = false; document.getElementById('filter-sale').checked = false }
+  else if (key === 'unterkat') { state.unterkategorie = '' }
+  else if (key.startsWith('geschlecht:')) {
+    const g = key.slice('geschlecht:'.length)
+    state.geschlechter.delete(g)
+    document.querySelectorAll('.filter-geschlecht').forEach((cb) => { if (cb.value === g) cb.checked = false })
+  }
   anwenden()
 }
 
@@ -146,6 +191,8 @@ function updateURL () {
   if (state.nurSale) params.set('sale', '1')
   if (state.haendler) params.set('shop', state.haendler)
   if (state.sort !== 'neu') params.set('sort', state.sort)
+  if (state.geschlechter.size) params.set('geschlecht', [...state.geschlechter].join(','))
+  if (state.unterkategorie) params.set('unterkat', state.unterkategorie)
   const qs = params.toString()
   window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
 }
@@ -201,8 +248,10 @@ function initFilterControls () {
   document.getElementById('filter-reset').addEventListener('click', () => {
     state.min = null; state.max = null; state.nurVerfuegbar = true
     state.nurSale = false; state.haendler = ''; state.sort = 'neu'
+    state.geschlechter = new Set(); state.unterkategorie = ''
     min.value = ''; max.value = ''; verf.checked = true
     sale.checked = false; haendler.value = ''; sort.value = 'neu'
+    document.querySelectorAll('.filter-geschlecht').forEach((cb) => { cb.checked = false })
     anwenden()
   })
 
@@ -210,6 +259,14 @@ function initFilterControls () {
   sale.addEventListener('change', () => { state.nurSale = sale.checked; anwenden() })
   haendler.addEventListener('change', () => { state.haendler = haendler.value; anwenden() })
   sort.addEventListener('change', () => { state.sort = sort.value; anwenden() })
+
+  document.querySelectorAll('.filter-geschlecht').forEach((cb) => {
+    cb.addEventListener('change', () => {
+      if (cb.checked) state.geschlechter.add(cb.value)
+      else state.geschlechter.delete(cb.value)
+      anwenden()
+    })
+  })
 
   const toggle = document.getElementById('filter-toggle')
   const sidebar = document.getElementById('kategorie-sidebar')
@@ -225,6 +282,9 @@ function syncControlsFromState () {
   document.getElementById('filter-verfuegbar').checked = state.nurVerfuegbar
   document.getElementById('filter-sale').checked = state.nurSale
   document.getElementById('filter-sort').value = state.sort
+  document.querySelectorAll('.filter-geschlecht').forEach((cb) => {
+    cb.checked = state.geschlechter.has(cb.value)
+  })
 }
 
 function leseStateAusURL (params) {
@@ -237,6 +297,9 @@ function leseStateAusURL (params) {
   state.haendler = params.get('shop') || ''
   const sort = params.get('sort')
   state.sort = ['preis-asc', 'preis-desc'].includes(sort) ? sort : 'neu'
+  const geschlechtRaw = params.get('geschlecht')
+  state.geschlechter = new Set(geschlechtRaw ? geschlechtRaw.split(',').filter(Boolean) : [])
+  state.unterkategorie = params.get('unterkat') || ''
 }
 
 // Init
