@@ -650,9 +650,8 @@ async function handleSpeichern (e) {
     highlights: highlights.length ? highlights : null,
     angebotspreis: angebotpreisRaw ? parseFloat(angebotpreisRaw) : null,
     angebot_von: angebotVon,
-    angebot_bis: angebotBis
-    // details_bild_url wird separat gespeichert -- Spalte muss in Supabase existieren
-    // details_bild_url: document.getElementById('pmodal-details-bild-preview')?.dataset.url || null
+    angebot_bis: angebotBis,
+    details_bild_url: document.getElementById('pmodal-details-bild-preview')?.dataset.url || null
   }
   if (gewaehlteShopId) daten.shop_id = gewaehlteShopId
 
@@ -685,9 +684,10 @@ async function handleSpeichern (e) {
   } catch (err) {
     console.error('Speichern fehlgeschlagen:', err)
     const msg = err?.message || ''
-    const spalteFehlt = err?.code === 'PGRST204' || (/column/i.test(msg) && /geschlecht/i.test(msg))
+    const fehlendeSpalte = (msg.match(/column ["']?produkte\.?([a-z_]+)["']? does not exist/i) || [])[1]
+    const spalteFehlt = err?.code === 'PGRST204' || /column/i.test(msg)
     feedback.innerHTML = `<div class="error-msg">${spalteFehlt
-      ? 'Die Datenbank kennt das Feld „Geschlecht" noch nicht — bitte die Migration supabase/migration-geschlecht.sql in Supabase ausführen.'
+      ? `Die Datenbank kennt ein Feld noch nicht${fehlendeSpalte ? ` („${fehlendeSpalte}“)` : ''} — bitte die passende Migration in supabase/ im SQL Editor ausführen (z.B. migration-geschlecht.sql oder migration-details-bild.sql).`
       : `Speichern fehlgeschlagen: ${msg || JSON.stringify(err)}`}</div>`
     feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   } finally {
