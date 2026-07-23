@@ -93,12 +93,6 @@ export function initProduktModal () {
             </select>
           </div>
 
-          <!-- EAN -->
-          <div class="pmodal-field">
-            <label class="pmodal-label" for="pmodal-ean">EAN <span class="pmodal-hint-inline">(optional)</span></label>
-            <input class="form-input" id="pmodal-ean" name="ean" type="text" inputmode="numeric" autocomplete="off" placeholder="z.B. 4006381333931">
-          </div>
-
           <!-- Angebotspreis + Zeitraum -->
           <div class="pmodal-section pmodal-angebot-section">
             <p class="pmodal-label pmodal-label--muted">Angebot (optional)</p>
@@ -155,7 +149,7 @@ export function initProduktModal () {
               <span>Dieses Produkt hat mehrere Farbvarianten (mit eigenem Foto und eigenen Größen je Farbe)</span>
             </label>
             <div id="pmodal-farben-wrap" hidden>
-              <div class="pmodal-farbe-header"><span>Farbe</span><span>Foto</span><span></span></div>
+              <div class="pmodal-farbe-header"><span>Farbe</span><span>Foto</span><span>EAN</span><span></span></div>
               <div class="pmodal-farben" id="pmodal-farben-list"></div>
               <button type="button" class="pmodal-add-btn" id="pmodal-add-farbe">+ Farbvariante hinzufügen</button>
               <p class="pmodal-hint">Die Fotos oben werden in der Galerie zuerst gezeigt, die Farb-Fotos danach. Wählt jemand auf der Produktseite eine Farbe, springt die Galerie automatisch zum passenden Foto. Größen &amp; Stück werden pro Farbe einzeln gepflegt.</p>
@@ -166,6 +160,12 @@ export function initProduktModal () {
           <div class="pmodal-field">
             <label class="pmodal-label" for="pmodal-farbe">Farbe <span class="pmodal-hint-inline">(optional, Freitext — nur ohne Farbvarianten)</span></label>
             <input class="form-input" id="pmodal-farbe" name="farbe" type="text" autocomplete="off" placeholder="z.B. Oliv, Schwarz/Weiß">
+          </div>
+
+          <!-- EAN -->
+          <div class="pmodal-field">
+            <label class="pmodal-label" for="pmodal-ean">EAN <span class="pmodal-hint-inline">(optional — nur ohne Farbvarianten, sonst je Farbe oben)</span></label>
+            <input class="form-input" id="pmodal-ean" name="ean" type="text" inputmode="numeric" autocomplete="off" placeholder="z.B. 4006381333931">
           </div>
 
           <!-- Größen & Stück (Standalone -- nur ohne Farbvarianten, sonst pro Farbe oben) -->
@@ -219,7 +219,7 @@ export function initProduktModal () {
     inputs[inputs.length - 1]?.focus()
   })
   document.getElementById('pmodal-add-farbe').addEventListener('click', () => {
-    aktuelleFarben.push({ farbe: '', bild_url: null, groessen: [] })
+    aktuelleFarben.push({ farbe: '', bild_url: null, ean: '', groessen: [] })
     renderFarben()
     const inputs = document.querySelectorAll('.pmodal-farbe-name')
     inputs[inputs.length - 1]?.focus()
@@ -230,10 +230,13 @@ export function initProduktModal () {
     document.getElementById('pmodal-groessen-standalone-wrap').hidden = checked
     const farbeInput = document.getElementById('pmodal-farbe')
     farbeInput.disabled = checked
+    const eanInput = document.getElementById('pmodal-ean')
+    eanInput.disabled = checked
     if (checked) {
       farbeInput.value = ''
+      eanInput.value = ''
       if (aktuelleFarben.length === 0) {
-        aktuelleFarben.push({ farbe: '', bild_url: null, groessen: [] })
+        aktuelleFarben.push({ farbe: '', bild_url: null, ean: '', groessen: [] })
       }
       renderFarben()
     }
@@ -371,6 +374,7 @@ function renderFarben () {
             <input type="file" accept="image/*" class="pmodal-farbe-file" data-fidx="${i}" style="display:none">
           </label>
         </div>
+        <input class="form-input pmodal-farbe-ean" type="text" inputmode="numeric" value="${escAttr(f.ean || '')}" data-fidx="${i}" placeholder="EAN">
         <button type="button" class="pmodal-farbe-del" data-fidx="${i}" title="Entfernen">&#x2715;</button>
       </div>
       <div class="pmodal-farbe-groessen">
@@ -381,6 +385,9 @@ function renderFarben () {
 
   container.querySelectorAll('.pmodal-farbe-name').forEach((inp) => {
     inp.addEventListener('input', () => { aktuelleFarben[parseInt(inp.dataset.fidx)].farbe = inp.value })
+  })
+  container.querySelectorAll('.pmodal-farbe-ean').forEach((inp) => {
+    inp.addEventListener('input', () => { aktuelleFarben[parseInt(inp.dataset.fidx)].ean = inp.value })
   })
   container.querySelectorAll('.pmodal-farbe-del').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -434,7 +441,7 @@ async function speichereGroessenUndFarben (produktId) {
       if (!farbe) return
       const groessen = (f.groessen || []).filter((g) => g && g.groesse)
       const gesamtStk = groessen.reduce((summe, g) => summe + (Number(g.stueckzahl) || 0), 0)
-      farbenNeu.push({ produkt_id: produktId, farbe, bild_url: f.bild_url || null, stueckzahl: gesamtStk })
+      farbenNeu.push({ produkt_id: produktId, farbe, bild_url: f.bild_url || null, ean: (f.ean || '').trim() || null, stueckzahl: gesamtStk })
       groessen.forEach((g) => {
         variantenNeu.push({ produkt_id: produktId, groesse: g.groesse, farbe, stueckzahl: Number(g.stueckzahl) || 0 })
       })
@@ -631,7 +638,7 @@ async function handleSpeichern (e) {
 
   const daten = {
     titel,
-    ean: document.getElementById('pmodal-ean').value.trim() || null,
+    ean: hatFarbvariantenChecked ? null : (document.getElementById('pmodal-ean').value.trim() || null),
     preis: parseFloat(preisRaw),
     beschreibung: document.getElementById('pmodal-beschreibung').value.trim() || null,
     kategorie_id: kategorieId,
@@ -736,7 +743,6 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
 
   document.getElementById('pmodal-title').textContent = produkt ? 'Produkt bearbeiten' : 'Produkt anlegen'
   document.getElementById('pmodal-titel').value = produkt?.titel || ''
-  document.getElementById('pmodal-ean').value = produkt?.ean || ''
   document.getElementById('pmodal-preis').value = produkt?.preis ?? ''
   document.getElementById('pmodal-beschreibung').value = produkt?.beschreibung || ''
   document.getElementById('pmodal-kategorie').value = produkt?.kategorie_id || ''
@@ -750,6 +756,9 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
   const farbeInput = document.getElementById('pmodal-farbe')
   farbeInput.disabled = hatFarbvariantenInit
   farbeInput.value = hatFarbvariantenInit ? '' : (produkt?.farbe || '')
+  const eanInput = document.getElementById('pmodal-ean')
+  eanInput.disabled = hatFarbvariantenInit
+  eanInput.value = hatFarbvariantenInit ? '' : (produkt?.ean || '')
   document.getElementById('pmodal-verfuegbar').checked = produkt?.verfuegbar !== false
   document.getElementById('pmodal-angebotspreis').value = produkt?.angebotspreis ?? ''
   document.getElementById('pmodal-angebot-von').value = produkt?.angebot_von || ''

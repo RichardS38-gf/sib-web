@@ -4,9 +4,9 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=11'
+import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=12'
 import { naechsteAusgabe, monatDatum, monatName, ausgabeNummer } from './newsletter-zeitraum.js'
-import { initProduktImport } from './produkt-import.js?v=10'
+import { initProduktImport } from './produkt-import.js?v=11'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 

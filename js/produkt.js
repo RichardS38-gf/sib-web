@@ -204,14 +204,18 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
           <option value="">Bitte wählen…</option>
           ${farben.map((f) => {
             const ausverkauft = !(f.stueckzahl > 0)
-            return `<option value="${esc(f.farbe)}" data-bild-url="${esc(f.bild_url || '')}"${ausverkauft ? ' disabled' : ''}>${esc(f.farbe)}${ausverkauft ? ' (Nicht verfügbar)' : ''}</option>`
+            return `<option value="${esc(f.farbe)}" data-bild-url="${esc(f.bild_url || '')}" data-ean="${esc(f.ean || '')}"${ausverkauft ? ' disabled' : ''}>${esc(f.farbe)}${ausverkauft ? ' (Nicht verfügbar)' : ''}</option>`
           }).join('')}
         </select>
       </div>`
     : ''
 
-  // EAN -- Platzhalter 000000000 bis echte EANs für alle Produkte gepflegt sind
-  const eanHtml = `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value">${esc(produkt.ean || '000000000')}</span></div>`
+  // EAN -- Platzhalter 000000000 bis echte EANs für alle Produkte gepflegt sind.
+  // Bei Farbvarianten hat jede Farbe ihre eigene EAN -- Wert wird erst nach
+  // Farbwahl per JS eingesetzt (siehe initFarben/aktualisiereGroesseFuerFarbe).
+  const eanHtml = hatFarbvarianten
+    ? `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value" id="ean-value">—</span></div>`
+    : `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value">${esc(produkt.ean || '000000000')}</span></div>`
 
   // Größe -- drei Fälle: (1) Farbvarianten MIT eigenen Größen -> Dropdown
   // wird erst nach Farbwahl befuellt, (2) Standalone-Größen ohne Farbbezug ->
@@ -330,6 +334,8 @@ function initFarben () {
       const idx = aktuelleBilder.indexOf(bildUrl)
       if (idx !== -1) zeigeBild(idx)
     }
+    const eanEl = document.getElementById('ean-value')
+    if (eanEl) eanEl.textContent = (opt?.dataset.ean) || '000000000'
     if (hatFarbGroessen) aktualisiereGroesseFuerFarbe()
   })
 }

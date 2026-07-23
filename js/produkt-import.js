@@ -4,10 +4,11 @@
 // Spalte A = Feldname (Produktname, Beschreibung, Preis, ...) von oben nach
 // unten, jede weitere Spalte (B, C, D, ...) ist EIN Produkt.
 //
-// Bewusst schlank gehalten: nur die Basisdaten (Name, EAN, Beschreibung,
-// Preis, Highlights) kommen aus der CSV. Kategorie, Geschlecht, Farbe,
-// Fotos, Größen und Farbvarianten sind zu variantenreich für ein starres
-// Tabellenformat und werden nach dem Import direkt am Produkt über
+// Bewusst schlank gehalten: nur die Basisdaten (Name, Beschreibung, Preis,
+// Highlights) kommen aus der CSV. EAN kommt raus, weil Produkte mit
+// Farbvarianten pro Farbe eine eigene EAN haben -- das passt nicht in ein
+// starres Tabellenformat. Kategorie, Geschlecht, Farbe, EAN, Fotos, Größen
+// und Farbvarianten werden nach dem Import direkt am Produkt über
 // "Bearbeiten" gepflegt.
 //
 // Ablauf: Händler lädt eine CSV hoch → Klick auf "Datei prüfen" parst alles
@@ -22,7 +23,7 @@ const VORLAGE_SPALTEN = 15 // leere Produkt-Spalten in der herunterladbaren Vorl
 
 // Reihenfolge der Felder von oben nach unten -- gilt für Vorlage UND Einlesen
 const FELD_REIHENFOLGE = [
-  'Produktname', 'EAN', 'Beschreibung', 'Preis',
+  'Produktname', 'Beschreibung', 'Preis',
   'Highlight 1', 'Highlight 2', 'Highlight 3', 'Highlight 4', 'Highlight 5'
 ]
 
@@ -119,13 +120,11 @@ function verarbeiteProdukt (feldMap, produktNr) {
   const warnungen = []
 
   const titel = getFeld(feldMap, 'Produktname')
-  const ean = getFeld(feldMap, 'EAN') || null
   const preisRaw = getFeld(feldMap, 'Preis')
   const preis = parseDezimal(preisRaw)
 
   if (!titel) fehler.push('Produktname fehlt')
   if (preis === null || preis < 0) fehler.push('Preis fehlt oder ungültig')
-  if (ean && !/^\d{8,14}$/.test(ean)) warnungen.push(`EAN "${ean}" sieht ungültig aus (8-14 Ziffern erwartet) -- wird trotzdem gespeichert`)
 
   const highlights = []
   for (let i = 1; i <= MAX_HIGHLIGHTS; i++) {
@@ -136,7 +135,6 @@ function verarbeiteProdukt (feldMap, produktNr) {
   return {
     produktNr,
     titel,
-    ean,
     preis,
     beschreibung: getFeld(feldMap, 'Beschreibung') || null,
     highlights,
@@ -260,14 +258,13 @@ export function initProduktImport ({ getShop, onImportiert }) {
         <div class="dash-table-wrap">
           <table class="dash-table">
             <thead>
-              <tr><th>Produkt</th><th>Name</th><th>EAN</th><th>Preis</th><th>Highlights</th><th>Status</th></tr>
+              <tr><th>Produkt</th><th>Name</th><th>Preis</th><th>Highlights</th><th>Status</th></tr>
             </thead>
             <tbody>
               ${verarbeiteteProdukte.map((z) => `
                 <tr${z.ok ? '' : ' class="dash-csv-row--fehler"'}>
                   <td>${z.produktNr}</td>
                   <td class="is-wrap">${esc(z.titel || '—')}</td>
-                  <td>${z.ean ? esc(z.ean) : '—'}</td>
                   <td>${z.preis !== null ? z.preis.toFixed(2) + ' €' : '—'}</td>
                   <td>${z.highlights.length || '—'}</td>
                   <td>${z.ok
@@ -281,7 +278,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
 
       statusEl.innerHTML = `${okAnzahl} von ${verarbeiteteProdukte.length} Produkten bereit zum Import` +
         (fehlerAnzahl ? `, <span class="error-msg">${fehlerAnzahl} mit Fehlern (werden übersprungen)</span>` : '.') +
-        ' Kategorie, Fotos, Größen und Farbvarianten pflegst du danach direkt am Produkt über „Bearbeiten".'
+        ' Kategorie, EAN, Fotos, Größen und Farbvarianten pflegst du danach direkt am Produkt über „Bearbeiten".'
 
       bestaetigenBtn.hidden = okAnzahl === 0
       bestaetigenBtn.textContent = `${okAnzahl} Produkt${okAnzahl === 1 ? '' : 'e'} importieren`
@@ -307,7 +304,6 @@ export function initProduktImport ({ getShop, onImportiert }) {
         const { error: insErr } = await supabase.from('produkte').insert({
           shop_id: shop.id,
           titel: z.titel,
-          ean: z.ean,
           preis: z.preis,
           beschreibung: z.beschreibung,
           verfuegbar: true,
@@ -321,7 +317,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
       }
     }
 
-    statusEl.innerHTML = `<span class="success-msg">${importiert} von ${gueltigeProdukte.length} Produkten importiert.</span> Bitte Kategorie, Fotos, Größen und ggf. Farbvarianten jetzt über „Bearbeiten" ergänzen -- neue Produkte sind wie gewohnt erst nach Freigabe sichtbar.`
+    statusEl.innerHTML = `<span class="success-msg">${importiert} von ${gueltigeProdukte.length} Produkten importiert.</span> Bitte Kategorie, EAN, Fotos, Größen und ggf. Farbvarianten jetzt über „Bearbeiten" ergänzen -- neue Produkte sind wie gewohnt erst nach Freigabe sichtbar.`
     bestaetigenBtn.hidden = true
     bestaetigenBtn.disabled = false
     csvInput.value = ''
