@@ -160,6 +160,7 @@ export function initProduktModal () {
               <span>Dieses Produkt hat mehrere Farbvarianten (mit eigenem Foto je Farbe)</span>
             </label>
             <div id="pmodal-farben-wrap" hidden>
+              <div class="pmodal-farbe-header"><span>Farbe</span><span>Foto</span><span>Stück</span><span></span></div>
               <div class="pmodal-farben" id="pmodal-farben-list"></div>
               <button type="button" class="pmodal-add-btn" id="pmodal-add-farbe">+ Farbvariante hinzufügen</button>
               <p class="pmodal-hint">Die Fotos oben werden in der Galerie zuerst gezeigt, die Farb-Fotos danach. Wählt jemand auf der Produktseite eine Farbe, springt die Galerie automatisch zum passenden Foto.</p>
