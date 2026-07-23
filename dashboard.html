@@ -108,15 +108,11 @@
             <!-- CSV-Massenimport -->
             <div class="dash-csv-import" id="csv-import-panel" hidden>
               <h3>Produkte per Excel/CSV importieren</h3>
-              <p class="dash-newsletter__hint">Lade die Vorlage herunter, trage in Spalte B dein erstes Produkt ein, in Spalte C das zweite usw. — die Feldnamen stehen bereits links (Produktname, Beschreibung, Preis, …). Bei „Kategorie“ und „Verfügbar“ gibt's in der Excel-Vorlage ein Dropdown, damit keine Tippfehler passieren können. Optional dazu ein ZIP mit den Fotos hochladen (Dateinamen müssen mit der Zeile „Bilder“ übereinstimmen). <button type="button" class="dash-link-btn" id="csv-vorlage-download">Vorlage herunterladen (Excel)</button></p>
+              <p class="dash-newsletter__hint">Lade die Vorlage herunter und trage in Spalte B dein erstes Produkt ein, in Spalte C das zweite usw. — die Feldnamen stehen bereits links (Produktname, EAN, Beschreibung, Preis, Highlight 1–5). Kategorie, Fotos, Größen und Farbvarianten pflegst du danach direkt am Produkt über „Bearbeiten“. <button type="button" class="dash-link-btn" id="csv-vorlage-download">Vorlage herunterladen (Excel)</button></p>
 
               <div class="dash-csv-import__row">
                 <label class="form-label" for="csv-import-file">Ausgefüllte Datei (Excel oder CSV)</label>
                 <input type="file" id="csv-import-file" accept=".xlsx,.csv,text/csv">
-              </div>
-              <div class="dash-csv-import__row">
-                <label class="form-label" for="csv-import-zip">Fotos (ZIP, optional)</label>
-                <input type="file" id="csv-import-zip" accept=".zip">
               </div>
 
               <div class="dash-csv-import__actions">
@@ -375,6 +371,6 @@
     </div>
   </footer>
 
-  <script type="module" src="js/dashboard.js?v=26"></script>
+  <script type="module" src="js/dashboard.js?v=27"></script>
 </body>
 </html>
