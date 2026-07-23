@@ -18,6 +18,8 @@ let hatFarbvarianten = false
 let farbGroessenMap = {} // farbe -> [{groesse, stueckzahl}], nur bei Farbvarianten MIT eigenen Größen
 let hatFarbGroessen = false
 let aktuelleBilder = []
+let aktuellerBildTitel = ''
+let aktuellesHeroBild = null // welche URL gerade als Hauptbild gezeigt wird
 
 // Feste Größen-Reihenfolge für das Dropdown
 const GROESSEN_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Einheitsgröße']
@@ -111,15 +113,44 @@ function bilderOf (produkt) {
   return Array.isArray(produkt.bilder) ? produkt.bilder.filter(Boolean) : []
 }
 
-// Wechselt das Hauptbild auf den übergebenen Bild-Index (0 = erstes Bild)
-// und markiert das passende Thumbnail als aktiv.
-function zeigeBild (index) {
-  if (index === null || index === undefined || !aktuelleBilder[index]) return
-  const main = document.getElementById('gallery-main')
-  if (main && main.tagName === 'IMG') main.src = aktuelleBilder[index]
-  document.querySelectorAll('.pdp-gallery__grid-img[data-index]').forEach((t) => {
-    t.classList.toggle('is-active', Number(t.dataset.index) === index)
-  })
+// Baut Hauptbild + Miniaturen-Grid aus aktuelleBilder + aktuellesHeroBild.
+// Das zuerst hochgeladene Foto (aktuelleBilder[0]) rutscht ans Ende der
+// Miniaturen, sobald es nicht mehr das Hauptbild ist -- es verschwindet nie,
+// sondern wechselt nur den Platz.
+function baueGalerieHtml () {
+  const bilder = aktuelleBilder
+  if (!bilder.length) {
+    return { mainHtml: '<div class="pdp-gallery__main" id="gallery-main"></div>', thumbsHtml: '' }
+  }
+  const hero = (aktuellesHeroBild && bilder.includes(aktuellesHeroBild)) ? aktuellesHeroBild : bilder[0]
+  let rest = bilder.filter((b) => b !== hero)
+  if (bilder[0] !== hero && rest.includes(bilder[0])) {
+    rest = rest.filter((b) => b !== bilder[0]).concat([bilder[0]])
+  }
+  const mainHtml = `<img class="pdp-gallery__main" id="gallery-main" src="${esc(hero)}" alt="${esc(aktuellerBildTitel)}">`
+  const thumbsHtml = rest.length
+    ? `<div class="pdp-gallery__grid">${rest.map((b, i) =>
+        `<img class="pdp-gallery__grid-img" data-url="${esc(b)}" src="${esc(b)}" alt="${esc(aktuellerBildTitel)} ${i + 2}" loading="lazy">`
+      ).join('')}</div>`
+    : ''
+  return { mainHtml, thumbsHtml }
+}
+
+// Wechselt das Hauptbild auf die übergebene URL -- baut Hauptbild + Grid neu
+// auf, damit das bisherige Hauptbild als Miniatur erhalten bleibt statt zu
+// verschwinden.
+function aktualisiereGalerie (url) {
+  if (!url || !aktuelleBilder.includes(url) || url === aktuellesHeroBild) return
+  aktuellesHeroBild = url
+  const { mainHtml, thumbsHtml } = baueGalerieHtml()
+  const gallery = document.querySelector('.pdp-gallery')
+  if (!gallery) return
+  const alterMain = document.getElementById('gallery-main')
+  const alteGrid = gallery.querySelector('.pdp-gallery__grid')
+  if (alterMain) alterMain.outerHTML = mainHtml
+  if (alteGrid) alteGrid.remove()
+  if (thumbsHtml) document.getElementById('gallery-main')?.insertAdjacentHTML('afterend', thumbsHtml)
+  initGallery()
 }
 
 function notFound (text) {
@@ -159,17 +190,11 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
   hatFarbGroessen = Object.values(farbGroessenMap).some((liste) => liste.length > 0)
 
   aktuelleBilder = bilder
+  aktuellerBildTitel = produkt.titel || ''
+  aktuellesHeroBild = bilder[0] || null
 
   // Galerie
-  const mainImg = bilder[0]
-    ? `<img class="pdp-gallery__main" id="gallery-main" data-index="0" src="${esc(bilder[0])}" alt="${esc(produkt.titel)}">`
-    : '<div class="pdp-gallery__main" id="gallery-main"></div>'
-
-  const thumbsHtml = bilder.length > 1
-    ? `<div class="pdp-gallery__grid">${bilder.slice(1).map((b, i) =>
-        `<img class="pdp-gallery__grid-img" data-index="${i + 1}" src="${esc(b)}" alt="${esc(produkt.titel)} ${i + 2}" loading="lazy">`
-      ).join('')}</div>`
-    : ''
+  const { mainHtml: mainImg, thumbsHtml } = baueGalerieHtml()
 
   // Sale-Preis
   const sale = isSaleAktiv(produkt)
@@ -330,10 +355,7 @@ function initFarben () {
     selectedFarbe = select.value || null
     const opt = select.options[select.selectedIndex]
     const bildUrl = opt?.dataset.bildUrl
-    if (bildUrl) {
-      const idx = aktuelleBilder.indexOf(bildUrl)
-      if (idx !== -1) zeigeBild(idx)
-    }
+    if (bildUrl) aktualisiereGalerie(bildUrl)
     const eanEl = document.getElementById('ean-value')
     if (eanEl) eanEl.textContent = (opt?.dataset.ean) || '000000000'
     if (hatFarbGroessen) aktualisiereGroesseFuerFarbe()
@@ -371,10 +393,10 @@ function initGroessen () {
 
 // Thumbnail-Klick tauscht das Hauptbild
 function initGallery () {
-  const thumbs = document.querySelectorAll('.pdp-gallery__grid-img[data-index]')
+  const thumbs = document.querySelectorAll('.pdp-gallery__grid-img[data-url]')
   thumbs.forEach((thumb) => {
     thumb.addEventListener('click', () => {
-      zeigeBild(Number(thumb.dataset.index))
+      aktualisiereGalerie(thumb.dataset.url)
     })
   })
 }
