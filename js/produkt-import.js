@@ -164,6 +164,8 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
     } else {
       fehler.push(`Kategorie "${kategorieName}" nicht gefunden`)
     }
+  } else {
+    fehler.push('Kategorie fehlt')
   }
 
   // Unterkategorie: nur bei "Mode & Accessoires" relevant -- dort Pflichtfeld,
@@ -325,7 +327,7 @@ async function erzeugeUndLadeVorlage () {
     for (let c = 2; c <= VORLAGE_SPALTEN + 1; c++) {
       sheet.getCell(zeile, c).dataValidation = {
         type: 'list',
-        allowBlank: true,
+        allowBlank: false,
         formulae: [formel],
         showErrorMessage: true,
         errorStyle: 'stop',

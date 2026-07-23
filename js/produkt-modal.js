@@ -67,9 +67,9 @@ export function initProduktModal () {
           <!-- Kategorie + Geschlecht -->
           <div class="pmodal-row">
             <div class="pmodal-field">
-              <label class="pmodal-label" for="pmodal-kategorie">Kategorie</label>
-              <select class="form-select" id="pmodal-kategorie" name="kategorie_id">
-                <option value="">Keine Kategorie</option>
+              <label class="pmodal-label" for="pmodal-kategorie">Kategorie *</label>
+              <select class="form-select" id="pmodal-kategorie" name="kategorie_id" required>
+                <option value="">— Bitte wählen —</option>
               </select>
             </div>
             <div class="pmodal-field">
@@ -537,6 +537,12 @@ async function handleSpeichern (e) {
     return
   }
 
+  const kategorieId = document.getElementById('pmodal-kategorie').value
+  if (!kategorieId) {
+    feedback.innerHTML = '<div class="error-msg">Bitte eine Kategorie auswählen.</div>'
+    return
+  }
+
   const geschlecht = document.getElementById('pmodal-geschlecht').value || null
 
   const shopGroup = document.getElementById('pmodal-shop-group')
@@ -573,7 +579,7 @@ async function handleSpeichern (e) {
     ean: document.getElementById('pmodal-ean').value.trim() || null,
     preis: parseFloat(preisRaw),
     beschreibung: document.getElementById('pmodal-beschreibung').value.trim() || null,
-    kategorie_id: document.getElementById('pmodal-kategorie').value || null,
+    kategorie_id: kategorieId,
     unterkategorie: document.getElementById('pmodal-unterkategorie-group').hidden ? null : (document.getElementById('pmodal-unterkategorie').value || null),
     geschlecht,
     farbe: hatFarbvariantenChecked ? null : (document.getElementById('pmodal-farbe').value.trim() || null),
