@@ -190,8 +190,7 @@ function renderDetail (produkt, varianten = [], farben = []) {
           <option value="">Bitte wählen…</option>
           ${farben.map((f) => {
             const ausverkauft = !(f.stueckzahl > 0)
-            const bildIndex = (f.bild_index === null || f.bild_index === undefined) ? '' : f.bild_index
-            return `<option value="${esc(f.farbe)}" data-bild-index="${bildIndex}"${ausverkauft ? ' disabled' : ''}>${esc(f.farbe)}${ausverkauft ? ' (Nicht verfügbar)' : ''}</option>`
+            return `<option value="${esc(f.farbe)}" data-bild-url="${esc(f.bild_url || '')}"${ausverkauft ? ' disabled' : ''}>${esc(f.farbe)}${ausverkauft ? ' (Nicht verfügbar)' : ''}</option>`
           }).join('')}
         </select>
       </div>`
@@ -301,9 +300,10 @@ function initFarben () {
   select.addEventListener('change', () => {
     selectedFarbe = select.value || null
     const opt = select.options[select.selectedIndex]
-    const bildIndexRaw = opt?.dataset.bildIndex
-    if (bildIndexRaw !== undefined && bildIndexRaw !== '') {
-      zeigeBild(parseInt(bildIndexRaw, 10))
+    const bildUrl = opt?.dataset.bildUrl
+    if (bildUrl) {
+      const idx = aktuelleBilder.indexOf(bildUrl)
+      if (idx !== -1) zeigeBild(idx)
     }
   })
 }

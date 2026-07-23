@@ -563,7 +563,12 @@ export function initProduktImport ({ getShop, onImportiert }) {
 
         if (z.farbvarianten.length) {
           await supabase.from('produkt_farben').insert(
-            z.farbvarianten.map((f) => ({ produkt_id: neuesProdukt.id, farbe: f.farbe, bild_index: f.bild_index, stueckzahl: f.stueckzahl }))
+            z.farbvarianten.map((f) => ({
+              produkt_id: neuesProdukt.id,
+              farbe: f.farbe,
+              bild_url: (f.bild_index !== null && bildUrls[f.bild_index]) ? bildUrls[f.bild_index] : null,
+              stueckzahl: f.stueckzahl
+            }))
           )
         }
 

@@ -1330,16 +1330,42 @@ textarea.form-input {
 
 .pmodal-farbe-row {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 0.7fr auto;
+  grid-template-columns: 1.2fr 1.4fr 0.7fr auto;
   gap: 0.4rem;
   align-items: center;
 }
 
 .pmodal-farbe-name,
-.pmodal-farbe-bild,
 .pmodal-farbe-stk {
   padding: 0.5rem 0.6rem;
   font-size: var(--text-sm);
+}
+
+.pmodal-farbe-foto {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pmodal-farbe-foto-img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.pmodal-farbe-foto-platzhalter {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.pmodal-farbe-foto-upload {
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .pmodal-farbe-del {
