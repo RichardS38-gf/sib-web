@@ -184,11 +184,9 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
   }
 
   const geschlechtRaw = getFeld(feldMap, 'Geschlecht')
-  const geschlecht = GESCHLECHTER.find((g) => g.toLowerCase() === geschlechtRaw.toLowerCase()) || null
-  if (!geschlechtRaw) {
-    fehler.push('Geschlecht fehlt (Herren, Damen oder Unisex)')
-  } else if (!geschlecht) {
-    fehler.push(`Geschlecht "${geschlechtRaw}" ungültig — erlaubt: Herren, Damen, Unisex`)
+  const geschlecht = geschlechtRaw ? (GESCHLECHTER.find((g) => g.toLowerCase() === geschlechtRaw.toLowerCase()) || null) : null
+  if (geschlechtRaw && !geschlecht) {
+    fehler.push(`Geschlecht "${geschlechtRaw}" ungültig — erlaubt: Herren, Damen, Unisex (oder leer lassen)`)
   }
 
   const verfuegbarRaw = getFeld(feldMap, 'Verfügbar').toLowerCase()
@@ -355,12 +353,12 @@ async function erzeugeUndLadeVorlage () {
   for (let c = 2; c <= VORLAGE_SPALTEN + 1; c++) {
     sheet.getCell(geschlechtZeile, c).dataValidation = {
       type: 'list',
-      allowBlank: false,
+      allowBlank: true,
       formulae: ['"Herren,Damen,Unisex"'],
       showErrorMessage: true,
       errorStyle: 'stop',
       errorTitle: 'Ungültiges Geschlecht',
-      error: 'Bitte Herren, Damen oder Unisex auswählen.'
+      error: 'Bitte Herren, Damen oder Unisex auswählen (oder leer lassen).'
     }
   }
 

@@ -73,9 +73,9 @@ export function initProduktModal () {
               </select>
             </div>
             <div class="pmodal-field">
-              <label class="pmodal-label" for="pmodal-geschlecht">Geschlecht *</label>
-              <select class="form-select" id="pmodal-geschlecht" name="geschlecht" required>
-                <option value="">— Bitte wählen —</option>
+              <label class="pmodal-label" for="pmodal-geschlecht">Geschlecht <span class="pmodal-hint-inline">(optional)</span></label>
+              <select class="form-select" id="pmodal-geschlecht" name="geschlecht">
+                <option value="">— Kein Geschlecht —</option>
                 <option value="Herren">Herren</option>
                 <option value="Damen">Damen</option>
                 <option value="Unisex">Unisex</option>
@@ -537,11 +537,7 @@ async function handleSpeichern (e) {
     return
   }
 
-  const geschlecht = document.getElementById('pmodal-geschlecht').value
-  if (!geschlecht) {
-    feedback.innerHTML = '<div class="error-msg">Bitte ein Geschlecht auswählen (Herren, Damen oder Unisex).</div>'
-    return
-  }
+  const geschlecht = document.getElementById('pmodal-geschlecht').value || null
 
   const shopGroup = document.getElementById('pmodal-shop-group')
   let gewaehlteShopId = null
