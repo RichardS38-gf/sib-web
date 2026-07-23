@@ -174,7 +174,7 @@ async function ladeHaendler () {
           <td>${esc(s.slug || '—')}</td>
           <td class="is-wrap">${esc(s.adresse || '—')}</td>
           <td>${aktiv ? '<span class="badge">aktiv</span>' : '<span class="badge badge--muted">inaktiv</span>'}</td>
-          <td><button class="admin-link-btn" data-edit-shop="${esc(s.id)}">Bearbeiten</button> <button class="admin-link-btn" data-toggle-shop="${esc(s.id)}" data-aktiv="${aktiv}">${toggleLabel}</button></td>
+          <td><button class="admin-link-btn" data-edit-shop="${esc(s.id)}">Bearbeiten</button> <button class="admin-link-btn" data-toggle-shop="${esc(s.id)}" data-aktiv="${aktiv}">${toggleLabel}</button> <button class="admin-link-btn admin-link-btn--danger" data-delete-shop="${esc(s.id)}" data-name="${esc(s.name)}">Löschen</button></td>
         </tr>`
     }).join('')
 
@@ -188,6 +188,9 @@ async function ladeHaendler () {
 
     el.querySelectorAll('[data-toggle-shop]').forEach((btn) => {
       btn.addEventListener('click', () => toggleShop(btn.dataset.toggleShop, btn.dataset.aktiv === 'true'))
+    })
+    el.querySelectorAll('[data-delete-shop]').forEach((btn) => {
+      btn.addEventListener('click', () => loescheShop(btn.dataset.deleteShop, btn.dataset.name))
     })
     el.querySelectorAll('[data-edit-shop]').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -213,6 +216,19 @@ async function toggleShop (id, aktivJetzt) {
   } catch (err) {
     console.error('Status ändern fehlgeschlagen:', err)
     window.alert('Der Status konnte nicht geändert werden.')
+  }
+}
+
+async function loescheShop (id, name) {
+  if (!window.confirm(`Händler „${name}“ wirklich komplett löschen? Das entfernt auch alle zugehörigen Produkte, Bewertungen und Reservierungen unwiderruflich.`)) return
+  try {
+    const { error } = await supabase.from('shops').delete().eq('id', id)
+    if (error) throw error
+    ladeHaendler()
+    ladeProdukte()
+  } catch (err) {
+    console.error('Händler löschen fehlgeschlagen:', err)
+    window.alert('Der Händler konnte nicht gelöscht werden. Möglicherweise verhindern verknüpfte Daten (z.B. Reservierungen) das Löschen.')
   }
 }
 

@@ -153,6 +153,8 @@
 
 .admin-link-btn:hover { color: var(--color-ink); }
 .admin-link-btn + .admin-link-btn { margin-left: var(--space-2); }
+.admin-link-btn--danger { color: #b3261e; }
+.admin-link-btn--danger:hover { color: #7a1a15; }
 
 /* ── Formulare ── */
 .admin-shop-form {
