@@ -7,7 +7,6 @@ import { initHeaderSearch } from './header.js'
 import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=11'
 import { naechsteAusgabe, monatDatum, monatName, ausgabeNummer } from './newsletter-zeitraum.js'
 import { initProduktImport } from './produkt-import.js?v=9'
-import { ermittleGroessenSet } from './groessen-config.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -205,23 +204,6 @@ async function ladeProdukte () {
       return
     }
 
-    // Varianten aller Produkte laden und nach produkt_id gruppieren
-    const variantenByProdukt = {}
-    const ids = produkte.map((p) => p.id)
-    if (ids.length) {
-      const { data: vData, error: vErr } = await supabase
-        .from('produkt_varianten')
-        .select('*')
-        .in('produkt_id', ids)
-        .order('erstellt_am', { ascending: true })
-      if (!vErr) {
-        (vData || []).forEach((v) => {
-          if (!variantenByProdukt[v.produkt_id]) variantenByProdukt[v.produkt_id] = []
-          variantenByProdukt[v.produkt_id].push(v)
-        })
-      }
-    }
-
     el.innerHTML = `<div class="dash-produkte-grid">${produkte.map((p) => {
       const bilder = Array.isArray(p.bilder) ? p.bilder.filter(Boolean) : []
       const bild = bilder[0]
@@ -233,23 +215,6 @@ async function ladeProdukte () {
         ? '<span class="badge badge--muted dash-produkt__badge">Freigegeben</span>'
         : '<span class="badge badge--outline dash-produkt__badge">Ausstehend</span>'
 
-      const varianten = variantenByProdukt[p.id] || []
-      const byGroesse = {}
-      varianten.forEach((v) => { byGroesse[v.groesse] = v })
-
-      const groessenSet = ermittleGroessenSet(p.kategorien?.name || '', p.unterkategorie)
-      const groessenRows = groessenSet.map((g) => {
-        const vorhanden = byGroesse[g]
-        const checked = !!vorhanden
-        const stk = vorhanden ? (vorhanden.stueckzahl ?? 0) : 1
-        return `
-          <label class="dash-groesse-row">
-            <input type="checkbox" class="dash-groesse-check" value="${esc(g)}" ${checked ? 'checked' : ''}>
-            <span class="dash-groesse-name">${esc(g)}</span>
-            <input type="number" class="form-input dash-groesse-stk" min="0" value="${esc(stk)}" ${checked ? '' : 'disabled'}>
-          </label>`
-      }).join('')
-
       return `
         <div class="dash-produkt">
           ${bild}
@@ -258,15 +223,6 @@ async function ladeProdukte () {
           ${p.ean ? `<p class="dash-produkt__ean">EAN: ${esc(p.ean)}</p>` : ''}
           <p class="dash-produkt__price">${esc(preis)}</p>
           <p class="dash-produkt__status">${status}</p>
-
-          <div class="dash-varianten" data-groessen="${esc(p.id)}">
-            <p class="dash-varianten__label">Größen &amp; Stück</p>
-            <div class="dash-groessen">${groessenRows}</div>
-            <div class="dash-groessen__bar">
-              <button class="btn btn--outline dash-groessen__save" type="button" data-save-groessen="${esc(p.id)}">Größen speichern</button>
-              <span class="dash-groessen__feedback" data-feedback="${esc(p.id)}" aria-live="polite"></span>
-            </div>
-          </div>
 
           <div class="dash-produkt__actions">
             <button class="btn btn--outline dash-produkt__edit" data-edit="${esc(p.id)}">Bearbeiten</button>
@@ -289,60 +245,9 @@ async function ladeProdukte () {
         })
       })
     })
-
-    // Checkbox aktiviert/deaktiviert das zugehörige Stückzahl-Feld
-    el.querySelectorAll('.dash-groesse-row').forEach((row) => {
-      const cb = row.querySelector('.dash-groesse-check')
-      const stk = row.querySelector('.dash-groesse-stk')
-      cb.addEventListener('change', () => {
-        stk.disabled = !cb.checked
-        if (cb.checked) stk.focus()
-      })
-    })
-
-    // Größen speichern
-    el.querySelectorAll('[data-save-groessen]').forEach((btn) => {
-      btn.addEventListener('click', () => speichereGroessen(btn.dataset.saveGroessen, btn))
-    })
   } catch (err) {
     console.error('Produkte konnten nicht geladen werden:', err)
     el.innerHTML = '<p class="dash-empty">Produkte konnten nicht geladen werden.</p>'
-  }
-}
-
-// Größen eines Produkts speichern: angehakte Größen ersetzen die bestehenden
-async function speichereGroessen (produktId, btn) {
-  const container = document.querySelector(`.dash-varianten[data-groessen="${CSS.escape(produktId)}"]`)
-  const feedback = container?.querySelector('.dash-groessen__feedback')
-  if (!container) return
-
-  const neu = []
-  container.querySelectorAll('.dash-groesse-row').forEach((row) => {
-    const cb = row.querySelector('.dash-groesse-check')
-    if (!cb.checked) return
-    let stk = parseInt(row.querySelector('.dash-groesse-stk').value, 10)
-    if (isNaN(stk) || stk < 0) stk = 0
-    neu.push({ produkt_id: produktId, groesse: cb.value, stueckzahl: stk })
-  })
-
-  btn.disabled = true
-  btn.textContent = 'Wird gespeichert…'
-  if (feedback) feedback.innerHTML = ''
-
-  try {
-    // bestehende Varianten ersetzen
-    const { error: delErr } = await supabase.from('produkt_varianten').delete().eq('produkt_id', produktId)
-    if (delErr) throw delErr
-    if (neu.length) {
-      const { error: insErr } = await supabase.from('produkt_varianten').insert(neu)
-      if (insErr) throw insErr
-    }
-    ladeProdukte()
-  } catch (err) {
-    console.error('Größen speichern fehlgeschlagen:', err)
-    if (feedback) feedback.innerHTML = '<span class="error-msg">Speichern fehlgeschlagen.</span>'
-    btn.disabled = false
-    btn.textContent = 'Größen speichern'
   }
 }
 
