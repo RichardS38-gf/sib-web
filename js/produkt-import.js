@@ -12,17 +12,20 @@
 import { supabase } from './supabase.js'
 import JSZip from 'https://cdn.jsdelivr.net/npm/jszip@3/+esm'
 import ExcelJS from 'https://cdn.jsdelivr.net/npm/exceljs@4/+esm'
+import { MODE_KATEGORIE_NAME, UNTERKATEGORIEN, ALLE_GROESSEN_LABELS, ermittleGroessenSet, unterkategorieLabel } from './groessen-config.js'
 
-const GROESSEN = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Einheitsgröße']
 const GESCHLECHTER = ['Herren', 'Damen', 'Unisex']
 const MAX_HIGHLIGHTS = 5
 const VORLAGE_SPALTEN = 15 // leere Produkt-Spalten in der herunterladbaren Vorlage
 
 // Reihenfolge der Felder von oben nach unten -- gilt für Vorlage UND Einlesen
+// Größen-Zeilen decken ALLE möglichen Unterkategorien ab (Oberteile, Hosen,
+// Kinderkleidung, Schuhe, Taschen) -- pro Produkt sind nur die Zeilen relevant,
+// die zur jeweils gewählten Unterkategorie passen, siehe verarbeiteProdukt().
 const FELD_REIHENFOLGE = [
-  'Produktname', 'EAN', 'Beschreibung', 'Preis', 'Kategorie', 'Geschlecht', 'Farbe', 'Verfügbar',
+  'Produktname', 'EAN', 'Beschreibung', 'Preis', 'Kategorie', 'Unterkategorie', 'Geschlecht', 'Farbe', 'Verfügbar',
   'Highlight 1', 'Highlight 2', 'Highlight 3', 'Highlight 4', 'Highlight 5',
-  ...GROESSEN.map((g) => `Größe ${g} Stück`),
+  ...ALLE_GROESSEN_LABELS.map((g) => `Größe ${g} Stück`),
   'Bilder'
 ]
 
@@ -157,6 +160,23 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
     }
   }
 
+  // Unterkategorie: nur bei "Mode & Accessoires" relevant -- dort Pflichtfeld,
+  // weil davon abhängt, welche Größenspalten überhaupt gültig sind.
+  let unterkategorie = null
+  const istModeKategorie = kategorieName.trim().toLowerCase() === MODE_KATEGORIE_NAME.toLowerCase()
+  const unterkategorieRaw = getFeld(feldMap, 'Unterkategorie')
+  if (istModeKategorie) {
+    const gefunden = UNTERKATEGORIEN.find((u) =>
+      u.value === unterkategorieRaw.toLowerCase() || u.label.toLowerCase() === unterkategorieRaw.toLowerCase())
+    if (gefunden) {
+      unterkategorie = gefunden.value
+    } else {
+      fehler.push(`Unterkategorie fehlt oder unbekannt (bei "Mode & Accessoires" erforderlich: ${UNTERKATEGORIEN.map((u) => u.label).join(', ')})`)
+    }
+  } else if (unterkategorieRaw) {
+    warnungen.push('Unterkategorie wird ignoriert, da Kategorie nicht "Mode & Accessoires" ist')
+  }
+
   const geschlechtRaw = getFeld(feldMap, 'Geschlecht')
   const geschlecht = GESCHLECHTER.find((g) => g.toLowerCase() === geschlechtRaw.toLowerCase()) || null
   if (!geschlechtRaw) {
@@ -177,10 +197,20 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
     if (val) highlights.push(val)
   }
 
+  // Erlaubtes Größenset basierend auf Kategorie + Unterkategorie (bzw.
+  // "Einheitsgröße" für alle Kategorien außer Mode & Accessoires). Nur
+  // Größen aus diesem Set werden übernommen -- eine Größe, die nicht dazu
+  // passt (z.B. eine Hosengröße bei "Schuhe"), wird als Fehler markiert statt
+  // stillschweigend übernommen zu werden.
+  const erlaubteGroessen = ermittleGroessenSet(kategorieName, unterkategorie)
   const varianten = []
-  GROESSEN.forEach((g) => {
+  ALLE_GROESSEN_LABELS.forEach((g) => {
     const raw = getFeld(feldMap, `Größe ${g} Stück`)
     if (!raw) return
+    if (!erlaubteGroessen.includes(g)) {
+      fehler.push(`Größe "${g}" passt nicht zur Unterkategorie${unterkategorie ? ` "${unterkategorieLabel(unterkategorie)}"` : ''} und wird nicht übernommen`)
+      return
+    }
     const stk = parseGanzzahl(raw)
     if (stk === null) {
       warnungen.push(`Stückzahl für Größe ${g} ungültig — Größe wird übersprungen`)
@@ -211,6 +241,7 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
     beschreibung: getFeld(feldMap, 'Beschreibung') || null,
     kategorieId,
     kategorieName,
+    unterkategorie,
     geschlecht,
     farbe,
     verfuegbar,
@@ -273,6 +304,20 @@ async function erzeugeUndLadeVorlage () {
         errorTitle: 'Ungültige Kategorie',
         error: 'Bitte eine Kategorie aus der Liste auswählen.'
       }
+    }
+  }
+
+  const unterkategorieZeile = zeileVon('Unterkategorie')
+  const unterkategorieFormel = `"${UNTERKATEGORIEN.map((u) => u.label).join(',')}"`
+  for (let c = 2; c <= VORLAGE_SPALTEN + 1; c++) {
+    sheet.getCell(unterkategorieZeile, c).dataValidation = {
+      type: 'list',
+      allowBlank: true,
+      formulae: [unterkategorieFormel],
+      showErrorMessage: true,
+      errorStyle: 'stop',
+      errorTitle: 'Ungültige Unterkategorie',
+      error: `Nur bei Kategorie "Mode & Accessoires" nötig: ${UNTERKATEGORIEN.map((u) => u.label).join(', ')}.`
     }
   }
 
@@ -406,7 +451,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
         <div class="dash-table-wrap">
           <table class="dash-table">
             <thead>
-              <tr><th>Produkt</th><th>Name</th><th>EAN</th><th>Preis</th><th>Kategorie</th><th>Geschlecht</th><th>Farbe</th><th>Fotos</th><th>Status</th></tr>
+              <tr><th>Produkt</th><th>Name</th><th>EAN</th><th>Preis</th><th>Kategorie</th><th>Unterkategorie</th><th>Geschlecht</th><th>Farbe</th><th>Fotos</th><th>Status</th></tr>
             </thead>
             <tbody>
               ${verarbeiteteProdukte.map((z) => `
@@ -416,6 +461,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
                   <td>${z.ean ? esc(z.ean) : '—'}</td>
                   <td>${z.preis !== null ? z.preis.toFixed(2) + ' €' : '—'}</td>
                   <td>${z.kategorieName ? esc(z.kategorieName) : '—'}</td>
+                  <td>${z.unterkategorie ? esc(unterkategorieLabel(z.unterkategorie)) : '—'}</td>
                   <td>${z.geschlecht ? esc(z.geschlecht) : '—'}</td>
                   <td>${z.farbe ? esc(z.farbe) : '—'}</td>
                   <td>${z.bildEintraege.length}/${z.bildEintraege.length + z.warnungen.filter(w => w.includes('nicht im ZIP') || w.includes('kein ZIP')).length}</td>
@@ -468,6 +514,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
           preis: z.preis,
           beschreibung: z.beschreibung,
           kategorie_id: z.kategorieId,
+          unterkategorie: z.unterkategorie,
           geschlecht: z.geschlecht,
           farbe: z.farbe,
           verfuegbar: z.verfuegbar,

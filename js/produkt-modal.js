@@ -3,11 +3,13 @@
 // Unterstützt Anlegen + Bearbeiten inkl. Multi-Foto-Upload, Features, Angebotspreis.
 
 import { supabase } from './supabase.js'
+import { UNTERKATEGORIEN, MODE_KATEGORIE_NAME, ermittleGroessenSet } from './groessen-config.js'
 
 let onSaveCallback = null
 let aktuellesProduktId = null
 let bildUrls = []
 let featuresList = []
+let aktuelleVarianten = []
 const MAX_FEATURES = 5
 
 // ── Modal-HTML einmalig in den DOM injizieren ──
@@ -59,6 +61,40 @@ export function initProduktModal () {
               <label class="pmodal-label" for="pmodal-preis">Preis (€) *</label>
               <input class="form-input" id="pmodal-preis" name="preis" type="number" min="0" step="0.01">
             </div>
+          </div>
+
+          <!-- Kategorie + Geschlecht -->
+          <div class="pmodal-row">
+            <div class="pmodal-field">
+              <label class="pmodal-label" for="pmodal-kategorie">Kategorie</label>
+              <select class="form-select" id="pmodal-kategorie" name="kategorie_id">
+                <option value="">Keine Kategorie</option>
+              </select>
+            </div>
+            <div class="pmodal-field">
+              <label class="pmodal-label" for="pmodal-geschlecht">Geschlecht *</label>
+              <select class="form-select" id="pmodal-geschlecht" name="geschlecht" required>
+                <option value="">— Bitte wählen —</option>
+                <option value="Herren">Herren</option>
+                <option value="Damen">Damen</option>
+                <option value="Unisex">Unisex</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Unterkategorie (nur bei Mode & Accessoires) -->
+          <div class="pmodal-field" id="pmodal-unterkategorie-group" hidden>
+            <label class="pmodal-label" for="pmodal-unterkategorie">Unterkategorie *</label>
+            <select class="form-select" id="pmodal-unterkategorie" name="unterkategorie">
+              <option value="">— Bitte wählen —</option>
+              ${UNTERKATEGORIEN.map((u) => `<option value="${u.value}">${u.label}</option>`).join('')}
+            </select>
+          </div>
+
+          <!-- Größen & Stück -->
+          <div class="pmodal-field">
+            <label class="pmodal-label">Größen &amp; Stück</label>
+            <div class="dash-groessen" id="pmodal-groessen-list"></div>
           </div>
 
           <!-- EAN -->
@@ -122,23 +158,8 @@ export function initProduktModal () {
             <input class="form-input" id="pmodal-farbe" name="farbe" type="text" autocomplete="off" placeholder="z.B. Oliv, Schwarz/Weiß">
           </div>
 
-          <!-- Kategorie + Geschlecht + Verfügbarkeit -->
-          <div class="pmodal-row pmodal-row--3">
-            <div class="pmodal-field">
-              <label class="pmodal-label" for="pmodal-kategorie">Kategorie</label>
-              <select class="form-select" id="pmodal-kategorie" name="kategorie_id">
-                <option value="">Keine Kategorie</option>
-              </select>
-            </div>
-            <div class="pmodal-field">
-              <label class="pmodal-label" for="pmodal-geschlecht">Geschlecht *</label>
-              <select class="form-select" id="pmodal-geschlecht" name="geschlecht" required>
-                <option value="">— Bitte wählen —</option>
-                <option value="Herren">Herren</option>
-                <option value="Damen">Damen</option>
-                <option value="Unisex">Unisex</option>
-              </select>
-            </div>
+          <!-- Kategorie + Verfügbarkeit -->
+          <div class="pmodal-row">
             <div class="pmodal-field">
               <label class="pmodal-label">Verfügbarkeit</label>
               <label class="pmodal-check">
@@ -183,6 +204,12 @@ export function initProduktModal () {
   })
   document.getElementById('pmodal-form').addEventListener('submit', handleSpeichern)
 
+  document.getElementById('pmodal-kategorie').addEventListener('change', () => {
+    aktualisiereUnterkategorieSichtbarkeit()
+    renderGroessenGrid()
+  })
+  document.getElementById('pmodal-unterkategorie').addEventListener('change', renderGroessenGrid)
+
   // Enter in einem einzeiligen Feld (Titel, Preis, Angebot, Features, ...) darf
   // das Formular NICHT automatisch abschicken -- sonst schließt/speichert das
   // Modal ungewollt mitten in der Eingabe (Browser-Standardverhalten bei Enter
@@ -213,6 +240,58 @@ async function ladeKategorien () {
       select.appendChild(opt)
     })
   } catch {}
+}
+
+// ── Kategorie/Unterkategorie -> passendes Größenset ──
+function aktuelleKategorieName () {
+  const select = document.getElementById('pmodal-kategorie')
+  return select.options[select.selectedIndex]?.textContent || ''
+}
+
+function aktualisiereUnterkategorieSichtbarkeit () {
+  const group = document.getElementById('pmodal-unterkategorie-group')
+  const istMode = aktuelleKategorieName() === MODE_KATEGORIE_NAME
+  group.hidden = !istMode
+  if (!istMode) document.getElementById('pmodal-unterkategorie').value = ''
+}
+
+function renderGroessenGrid () {
+  const unterkategorie = document.getElementById('pmodal-unterkategorie').value
+  const set = ermittleGroessenSet(aktuelleKategorieName(), unterkategorie)
+  const container = document.getElementById('pmodal-groessen-list')
+  container.innerHTML = set.map((g) => {
+    const vorhanden = aktuelleVarianten.find((v) => v.groesse === g)
+    const checked = !!vorhanden
+    const stk = vorhanden ? (vorhanden.stueckzahl ?? 0) : 1
+    return `
+      <label class="dash-groesse-row">
+        <input type="checkbox" class="pmodal-groesse-check" value="${escAttr(g)}" ${checked ? 'checked' : ''}>
+        <span class="dash-groesse-name">${escAttr(g)}</span>
+        <input type="number" class="form-input pmodal-groesse-stk" min="0" value="${stk}" ${checked ? '' : 'disabled'}>
+      </label>`
+  }).join('')
+
+  container.querySelectorAll('.dash-groesse-row').forEach((row) => {
+    const cb = row.querySelector('.pmodal-groesse-check')
+    const stk = row.querySelector('.pmodal-groesse-stk')
+    cb.addEventListener('change', () => {
+      stk.disabled = !cb.checked
+      if (cb.checked) stk.focus()
+    })
+  })
+}
+
+async function speichereVarianten (produktId) {
+  const neu = []
+  document.querySelectorAll('#pmodal-groessen-list .dash-groesse-row').forEach((row) => {
+    const cb = row.querySelector('.pmodal-groesse-check')
+    if (!cb.checked) return
+    let stk = parseInt(row.querySelector('.pmodal-groesse-stk').value, 10)
+    if (isNaN(stk) || stk < 0) stk = 0
+    neu.push({ produkt_id: produktId, groesse: cb.value, stueckzahl: stk })
+  })
+  await supabase.from('produkt_varianten').delete().eq('produkt_id', produktId)
+  if (neu.length) await supabase.from('produkt_varianten').insert(neu)
 }
 
 // ── Thumbnails ──
@@ -387,6 +466,7 @@ async function handleSpeichern (e) {
     preis: parseFloat(preisRaw),
     beschreibung: document.getElementById('pmodal-beschreibung').value.trim() || null,
     kategorie_id: document.getElementById('pmodal-kategorie').value || null,
+    unterkategorie: document.getElementById('pmodal-unterkategorie-group').hidden ? null : (document.getElementById('pmodal-unterkategorie').value || null),
     geschlecht,
     farbe: document.getElementById('pmodal-farbe').value.trim() || null,
     verfuegbar: document.getElementById('pmodal-verfuegbar').checked,
@@ -414,12 +494,14 @@ async function handleSpeichern (e) {
       if (!upd || upd.length === 0) {
         throw new Error('Keine Zeile aktualisiert — Produkt nicht gefunden oder keine Berechtigung.')
       }
+      await speichereVarianten(aktuellesProduktId)
       // Callback VOR dem Schließen sichern -- schliesseProduktModal() setzt ihn auf null
       const cb = onSaveCallback
       schliesseProduktModal()
       if (cb) cb(null)
     } else {
-      await onSaveCallback(daten)
+      const neueId = await onSaveCallback(daten)
+      if (neueId) await speichereVarianten(neueId)
       schliesseProduktModal()
     }
   } catch (err) {
@@ -438,7 +520,7 @@ async function handleSpeichern (e) {
 }
 
 // ── Öffentliche API ──
-export function oeffneProduktModal ({ produkt = null, onSave, shops = null } = {}) {
+export async function oeffneProduktModal ({ produkt = null, onSave, shops = null } = {}) {
   const modal = document.getElementById('produkt-modal')
   if (!modal) return
 
@@ -446,6 +528,11 @@ export function oeffneProduktModal ({ produkt = null, onSave, shops = null } = {
   aktuellesProduktId = produkt?.id || null
   bildUrls = Array.isArray(produkt?.bilder) ? [...produkt.bilder.filter(Boolean)] : []
   featuresList = Array.isArray(produkt?.highlights) ? [...produkt.highlights].slice(0, MAX_FEATURES) : []
+  aktuelleVarianten = []
+  if (produkt?.id) {
+    const { data } = await supabase.from('produkt_varianten').select('*').eq('produkt_id', produkt.id)
+    aktuelleVarianten = data || []
+  }
 
   const shopGroup = document.getElementById('pmodal-shop-group')
   const shopSelect = document.getElementById('pmodal-shop')
@@ -464,6 +551,8 @@ export function oeffneProduktModal ({ produkt = null, onSave, shops = null } = {
   document.getElementById('pmodal-preis').value = produkt?.preis ?? ''
   document.getElementById('pmodal-beschreibung').value = produkt?.beschreibung || ''
   document.getElementById('pmodal-kategorie').value = produkt?.kategorie_id || ''
+  aktualisiereUnterkategorieSichtbarkeit()
+  document.getElementById('pmodal-unterkategorie').value = produkt?.unterkategorie || ''
   document.getElementById('pmodal-geschlecht').value = produkt?.geschlecht || ''
   document.getElementById('pmodal-farbe').value = produkt?.farbe || ''
   document.getElementById('pmodal-verfuegbar').checked = produkt?.verfuegbar !== false
@@ -475,6 +564,7 @@ export function oeffneProduktModal ({ produkt = null, onSave, shops = null } = {
 
   renderThumbs()
   renderFeatures()
+  renderGroessenGrid()
   setzeDetailsBildPreview(produkt?.details_bild_url || null)
   modal.hidden = false
   document.body.style.overflow = 'hidden'

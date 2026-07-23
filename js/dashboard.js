@@ -4,14 +4,12 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=5'
+import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=6'
 import { naechsteAusgabe, monatDatum, monatName, ausgabeNummer } from './newsletter-zeitraum.js'
-import { initProduktImport } from './produkt-import.js?v=3'
+import { initProduktImport } from './produkt-import.js?v=5'
+import { ermittleGroessenSet } from './groessen-config.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
-
-// Feste Größen-Liste (Reihenfolge wie auf der Produktseite)
-const GROESSEN = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Einheitsgröße']
 
 let shop = null // aktueller Shop des eingeloggten Händlers
 let reservierungenListe = [] // Cache für die E-Mail-Daten beim Bestätigen
@@ -195,7 +193,7 @@ async function ladeProdukte () {
   try {
     const { data, error } = await supabase
       .from('produkte')
-      .select('*')
+      .select('*, kategorien(name)')
       .eq('shop_id', shop.id)
       .order('erstellt_am', { ascending: false })
 
@@ -239,7 +237,8 @@ async function ladeProdukte () {
       const byGroesse = {}
       varianten.forEach((v) => { byGroesse[v.groesse] = v })
 
-      const groessenRows = GROESSEN.map((g) => {
+      const groessenSet = ermittleGroessenSet(p.kategorien?.name || '', p.unterkategorie)
+      const groessenRows = groessenSet.map((g) => {
         const vorhanden = byGroesse[g]
         const checked = !!vorhanden
         const stk = vorhanden ? (vorhanden.stueckzahl ?? 0) : 1
@@ -381,13 +380,14 @@ function initProduktForm () {
   toggleBtn.addEventListener('click', () => {
     oeffneProduktModal({
       onSave: async (daten) => {
-        const { error } = await supabase.from('produkte').insert({
+        const { data, error } = await supabase.from('produkte').insert({
           ...daten,
           shop_id: shop.id,
           freigegeben: false
-        })
+        }).select('id').single()
         if (error) throw error
         ladeProdukte()
+        return data.id
       }
     })
   })
