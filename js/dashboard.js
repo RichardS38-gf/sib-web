@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=10'
+import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=11'
 import { naechsteAusgabe, monatDatum, monatName, ausgabeNummer } from './newsletter-zeitraum.js'
 import { initProduktImport } from './produkt-import.js?v=9'
 import { ermittleGroessenSet } from './groessen-config.js'

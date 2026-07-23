@@ -15,6 +15,8 @@ let hatVarianten = false
 // Ausgewählte Farbe (Variante) für die Reservierung + Bild-Zuordnung
 let selectedFarbe = null
 let hatFarbvarianten = false
+let farbGroessenMap = {} // farbe -> [{groesse, stueckzahl}], nur bei Farbvarianten MIT eigenen Größen
+let hatFarbGroessen = false
 let aktuelleBilder = []
 
 // Feste Größen-Reihenfolge für das Dropdown
@@ -131,7 +133,7 @@ function notFound (text) {
 }
 
 // ── Detail rendern ──
-function renderDetail (produkt, varianten = [], farben = []) {
+function renderDetail (produkt, alleVarianten = [], farben = []) {
   const el = document.getElementById('produkt-detail')
   const bilder = bilderOf(produkt)
   const shop = produkt.shops || null
@@ -141,9 +143,21 @@ function renderDetail (produkt, varianten = [], farben = []) {
   const kategorieName = produkt.kategorien?.name || ''
 
   selectedGroesse = null
-  hatVarianten = varianten.length > 0
   selectedFarbe = null
   hatFarbvarianten = farben.length > 0
+
+  // Varianten ohne Farbbezug (Standalone-Fall) von den farbgebundenen trennen.
+  const varianten = alleVarianten.filter((v) => !v.farbe)
+  hatVarianten = !hatFarbvarianten && varianten.length > 0
+
+  farbGroessenMap = {}
+  farben.forEach((f) => {
+    farbGroessenMap[f.farbe] = alleVarianten
+      .filter((v) => v.farbe === f.farbe)
+      .map((v) => ({ groesse: v.groesse, stueckzahl: v.stueckzahl }))
+  })
+  hatFarbGroessen = Object.values(farbGroessenMap).some((liste) => liste.length > 0)
+
   aktuelleBilder = bilder
 
   // Galerie
@@ -199,22 +213,33 @@ function renderDetail (produkt, varianten = [], farben = []) {
   // EAN -- Platzhalter 000000000 bis echte EANs für alle Produkte gepflegt sind
   const eanHtml = `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value">${esc(produkt.ean || '000000000')}</span></div>`
 
-  // Größe
-  const groesseHtml = hatVarianten
-    ? `<div class="pdp-field">
-        <label class="pdp-field__label" for="groesse-select">Größe</label>
-        <select class="form-select" id="groesse-select">
-          <option value="">Bitte wählen…</option>
-          ${sortiereVarianten(varianten).map((v) => {
-            const ausverkauft = !(v.stueckzahl > 0)
-            return `<option value="${esc(v.groesse)}"${ausverkauft ? ' disabled' : ''}>${esc(v.groesse)}${ausverkauft ? ' (Nicht verfügbar)' : ''}</option>`
-          }).join('')}
-        </select>
-      </div>`
-    : `<div class="pdp-field">
-        <label class="pdp-field__label" for="groesse-input">Größe</label>
-        <input class="form-input" type="text" id="groesse-input" name="groesse" placeholder="z.B. M, L, XL …">
-      </div>`
+  // Größe -- drei Fälle: (1) Farbvarianten MIT eigenen Größen -> Dropdown
+  // wird erst nach Farbwahl befuellt, (2) Standalone-Größen ohne Farbbezug ->
+  // normales Dropdown wie bisher, (3) gar keine Größen -> Freitext-Fallback.
+  const groesseHtml = hatFarbvarianten
+    ? (hatFarbGroessen
+        ? `<div class="pdp-field">
+            <label class="pdp-field__label" for="groesse-select">Größe</label>
+            <select class="form-select" id="groesse-select" disabled>
+              <option value="">Bitte zuerst Farbe wählen…</option>
+            </select>
+          </div>`
+        : '')
+    : (hatVarianten
+        ? `<div class="pdp-field">
+            <label class="pdp-field__label" for="groesse-select">Größe</label>
+            <select class="form-select" id="groesse-select">
+              <option value="">Bitte wählen…</option>
+              ${sortiereVarianten(varianten).map((v) => {
+                const ausverkauft = !(v.stueckzahl > 0)
+                return `<option value="${esc(v.groesse)}"${ausverkauft ? ' disabled' : ''}>${esc(v.groesse)}${ausverkauft ? ' (Nicht verfügbar)' : ''}</option>`
+              }).join('')}
+            </select>
+          </div>`
+        : `<div class="pdp-field">
+            <label class="pdp-field__label" for="groesse-input">Größe</label>
+            <input class="form-input" type="text" id="groesse-input" name="groesse" placeholder="z.B. M, L, XL …">
+          </div>`)
 
   // Reservierungsformular
   const formularHtml = verfuegbar
@@ -305,7 +330,28 @@ function initFarben () {
       const idx = aktuelleBilder.indexOf(bildUrl)
       if (idx !== -1) zeigeBild(idx)
     }
+    if (hatFarbGroessen) aktualisiereGroesseFuerFarbe()
   })
+}
+
+// Füllt das Größen-Dropdown mit den zur gewählten Farbe passenden Größen
+// (inkl. eigenem Lagerbestand je Farbe+Größe).
+function aktualisiereGroesseFuerFarbe () {
+  const groesseSelect = document.getElementById('groesse-select')
+  if (!groesseSelect) return
+  selectedGroesse = null
+  if (!selectedFarbe) {
+    groesseSelect.innerHTML = '<option value="">Bitte zuerst Farbe wählen…</option>'
+    groesseSelect.disabled = true
+    return
+  }
+  const liste = farbGroessenMap[selectedFarbe] || []
+  groesseSelect.disabled = false
+  groesseSelect.innerHTML = '<option value="">Bitte wählen…</option>' +
+    sortiereVarianten(liste).map((v) => {
+      const ausverkauft = !(v.stueckzahl > 0)
+      return `<option value="${esc(v.groesse)}"${ausverkauft ? ' disabled' : ''}>${esc(v.groesse)}${ausverkauft ? ' (Nicht verfügbar)' : ''}</option>`
+    }).join('')
 }
 
 // Größen-Dropdown
@@ -387,6 +433,11 @@ async function initReservierung (produkt) {
 
     if (hatFarbvarianten && !selectedFarbe) {
       feedback.innerHTML = '<div class="error-msg">Bitte wähle eine Farbe.</div>'
+      return
+    }
+
+    if (hatFarbvarianten && hatFarbGroessen && !selectedGroesse) {
+      feedback.innerHTML = '<div class="error-msg">Bitte wähle eine Größe.</div>'
       return
     }
 

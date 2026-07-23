@@ -1,6 +1,7 @@
 // js/produkt-modal.js
 // Geteiltes Produkt-Modal für Händler- und Admin-Dashboard.
-// Unterstützt Anlegen + Bearbeiten inkl. Multi-Foto-Upload, Features, Angebotspreis.
+// Unterstützt Anlegen + Bearbeiten inkl. Multi-Foto-Upload, Features, Angebotspreis,
+// Farbvarianten mit eigenem Foto und eigener Größen/Stück-Matrix pro Farbe.
 
 import { supabase } from './supabase.js'
 import { UNTERKATEGORIEN, MODE_KATEGORIE_NAME, ermittleGroessenSet } from './groessen-config.js'
@@ -92,12 +93,6 @@ export function initProduktModal () {
             </select>
           </div>
 
-          <!-- Größen & Stück -->
-          <div class="pmodal-field">
-            <label class="pmodal-label">Größen &amp; Stück</label>
-            <div class="dash-groessen" id="pmodal-groessen-list"></div>
-          </div>
-
           <!-- EAN -->
           <div class="pmodal-field">
             <label class="pmodal-label" for="pmodal-ean">EAN <span class="pmodal-hint-inline">(optional)</span></label>
@@ -157,13 +152,13 @@ export function initProduktModal () {
           <div class="pmodal-field">
             <label class="pmodal-check">
               <input type="checkbox" id="pmodal-hat-farbvarianten">
-              <span>Dieses Produkt hat mehrere Farbvarianten (mit eigenem Foto je Farbe)</span>
+              <span>Dieses Produkt hat mehrere Farbvarianten (mit eigenem Foto und eigenen Größen je Farbe)</span>
             </label>
             <div id="pmodal-farben-wrap" hidden>
-              <div class="pmodal-farbe-header"><span>Farbe</span><span>Foto</span><span>Stück</span><span></span></div>
+              <div class="pmodal-farbe-header"><span>Farbe</span><span>Foto</span><span></span></div>
               <div class="pmodal-farben" id="pmodal-farben-list"></div>
               <button type="button" class="pmodal-add-btn" id="pmodal-add-farbe">+ Farbvariante hinzufügen</button>
-              <p class="pmodal-hint">Die Fotos oben werden in der Galerie zuerst gezeigt, die Farb-Fotos danach. Wählt jemand auf der Produktseite eine Farbe, springt die Galerie automatisch zum passenden Foto.</p>
+              <p class="pmodal-hint">Die Fotos oben werden in der Galerie zuerst gezeigt, die Farb-Fotos danach. Wählt jemand auf der Produktseite eine Farbe, springt die Galerie automatisch zum passenden Foto. Größen &amp; Stück werden pro Farbe einzeln gepflegt.</p>
             </div>
           </div>
 
@@ -171,6 +166,12 @@ export function initProduktModal () {
           <div class="pmodal-field">
             <label class="pmodal-label" for="pmodal-farbe">Farbe <span class="pmodal-hint-inline">(optional, Freitext — nur ohne Farbvarianten)</span></label>
             <input class="form-input" id="pmodal-farbe" name="farbe" type="text" autocomplete="off" placeholder="z.B. Oliv, Schwarz/Weiß">
+          </div>
+
+          <!-- Größen & Stück (Standalone -- nur ohne Farbvarianten, sonst pro Farbe oben) -->
+          <div class="pmodal-field" id="pmodal-groessen-standalone-wrap">
+            <label class="pmodal-label">Größen &amp; Stück</label>
+            <div class="dash-groessen" id="pmodal-groessen-list"></div>
           </div>
 
           <!-- Kategorie + Verfügbarkeit -->
@@ -218,7 +219,7 @@ export function initProduktModal () {
     inputs[inputs.length - 1]?.focus()
   })
   document.getElementById('pmodal-add-farbe').addEventListener('click', () => {
-    aktuelleFarben.push({ farbe: '', bild_url: null, stueckzahl: 1 })
+    aktuelleFarben.push({ farbe: '', bild_url: null, groessen: [] })
     renderFarben()
     const inputs = document.querySelectorAll('.pmodal-farbe-name')
     inputs[inputs.length - 1]?.focus()
@@ -226,14 +227,15 @@ export function initProduktModal () {
   document.getElementById('pmodal-hat-farbvarianten').addEventListener('change', (e) => {
     const checked = e.target.checked
     document.getElementById('pmodal-farben-wrap').hidden = !checked
+    document.getElementById('pmodal-groessen-standalone-wrap').hidden = checked
     const farbeInput = document.getElementById('pmodal-farbe')
     farbeInput.disabled = checked
     if (checked) {
       farbeInput.value = ''
       if (aktuelleFarben.length === 0) {
-        aktuelleFarben.push({ farbe: '', bild_url: null, stueckzahl: 1 })
-        renderFarben()
+        aktuelleFarben.push({ farbe: '', bild_url: null, groessen: [] })
       }
+      renderFarben()
     }
   })
   document.getElementById('pmodal-form').addEventListener('submit', handleSpeichern)
@@ -241,8 +243,12 @@ export function initProduktModal () {
   document.getElementById('pmodal-kategorie').addEventListener('change', () => {
     aktualisiereUnterkategorieSichtbarkeit()
     renderGroessenGrid()
+    renderFarben()
   })
-  document.getElementById('pmodal-unterkategorie').addEventListener('change', renderGroessenGrid)
+  document.getElementById('pmodal-unterkategorie').addEventListener('change', () => {
+    renderGroessenGrid()
+    renderFarben()
+  })
 
   // Enter in einem einzeiligen Feld (Titel, Preis, Angebot, Features, ...) darf
   // das Formular NICHT automatisch abschicken -- sonst schließt/speichert das
@@ -282,6 +288,11 @@ function aktuelleKategorieName () {
   return select.options[select.selectedIndex]?.textContent || ''
 }
 
+function aktuellesGroessenSet () {
+  const unterkategorie = document.getElementById('pmodal-unterkategorie').value
+  return ermittleGroessenSet(aktuelleKategorieName(), unterkategorie)
+}
+
 function aktualisiereUnterkategorieSichtbarkeit () {
   const group = document.getElementById('pmodal-unterkategorie-group')
   const istMode = aktuelleKategorieName() === MODE_KATEGORIE_NAME
@@ -289,12 +300,12 @@ function aktualisiereUnterkategorieSichtbarkeit () {
   if (!istMode) document.getElementById('pmodal-unterkategorie').value = ''
 }
 
-function renderGroessenGrid () {
-  const unterkategorie = document.getElementById('pmodal-unterkategorie').value
-  const set = ermittleGroessenSet(aktuelleKategorieName(), unterkategorie)
-  const container = document.getElementById('pmodal-groessen-list')
-  container.innerHTML = set.map((g) => {
-    const vorhanden = aktuelleVarianten.find((v) => v.groesse === g)
+// Baut die Checkbox+Stück-Zeilen für ein Größenset, vorbelegt aus einer Liste
+// von {groesse, stueckzahl}. Wird sowohl für die Standalone-Größenliste als
+// auch pro Farbvariante verwendet.
+function groessenZeilenHtml (set, vorhandeneListe) {
+  return set.map((g) => {
+    const vorhanden = (vorhandeneListe || []).find((v) => v.groesse === g)
     const checked = !!vorhanden
     const stk = vorhanden ? (vorhanden.stueckzahl ?? 0) : 1
     return `
@@ -304,55 +315,72 @@ function renderGroessenGrid () {
         <input type="number" class="form-input pmodal-groesse-stk" min="0" value="${stk}" ${checked ? '' : 'disabled'}>
       </label>`
   }).join('')
+}
 
-  container.querySelectorAll('.dash-groesse-row').forEach((row) => {
+function bindGroessenZeilen (root, onChange) {
+  root.querySelectorAll('.dash-groesse-row').forEach((row) => {
     const cb = row.querySelector('.pmodal-groesse-check')
     const stk = row.querySelector('.pmodal-groesse-stk')
     cb.addEventListener('change', () => {
       stk.disabled = !cb.checked
       if (cb.checked) stk.focus()
+      if (onChange) onChange(cb.value, cb.checked, parseInt(stk.value, 10) || 0)
+    })
+    stk.addEventListener('input', () => {
+      if (onChange) onChange(cb.value, cb.checked, parseInt(stk.value, 10) || 0)
     })
   })
 }
 
-async function speichereVarianten (produktId) {
-  const neu = []
-  document.querySelectorAll('#pmodal-groessen-list .dash-groesse-row').forEach((row) => {
-    const cb = row.querySelector('.pmodal-groesse-check')
-    if (!cb.checked) return
-    let stk = parseInt(row.querySelector('.pmodal-groesse-stk').value, 10)
-    if (isNaN(stk) || stk < 0) stk = 0
-    neu.push({ produkt_id: produktId, groesse: cb.value, stueckzahl: stk })
-  })
-  await supabase.from('produkt_varianten').delete().eq('produkt_id', produktId)
-  if (neu.length) await supabase.from('produkt_varianten').insert(neu)
+function renderGroessenGrid () {
+  const set = aktuellesGroessenSet()
+  const container = document.getElementById('pmodal-groessen-list')
+  container.innerHTML = groessenZeilenHtml(set, aktuelleVarianten)
+  bindGroessenZeilen(container)
 }
 
-// ── Farbvarianten ──
+// ── Farbvarianten (inkl. eigener Größen/Stück-Matrix je Farbe) ──
+function syncFarbeGroesse (idx, groesse, checked, stueckzahl) {
+  const f = aktuelleFarben[idx]
+  if (!f) return
+  if (!f.groessen) f.groessen = []
+  const bestehend = f.groessen.find((g) => g.groesse === groesse)
+  if (checked) {
+    if (bestehend) bestehend.stueckzahl = stueckzahl
+    else f.groessen.push({ groesse, stueckzahl })
+  } else if (bestehend) {
+    f.groessen = f.groessen.filter((g) => g.groesse !== groesse)
+  }
+}
+
 function renderFarben () {
   const container = document.getElementById('pmodal-farben-list')
   if (!container) return
+  const groessenSet = aktuellesGroessenSet()
+
   container.innerHTML = aktuelleFarben.map((f, i) => `
-    <div class="pmodal-farbe-row">
-      <input class="form-input pmodal-farbe-name" type="text" value="${escAttr(f.farbe || '')}" data-fidx="${i}" placeholder="z.B. Blau">
-      <div class="pmodal-farbe-foto">
-        ${f.bild_url
-          ? `<img class="pmodal-farbe-foto-img" src="${escAttr(f.bild_url)}" alt="">`
-          : '<span class="pmodal-farbe-foto-platzhalter">Kein Foto</span>'}
-        <label class="pmodal-farbe-foto-upload">
-          ${f.bild_url ? 'Ändern' : 'Foto wählen'}
-          <input type="file" accept="image/*" class="pmodal-farbe-file" data-fidx="${i}" style="display:none">
-        </label>
+    <div class="pmodal-farbe-block" data-fidx="${i}">
+      <div class="pmodal-farbe-row">
+        <input class="form-input pmodal-farbe-name" type="text" value="${escAttr(f.farbe || '')}" data-fidx="${i}" placeholder="z.B. Blau">
+        <div class="pmodal-farbe-foto">
+          ${f.bild_url
+            ? `<img class="pmodal-farbe-foto-img" src="${escAttr(f.bild_url)}" alt="">`
+            : '<span class="pmodal-farbe-foto-platzhalter">Kein Foto</span>'}
+          <label class="pmodal-farbe-foto-upload">
+            ${f.bild_url ? 'Ändern' : 'Foto wählen'}
+            <input type="file" accept="image/*" class="pmodal-farbe-file" data-fidx="${i}" style="display:none">
+          </label>
+        </div>
+        <button type="button" class="pmodal-farbe-del" data-fidx="${i}" title="Entfernen">&#x2715;</button>
       </div>
-      <input class="form-input pmodal-farbe-stk" type="number" min="0" value="${f.stueckzahl ?? 1}" data-fidx="${i}" placeholder="Stück">
-      <button type="button" class="pmodal-farbe-del" data-fidx="${i}" title="Entfernen">&#x2715;</button>
+      <div class="pmodal-farbe-groessen">
+        <p class="pmodal-farbe-groessen-label">Größen &amp; Stück für diese Farbe</p>
+        <div class="dash-groessen">${groessenZeilenHtml(groessenSet, f.groessen || [])}</div>
+      </div>
     </div>`).join('')
 
   container.querySelectorAll('.pmodal-farbe-name').forEach((inp) => {
     inp.addEventListener('input', () => { aktuelleFarben[parseInt(inp.dataset.fidx)].farbe = inp.value })
-  })
-  container.querySelectorAll('.pmodal-farbe-stk').forEach((inp) => {
-    inp.addEventListener('input', () => { aktuelleFarben[parseInt(inp.dataset.fidx)].stueckzahl = parseInt(inp.value, 10) || 0 })
   })
   container.querySelectorAll('.pmodal-farbe-del').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -362,6 +390,10 @@ function renderFarben () {
   })
   container.querySelectorAll('.pmodal-farbe-file').forEach((input) => {
     input.addEventListener('change', (e) => handleFarbeFotoUpload(e, parseInt(input.dataset.fidx)))
+  })
+  container.querySelectorAll('.pmodal-farbe-block').forEach((block) => {
+    const idx = parseInt(block.dataset.fidx, 10)
+    bindGroessenZeilen(block, (groesse, checked, stueckzahl) => syncFarbeGroesse(idx, groesse, checked, stueckzahl))
   })
 }
 
@@ -384,19 +416,42 @@ async function handleFarbeFotoUpload (e, idx) {
   e.target.value = ''
 }
 
-async function speichereFarben (produktId) {
+// Speichert Größen (produkt_varianten) und Farben (produkt_farben) in einem
+// Rutsch. Ohne Farbvarianten: eine "farblose" Größenliste (farbe = null, wie
+// bisher). Mit Farbvarianten: pro Farbe eine eigene Größen/Stück-Matrix
+// (farbe = Farbname), die farblose Standalone-Liste bleibt dann leer.
+async function speichereGroessenUndFarben (produktId) {
   const hatFarbvarianten = document.getElementById('pmodal-hat-farbvarianten').checked
+
   await supabase.from('produkt_farben').delete().eq('produkt_id', produktId)
-  if (!hatFarbvarianten) return
-  const neu = aktuelleFarben
-    .filter((f) => f.farbe && f.farbe.trim())
-    .map((f) => ({
-      produkt_id: produktId,
-      farbe: f.farbe.trim(),
-      bild_url: f.bild_url || null,
-      stueckzahl: isNaN(parseInt(f.stueckzahl, 10)) ? 0 : parseInt(f.stueckzahl, 10)
-    }))
-  if (neu.length) await supabase.from('produkt_farben').insert(neu)
+  await supabase.from('produkt_varianten').delete().eq('produkt_id', produktId)
+
+  if (hatFarbvarianten) {
+    const farbenNeu = []
+    const variantenNeu = []
+    aktuelleFarben.forEach((f) => {
+      const farbe = (f.farbe || '').trim()
+      if (!farbe) return
+      const groessen = (f.groessen || []).filter((g) => g && g.groesse)
+      const gesamtStk = groessen.reduce((summe, g) => summe + (Number(g.stueckzahl) || 0), 0)
+      farbenNeu.push({ produkt_id: produktId, farbe, bild_url: f.bild_url || null, stueckzahl: gesamtStk })
+      groessen.forEach((g) => {
+        variantenNeu.push({ produkt_id: produktId, groesse: g.groesse, farbe, stueckzahl: Number(g.stueckzahl) || 0 })
+      })
+    })
+    if (farbenNeu.length) await supabase.from('produkt_farben').insert(farbenNeu)
+    if (variantenNeu.length) await supabase.from('produkt_varianten').insert(variantenNeu)
+  } else {
+    const variantenNeu = []
+    document.querySelectorAll('#pmodal-groessen-list .dash-groesse-row').forEach((row) => {
+      const cb = row.querySelector('.pmodal-groesse-check')
+      if (!cb.checked) return
+      let stk = parseInt(row.querySelector('.pmodal-groesse-stk').value, 10)
+      if (isNaN(stk) || stk < 0) stk = 0
+      variantenNeu.push({ produkt_id: produktId, groesse: cb.value, farbe: null, stueckzahl: stk })
+    })
+    if (variantenNeu.length) await supabase.from('produkt_varianten').insert(variantenNeu)
+  }
 }
 
 // ── Thumbnails ──
@@ -608,8 +663,7 @@ async function handleSpeichern (e) {
       if (!upd || upd.length === 0) {
         throw new Error('Keine Zeile aktualisiert — Produkt nicht gefunden oder keine Berechtigung.')
       }
-      await speichereVarianten(aktuellesProduktId)
-      await speichereFarben(aktuellesProduktId)
+      await speichereGroessenUndFarben(aktuellesProduktId)
       // Callback VOR dem Schließen sichern -- schliesseProduktModal() setzt ihn auf null
       const cb = onSaveCallback
       schliesseProduktModal()
@@ -617,8 +671,7 @@ async function handleSpeichern (e) {
     } else {
       const neueId = await onSaveCallback(daten)
       if (neueId) {
-        await speichereVarianten(neueId)
-        await speichereFarben(neueId)
+        await speichereGroessenUndFarben(neueId)
       }
       schliesseProduktModal()
     }
@@ -652,8 +705,15 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
       supabase.from('produkt_varianten').select('*').eq('produkt_id', produkt.id),
       supabase.from('produkt_farben').select('*').eq('produkt_id', produkt.id)
     ])
-    aktuelleVarianten = vData || []
-    aktuelleFarben = fData || []
+    const alleVarianten = vData || []
+    // Farblose Varianten (Standalone-Fall) von den farbgebundenen trennen.
+    aktuelleVarianten = alleVarianten.filter((v) => !v.farbe)
+    aktuelleFarben = (fData || []).map((f) => ({
+      ...f,
+      groessen: alleVarianten
+        .filter((v) => v.farbe === f.farbe)
+        .map((v) => ({ groesse: v.groesse, stueckzahl: v.stueckzahl }))
+    }))
   }
   // Fotos, die bereits einer Farbvariante zugeordnet sind, gehoeren NICHT in
   // die allgemeine Fotos-Liste -- sonst wuerden sie doppelt auftauchen (einmal
@@ -686,6 +746,7 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
   const hatFarbvariantenInit = aktuelleFarben.length > 0
   document.getElementById('pmodal-hat-farbvarianten').checked = hatFarbvariantenInit
   document.getElementById('pmodal-farben-wrap').hidden = !hatFarbvariantenInit
+  document.getElementById('pmodal-groessen-standalone-wrap').hidden = hatFarbvariantenInit
   const farbeInput = document.getElementById('pmodal-farbe')
   farbeInput.disabled = hatFarbvariantenInit
   farbeInput.value = hatFarbvariantenInit ? '' : (produkt?.farbe || '')
