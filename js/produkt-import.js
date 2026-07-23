@@ -16,16 +16,22 @@ import { MODE_KATEGORIE_NAME, UNTERKATEGORIEN, ALLE_GROESSEN_LABELS, ermittleGro
 
 const GESCHLECHTER = ['Herren', 'Damen', 'Unisex']
 const MAX_HIGHLIGHTS = 5
+const MAX_FARBEN = 5
 const VORLAGE_SPALTEN = 15 // leere Produkt-Spalten in der herunterladbaren Vorlage
 
 // Reihenfolge der Felder von oben nach unten -- gilt für Vorlage UND Einlesen
 // Größen-Zeilen decken ALLE möglichen Unterkategorien ab (Oberteile, Hosen,
 // Kinderkleidung, Schuhe, Taschen) -- pro Produkt sind nur die Zeilen relevant,
 // die zur jeweils gewählten Unterkategorie passen, siehe verarbeiteProdukt().
+// Farbvarianten-Zeilen ("Farbe 1 Name/Bild/Stück" ...) beziehen sich mit
+// "Bild" auf einen der Dateinamen aus der "Bilder"-Zeile weiter unten.
+const FARBEN_FELDER = Array.from({ length: MAX_FARBEN }, (_, i) => i + 1)
+  .flatMap((n) => [`Farbe ${n} Name`, `Farbe ${n} Bild`, `Farbe ${n} Stück`])
 const FELD_REIHENFOLGE = [
   'Produktname', 'EAN', 'Beschreibung', 'Preis', 'Kategorie', 'Unterkategorie', 'Geschlecht', 'Farbe', 'Verfügbar',
   'Highlight 1', 'Highlight 2', 'Highlight 3', 'Highlight 4', 'Highlight 5',
   ...ALLE_GROESSEN_LABELS.map((g) => `Größe ${g} Stück`),
+  ...FARBEN_FELDER,
   'Bilder'
 ]
 
@@ -233,6 +239,29 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
     }
   })
 
+  // Farbvarianten: "Bild" verweist auf einen Dateinamen aus der Bilder-Zeile.
+  // Der Index bezieht sich bewusst auf bildEintraege (nur tatsächlich im ZIP
+  // gefundene Fotos), weil genau in dieser Reihenfolge die Fotos beim Import
+  // hochgeladen und in produkte.bilder gespeichert werden.
+  const farbvarianten = []
+  for (let i = 1; i <= MAX_FARBEN; i++) {
+    const farbname = getFeld(feldMap, `Farbe ${i} Name`)
+    if (!farbname) continue
+    const bildRaw = getFeld(feldMap, `Farbe ${i} Bild`)
+    let bildIndex = null
+    if (bildRaw) {
+      const idx = bildEintraege.findIndex((e) => e.name.toLowerCase() === bildRaw.toLowerCase())
+      if (idx === -1) {
+        warnungen.push(`Farbe "${farbname}": Foto "${bildRaw}" nicht gefunden -- Farbe wird ohne Bild-Zuordnung angelegt`)
+      } else {
+        bildIndex = idx
+      }
+    }
+    let stk = parseGanzzahl(getFeld(feldMap, `Farbe ${i} Stück`))
+    if (stk === null) stk = 1
+    farbvarianten.push({ farbe: farbname, bild_index: bildIndex, stueckzahl: stk })
+  }
+
   return {
     produktNr,
     titel,
@@ -247,6 +276,7 @@ function verarbeiteProdukt (feldMap, produktNr, kategorienByName, fotoDateien) {
     verfuegbar,
     highlights,
     varianten,
+    farbvarianten,
     bildEintraege,
     fehler,
     warnungen,
@@ -451,7 +481,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
         <div class="dash-table-wrap">
           <table class="dash-table">
             <thead>
-              <tr><th>Produkt</th><th>Name</th><th>EAN</th><th>Preis</th><th>Kategorie</th><th>Unterkategorie</th><th>Geschlecht</th><th>Farbe</th><th>Fotos</th><th>Status</th></tr>
+              <tr><th>Produkt</th><th>Name</th><th>EAN</th><th>Preis</th><th>Kategorie</th><th>Unterkategorie</th><th>Geschlecht</th><th>Farbe</th><th>Farbvarianten</th><th>Fotos</th><th>Status</th></tr>
             </thead>
             <tbody>
               ${verarbeiteteProdukte.map((z) => `
@@ -464,6 +494,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
                   <td>${z.unterkategorie ? esc(unterkategorieLabel(z.unterkategorie)) : '—'}</td>
                   <td>${z.geschlecht ? esc(z.geschlecht) : '—'}</td>
                   <td>${z.farbe ? esc(z.farbe) : '—'}</td>
+                  <td>${z.farbvarianten.length ? esc(z.farbvarianten.map(f => f.farbe).join(', ')) : '—'}</td>
                   <td>${z.bildEintraege.length}/${z.bildEintraege.length + z.warnungen.filter(w => w.includes('nicht im ZIP') || w.includes('kein ZIP')).length}</td>
                   <td>${z.ok
                     ? `<span class="badge">OK</span>${z.warnungen.length ? `<div class="dash-csv-warnung">${z.warnungen.map(esc).join('<br>')}</div>` : ''}`
@@ -527,6 +558,12 @@ export function initProduktImport ({ getShop, onImportiert }) {
         if (z.varianten.length) {
           await supabase.from('produkt_varianten').insert(
             z.varianten.map((v) => ({ produkt_id: neuesProdukt.id, groesse: v.groesse, stueckzahl: v.stueckzahl }))
+          )
+        }
+
+        if (z.farbvarianten.length) {
+          await supabase.from('produkt_farben').insert(
+            z.farbvarianten.map((f) => ({ produkt_id: neuesProdukt.id, farbe: f.farbe, bild_index: f.bild_index, stueckzahl: f.stueckzahl }))
           )
         }
 

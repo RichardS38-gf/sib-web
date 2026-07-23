@@ -1320,6 +1320,48 @@ textarea.form-input {
 }
 .pmodal-add-btn:hover { border-color: var(--color-ink); color: var(--color-ink); }
 
+/* Farbvarianten-Liste */
+.pmodal-farben {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.pmodal-farbe-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.7fr auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.pmodal-farbe-name,
+.pmodal-farbe-bild,
+.pmodal-farbe-stk {
+  padding: 0.5rem 0.6rem;
+  font-size: var(--text-sm);
+}
+
+.pmodal-farbe-del {
+  background: none;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  cursor: pointer;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pmodal-farbe-del:hover { color: var(--color-ink); border-color: var(--color-ink); }
+
+@media (max-width: 600px) {
+  .pmodal-farbe-row { grid-template-columns: 1fr; }
+}
+
 /* Details-Bild */
 .pmodal-upload-area--sm {
   padding: 0.45rem 0.75rem;

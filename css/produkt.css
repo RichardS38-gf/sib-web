@@ -56,6 +56,14 @@
   object-fit: cover;
   border-radius: var(--radius-sm);
   display: block;
+  cursor: pointer;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.15s;
+}
+
+.pdp-gallery__grid-img.is-active {
+  outline-color: var(--color-ink);
 }
 
 /* Erstes Bild im Grid = breites Bild, volle Breite */

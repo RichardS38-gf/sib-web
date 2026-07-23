@@ -10,6 +10,7 @@ let aktuellesProduktId = null
 let bildUrls = []
 let featuresList = []
 let aktuelleVarianten = []
+let aktuelleFarben = []
 const MAX_FEATURES = 5
 
 // ── Modal-HTML einmalig in den DOM injizieren ──
@@ -154,8 +155,16 @@ export function initProduktModal () {
 
           <!-- Farbe -->
           <div class="pmodal-field">
-            <label class="pmodal-label" for="pmodal-farbe">Farbe <span class="pmodal-hint-inline">(optional)</span></label>
+            <label class="pmodal-label" for="pmodal-farbe">Farbe <span class="pmodal-hint-inline">(optional, Freitext)</span></label>
             <input class="form-input" id="pmodal-farbe" name="farbe" type="text" autocomplete="off" placeholder="z.B. Oliv, Schwarz/Weiß">
+          </div>
+
+          <!-- Farbvarianten -->
+          <div class="pmodal-field">
+            <label class="pmodal-label">Farbvarianten <span class="pmodal-hint-inline">(optional — für Produkte mit mehreren Farben)</span></label>
+            <div class="pmodal-farben" id="pmodal-farben-list"></div>
+            <button type="button" class="pmodal-add-btn" id="pmodal-add-farbe">+ Farbvariante hinzufügen</button>
+            <p class="pmodal-hint">Die Bild-Zuordnung bezieht sich auf die Reihenfolge der Fotos oben (Foto 1, Foto 2, …). Ist mindestens eine Farbvariante gesetzt, zeigt die Produktseite ein Farb-Dropdown statt des Freitexts an.</p>
           </div>
 
           <!-- Kategorie + Verfügbarkeit -->
@@ -200,6 +209,12 @@ export function initProduktModal () {
     renderFeatures()
     // Fokus auf das neue Feld
     const inputs = document.querySelectorAll('.pmodal-feature-input')
+    inputs[inputs.length - 1]?.focus()
+  })
+  document.getElementById('pmodal-add-farbe').addEventListener('click', () => {
+    aktuelleFarben.push({ farbe: '', bild_index: null, stueckzahl: 1 })
+    renderFarben()
+    const inputs = document.querySelectorAll('.pmodal-farbe-name')
     inputs[inputs.length - 1]?.focus()
   })
   document.getElementById('pmodal-form').addEventListener('submit', handleSpeichern)
@@ -294,6 +309,57 @@ async function speichereVarianten (produktId) {
   if (neu.length) await supabase.from('produkt_varianten').insert(neu)
 }
 
+// ── Farbvarianten ──
+function renderFarben () {
+  const container = document.getElementById('pmodal-farben-list')
+  if (!container) return
+  container.innerHTML = aktuelleFarben.map((f, i) => `
+    <div class="pmodal-farbe-row">
+      <input class="form-input pmodal-farbe-name" type="text" value="${escAttr(f.farbe || '')}" data-fidx="${i}" placeholder="z.B. Blau">
+      <select class="form-select pmodal-farbe-bild" data-fidx="${i}">
+        <option value="">— kein Foto —</option>
+        ${bildUrls.map((_, bi) => `<option value="${bi}" ${Number(f.bild_index) === bi ? 'selected' : ''}>Foto ${bi + 1}</option>`).join('')}
+      </select>
+      <input class="form-input pmodal-farbe-stk" type="number" min="0" value="${f.stueckzahl ?? 1}" data-fidx="${i}" placeholder="Stück">
+      <button type="button" class="pmodal-farbe-del" data-fidx="${i}" title="Entfernen">&#x2715;</button>
+    </div>`).join('')
+
+  container.querySelectorAll('.pmodal-farbe-name').forEach((inp) => {
+    inp.addEventListener('input', () => { aktuelleFarben[parseInt(inp.dataset.fidx)].farbe = inp.value })
+  })
+  container.querySelectorAll('.pmodal-farbe-bild').forEach((sel) => {
+    sel.addEventListener('change', () => { aktuelleFarben[parseInt(sel.dataset.fidx)].bild_index = sel.value === '' ? null : parseInt(sel.value, 10) })
+  })
+  container.querySelectorAll('.pmodal-farbe-stk').forEach((inp) => {
+    inp.addEventListener('input', () => { aktuelleFarben[parseInt(inp.dataset.fidx)].stueckzahl = parseInt(inp.value, 10) || 0 })
+  })
+  container.querySelectorAll('.pmodal-farbe-del').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      aktuelleFarben.splice(parseInt(btn.dataset.fidx), 1)
+      renderFarben()
+    })
+  })
+}
+
+async function speichereFarben (produktId) {
+  const neu = []
+  document.querySelectorAll('#pmodal-farben-list .pmodal-farbe-row').forEach((row) => {
+    const farbe = row.querySelector('.pmodal-farbe-name').value.trim()
+    if (!farbe) return
+    const bildRaw = row.querySelector('.pmodal-farbe-bild').value
+    let stk = parseInt(row.querySelector('.pmodal-farbe-stk').value, 10)
+    if (isNaN(stk) || stk < 0) stk = 0
+    neu.push({
+      produkt_id: produktId,
+      farbe,
+      bild_index: bildRaw === '' ? null : parseInt(bildRaw, 10),
+      stueckzahl: stk
+    })
+  })
+  await supabase.from('produkt_farben').delete().eq('produkt_id', produktId)
+  if (neu.length) await supabase.from('produkt_farben').insert(neu)
+}
+
 // ── Thumbnails ──
 function renderThumbs () {
   const container = document.getElementById('pmodal-thumbs')
@@ -308,6 +374,7 @@ function renderThumbs () {
     btn.addEventListener('click', () => {
       bildUrls.splice(parseInt(btn.dataset.idx), 1)
       renderThumbs()
+      renderFarben()
     })
   })
 }
@@ -408,6 +475,7 @@ async function handleDateiUpload (e) {
       ok++
       status.textContent = `Lädt hoch (${ok}/${dateien.length})…`
       renderThumbs()
+      renderFarben()
     } catch (err) {
       console.error('Bild-Upload fehlgeschlagen:', err)
     }
@@ -495,13 +563,17 @@ async function handleSpeichern (e) {
         throw new Error('Keine Zeile aktualisiert — Produkt nicht gefunden oder keine Berechtigung.')
       }
       await speichereVarianten(aktuellesProduktId)
+      await speichereFarben(aktuellesProduktId)
       // Callback VOR dem Schließen sichern -- schliesseProduktModal() setzt ihn auf null
       const cb = onSaveCallback
       schliesseProduktModal()
       if (cb) cb(null)
     } else {
       const neueId = await onSaveCallback(daten)
-      if (neueId) await speichereVarianten(neueId)
+      if (neueId) {
+        await speichereVarianten(neueId)
+        await speichereFarben(neueId)
+      }
       schliesseProduktModal()
     }
   } catch (err) {
@@ -529,9 +601,14 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
   bildUrls = Array.isArray(produkt?.bilder) ? [...produkt.bilder.filter(Boolean)] : []
   featuresList = Array.isArray(produkt?.highlights) ? [...produkt.highlights].slice(0, MAX_FEATURES) : []
   aktuelleVarianten = []
+  aktuelleFarben = []
   if (produkt?.id) {
-    const { data } = await supabase.from('produkt_varianten').select('*').eq('produkt_id', produkt.id)
-    aktuelleVarianten = data || []
+    const [{ data: vData }, { data: fData }] = await Promise.all([
+      supabase.from('produkt_varianten').select('*').eq('produkt_id', produkt.id),
+      supabase.from('produkt_farben').select('*').eq('produkt_id', produkt.id)
+    ])
+    aktuelleVarianten = vData || []
+    aktuelleFarben = fData || []
   }
 
   const shopGroup = document.getElementById('pmodal-shop-group')
@@ -565,6 +642,7 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
   renderThumbs()
   renderFeatures()
   renderGroessenGrid()
+  renderFarben()
   setzeDetailsBildPreview(produkt?.details_bild_url || null)
   modal.hidden = false
   document.body.style.overflow = 'hidden'
@@ -578,5 +656,6 @@ export function schliesseProduktModal () {
   aktuellesProduktId = null
   bildUrls = []
   featuresList = []
+  aktuelleFarben = []
   onSaveCallback = null
 }

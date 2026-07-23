@@ -12,6 +12,11 @@ const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR'
 let selectedGroesse = null
 let hatVarianten = false
 
+// Ausgewählte Farbe (Variante) für die Reservierung + Bild-Zuordnung
+let selectedFarbe = null
+let hatFarbvarianten = false
+let aktuelleBilder = []
+
 // Feste Größen-Reihenfolge für das Dropdown
 const GROESSEN_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Einheitsgröße']
 
@@ -104,6 +109,17 @@ function bilderOf (produkt) {
   return Array.isArray(produkt.bilder) ? produkt.bilder.filter(Boolean) : []
 }
 
+// Wechselt das Hauptbild auf den übergebenen Bild-Index (0 = erstes Bild)
+// und markiert das passende Thumbnail als aktiv.
+function zeigeBild (index) {
+  if (index === null || index === undefined || !aktuelleBilder[index]) return
+  const main = document.getElementById('gallery-main')
+  if (main && main.tagName === 'IMG') main.src = aktuelleBilder[index]
+  document.querySelectorAll('.pdp-gallery__grid-img[data-index]').forEach((t) => {
+    t.classList.toggle('is-active', Number(t.dataset.index) === index)
+  })
+}
+
 function notFound (text) {
   const el = document.getElementById('produkt-detail')
   el.innerHTML = `
@@ -115,7 +131,7 @@ function notFound (text) {
 }
 
 // ── Detail rendern ──
-function renderDetail (produkt, varianten = []) {
+function renderDetail (produkt, varianten = [], farben = []) {
   const el = document.getElementById('produkt-detail')
   const bilder = bilderOf(produkt)
   const shop = produkt.shops || null
@@ -126,15 +142,18 @@ function renderDetail (produkt, varianten = []) {
 
   selectedGroesse = null
   hatVarianten = varianten.length > 0
+  selectedFarbe = null
+  hatFarbvarianten = farben.length > 0
+  aktuelleBilder = bilder
 
   // Galerie
   const mainImg = bilder[0]
-    ? `<img class="pdp-gallery__main" id="gallery-main" src="${esc(bilder[0])}" alt="${esc(produkt.titel)}">`
+    ? `<img class="pdp-gallery__main" id="gallery-main" data-index="0" src="${esc(bilder[0])}" alt="${esc(produkt.titel)}">`
     : '<div class="pdp-gallery__main" id="gallery-main"></div>'
 
   const thumbsHtml = bilder.length > 1
     ? `<div class="pdp-gallery__grid">${bilder.slice(1).map((b, i) =>
-        `<img class="pdp-gallery__grid-img" src="${esc(b)}" alt="${esc(produkt.titel)} ${i + 2}" loading="lazy">`
+        `<img class="pdp-gallery__grid-img" data-index="${i + 1}" src="${esc(b)}" alt="${esc(produkt.titel)} ${i + 2}" loading="lazy">`
       ).join('')}</div>`
     : ''
 
@@ -159,9 +178,23 @@ function renderDetail (produkt, varianten = []) {
     ? `<div class="pdp-meta-row"><span class="pdp-meta-label">Geschlecht</span><span class="pdp-meta-value">${esc(produkt.geschlecht)}</span></div>`
     : ''
 
-  // Farbe -- nur anzeigen, wenn gesetzt
-  const farbeHtml = produkt.farbe
+  // Farbe -- Dropdown bei Farbvarianten, sonst Freitext-Anzeige falls gesetzt
+  const farbeMetaHtml = (!hatFarbvarianten && produkt.farbe)
     ? `<div class="pdp-meta-row"><span class="pdp-meta-label">Farbe</span><span class="pdp-meta-value">${esc(produkt.farbe)}</span></div>`
+    : ''
+
+  const farbeFieldHtml = hatFarbvarianten
+    ? `<div class="pdp-field">
+        <label class="pdp-field__label" for="farbe-select">Farbe</label>
+        <select class="form-select" id="farbe-select">
+          <option value="">Bitte wählen…</option>
+          ${farben.map((f) => {
+            const ausverkauft = !(f.stueckzahl > 0)
+            const bildIndex = (f.bild_index === null || f.bild_index === undefined) ? '' : f.bild_index
+            return `<option value="${esc(f.farbe)}" data-bild-index="${bildIndex}"${ausverkauft ? ' disabled' : ''}>${esc(f.farbe)}${ausverkauft ? ' (Nicht verfügbar)' : ''}</option>`
+          }).join('')}
+        </select>
+      </div>`
     : ''
 
   // EAN -- Platzhalter 000000000 bis echte EANs für alle Produkte gepflegt sind
@@ -225,8 +258,9 @@ function renderDetail (produkt, varianten = []) {
         <hr class="pdp-divider">
         ${kategorieHtml}
         ${geschlechtHtml}
-        ${farbeHtml}
+        ${farbeMetaHtml}
         ${eanHtml}
+        ${farbeFieldHtml}
         ${groesseHtml}
         <form class="pdp-form" id="reservierung-form" novalidate>
           ${formularHtml}
@@ -255,8 +289,23 @@ function renderDetail (produkt, varianten = []) {
   })
   if (verfuegbar) {
     initGroessen()
+    initFarben()
     initReservierung(produkt)
   }
+}
+
+// Farbe-Dropdown
+function initFarben () {
+  const select = document.getElementById('farbe-select')
+  if (!select) return
+  select.addEventListener('change', () => {
+    selectedFarbe = select.value || null
+    const opt = select.options[select.selectedIndex]
+    const bildIndexRaw = opt?.dataset.bildIndex
+    if (bildIndexRaw !== undefined && bildIndexRaw !== '') {
+      zeigeBild(parseInt(bildIndexRaw, 10))
+    }
+  })
 }
 
 // Größen-Dropdown
@@ -270,14 +319,10 @@ function initGroessen () {
 
 // Thumbnail-Klick tauscht das Hauptbild
 function initGallery () {
-  const main = document.getElementById('gallery-main')
-  const thumbs = document.querySelectorAll('.pdp-gallery__thumb')
+  const thumbs = document.querySelectorAll('.pdp-gallery__grid-img[data-index]')
   thumbs.forEach((thumb) => {
     thumb.addEventListener('click', () => {
-      const src = thumb.getAttribute('data-src')
-      if (main.tagName === 'IMG') main.src = src
-      thumbs.forEach((t) => t.classList.remove('is-active'))
-      thumb.classList.add('is-active')
+      zeigeBild(Number(thumb.dataset.index))
     })
   })
 }
@@ -340,6 +385,11 @@ async function initReservierung (produkt) {
       return
     }
 
+    if (hatFarbvarianten && !selectedFarbe) {
+      feedback.innerHTML = '<div class="error-msg">Bitte wähle eine Farbe.</div>'
+      return
+    }
+
     const submitBtn = form.querySelector('button[type="submit"]')
     submitBtn.disabled = true
     submitBtn.textContent = 'Wird gesendet…'
@@ -353,6 +403,7 @@ async function initReservierung (produkt) {
         kunde_name: name,
         kunde_email: email,
         groesse: selectedGroesse,
+        farbe: selectedFarbe,
         status: 'offen',
         ablauf_am: ablauf,
         user_id: session?.user?.id || null
@@ -673,7 +724,19 @@ async function init () {
       console.error('Größen konnten nicht geladen werden:', vErr)
     }
 
-    renderDetail(data, varianten)
+    let farben = []
+    try {
+      const { data: fData, error: fErr } = await supabase
+        .from('produkt_farben')
+        .select('*')
+        .eq('produkt_id', data.id)
+        .order('erstellt_am', { ascending: true })
+      if (!fErr) farben = fData || []
+    } catch (fErr) {
+      console.error('Farben konnten nicht geladen werden:', fErr)
+    }
+
+    renderDetail(data, varianten, farben)
     renderDetails(data)
     ladeBewertungen(data)
     initBewertungForm(data)
