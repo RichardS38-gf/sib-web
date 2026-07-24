@@ -293,7 +293,7 @@
 .category-card__img-wrap {
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 50%;
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
