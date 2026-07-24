@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, isSaleAktiv, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js'
+import { renderProductCard, fetchProductRatings, isSaleAktiv, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=3'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -120,7 +120,7 @@ function bilderOf (produkt) {
 function baueGalerieHtml () {
   const bilder = aktuelleBilder
   if (!bilder.length) {
-    return { mainHtml: '<div class="pdp-gallery__main" id="gallery-main"></div>', thumbsHtml: '' }
+    return { mainHtml: '<div class="pdp-gallery__main" id="gallery-main" style="aspect-ratio:1/1"></div>', thumbsHtml: '' }
   }
   const hero = (aktuellesHeroBild && bilder.includes(aktuellesHeroBild)) ? aktuellesHeroBild : bilder[0]
   let rest = bilder.filter((b) => b !== hero)
