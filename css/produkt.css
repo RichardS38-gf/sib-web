@@ -33,7 +33,7 @@
 
 .pdp-gallery__main {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: var(--radius-md);
   display: block;
@@ -52,7 +52,7 @@
 
 .pdp-gallery__grid-img {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: var(--radius-sm);
   display: block;
@@ -66,11 +66,7 @@
   outline-color: var(--color-ink);
 }
 
-/* Erstes Bild im Grid = breites Bild, volle Breite */
-.pdp-gallery__grid-img:first-child {
-  grid-column: 1 / -1;
-  aspect-ratio: 16 / 9;
-}
+/* Alle Grid-Thumbnails einheitlich quadratisch (auch das erste) */
 
 /* ─── Info-Box ─── */
 .pdp-info {
