@@ -79,6 +79,7 @@
 .product-card {
   display: flex;
   flex-direction: column;
+  aspect-ratio: 1 / 1;
   background: var(--color-bg);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
@@ -91,10 +92,12 @@
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
-/* Bild-Wrapper */
+/* Bild-Wrapper -- füllt den Platz, der nach Abzug der Textzeilen unten von
+   der quadratischen Karte übrig bleibt (kein eigenes aspect-ratio mehr) */
 .product-card__img-wrap {
   position: relative;
-  aspect-ratio: 1 / 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
   background: var(--color-bg-soft);
 }
@@ -180,11 +183,11 @@
 
 /* Body */
 .product-card__body {
-  padding: 0.75rem;
+  padding: 0.6rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  flex: 1;
+  gap: 0.35rem;
+  flex: 0 0 auto;
 }
 
 .product-card__content {
