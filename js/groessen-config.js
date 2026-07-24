@@ -20,6 +20,10 @@ function baueHosenGroessen () {
   const laengen = [28, 30, 32, 34]
   const out = []
   weiten.forEach((w) => laengen.forEach((l) => out.push(`W${w}/L${l}`)))
+  // Sicherstellen, dass W28/L28 auf jeden Fall enthalten ist (explizit
+  // angefragte Größe -- falls sie durch eine künftige Änderung der Weiten/
+  // Längen-Listen oben mal rausfallen sollte).
+  if (!out.includes('W28/L28')) out.splice(out.indexOf('W28/L30'), 0, 'W28/L28')
   return out
 }
 
