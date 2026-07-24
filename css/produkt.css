@@ -33,7 +33,7 @@
 
 .pdp-gallery__main {
   width: 100%;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
   border-radius: var(--radius-md);
   display: block;
@@ -52,7 +52,7 @@
 
 .pdp-gallery__grid-img {
   width: 100%;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
   border-radius: var(--radius-sm);
   display: block;
