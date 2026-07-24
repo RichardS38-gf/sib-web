@@ -4,7 +4,7 @@
 // Farbvarianten mit eigenem Foto und eigener Größen/Stück-Matrix pro Farbe.
 
 import { supabase } from './supabase.js'
-import { UNTERKATEGORIEN, MODE_KATEGORIE_NAME, ermittleGroessenSet } from './groessen-config.js'
+import { UNTERKATEGORIEN, MODE_KATEGORIE_NAME, ermittleGroessenSet } from './groessen-config.js?v=2'
 
 let onSaveCallback = null
 let aktuellesProduktId = null

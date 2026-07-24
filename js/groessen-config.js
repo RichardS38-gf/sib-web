@@ -17,7 +17,7 @@ export const UNTERKATEGORIEN = [
 
 function baueHosenGroessen () {
   const weiten = [26, 27, 28, 29, 30, 31, 32, 33, 34, 36, 38, 40]
-  const laengen = [30, 32, 34]
+  const laengen = [28, 30, 32, 34]
   const out = []
   weiten.forEach((w) => laengen.forEach((l) => out.push(`W${w}/L${l}`)))
   return out
