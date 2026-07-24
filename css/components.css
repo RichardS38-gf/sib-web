@@ -301,7 +301,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
   background-color: var(--color-bg-soft);
   transition: transform 0.3s ease;
   display: block;
