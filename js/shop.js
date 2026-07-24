@@ -51,6 +51,13 @@ function sterneHtml (n, max = 5) {
   return '<span class="stern-on">★</span>'.repeat(v) + '<span class="stern-off">★</span>'.repeat(max - v) + `<span class="bw-karte__sterne-text">${v} von ${max}</span>`
 }
 
+// Baut aus einer deutschen Rufnummer einen wa.me-Link (WhatsApp).
+function whatsappLink (telefon) {
+  let ziffern = String(telefon).replace(/[^\d]/g, '')
+  if (ziffern.startsWith('0')) ziffern = '49' + ziffern.slice(1)
+  return `https://wa.me/${ziffern}`
+}
+
 function avatarHtml (name) {
   const initials = (name || '?').trim().slice(0, 1).toUpperCase()
   const colors = ['#2D6A4F','#1B4332','#52796F','#354F52','#40916C','#1D3557','#457B9D','#6D4C41']

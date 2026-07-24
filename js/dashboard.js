@@ -908,6 +908,7 @@ function fuelleShopForm () {
   const f = document.getElementById('shop-form')
   f.name.value = shop.name || ''
   f.adresse.value = shop.adresse || ''
+  f.telefon.value = shop.telefon || ''
   f.email.value = shop.email || ''
   f.about_headline.value = shop.about_headline || ''
   f.beschreibung.value = shop.beschreibung || ''
@@ -922,6 +923,8 @@ function fuelleShopForm () {
 
   const msgToggle = document.getElementById('sf-messaging')
   if (msgToggle) msgToggle.checked = !!shop.messaging_enabled
+  const whatsappToggle = document.getElementById('sf-whatsapp')
+  if (whatsappToggle) whatsappToggle.checked = !!shop.whatsapp_aktiv
 }
 
 function initShopForm () {
@@ -942,6 +945,7 @@ function initShopForm () {
     const updates = {
       name: form.name.value.trim(),
       adresse: form.adresse.value.trim() || null,
+      telefon: form.telefon.value.trim() || null,
       email: form.email.value.trim() || null,
       about_headline: form.about_headline.value.trim() || null,
       beschreibung: form.beschreibung.value.trim() || null,
@@ -952,7 +956,8 @@ function initShopForm () {
       banner_url: bannerUrl,
       bild_url: titelbildUrl,
       agb_url: agbUrl,
-      messaging_enabled: document.getElementById('sf-messaging')?.checked ?? false
+      messaging_enabled: document.getElementById('sf-messaging')?.checked ?? false,
+      whatsapp_aktiv: document.getElementById('sf-whatsapp')?.checked ?? false
     }
 
     if (!updates.name) {
