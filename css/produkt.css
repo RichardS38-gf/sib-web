@@ -33,10 +33,9 @@
 
 .pdp-gallery__main {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border-radius: var(--radius-md);
+  height: auto;
   display: block;
+  border-radius: var(--radius-md);
   background: var(--color-bg-soft);
 }
 
@@ -52,11 +51,10 @@
 
 .pdp-gallery__grid-img {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
+  height: auto;
+  display: block;
   background: var(--color-bg-soft);
   border-radius: var(--radius-sm);
-  display: block;
   cursor: pointer;
   outline: 2px solid transparent;
   outline-offset: 2px;
