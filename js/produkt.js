@@ -352,28 +352,36 @@ function initFarben () {
   const select = document.getElementById('farbe-select')
   if (!select) return
 
-  const wendeFarbeAn = () => {
-    selectedFarbe = select.value || null
-    const opt = select.options[select.selectedIndex]
-    const bildUrl = opt?.dataset.bildUrl
-    if (bildUrl) aktualisiereGalerie(bildUrl)
-    const eanEl = document.getElementById('ean-value')
-    if (eanEl) eanEl.textContent = (opt?.dataset.ean) || '000000000'
-    if (hatFarbGroessen) aktualisiereGroesseFuerFarbe()
-  }
-
-  select.addEventListener('change', wendeFarbeAn)
+  select.addEventListener('change', () => wendeFarbeAn(select.value))
 
   // Deep-Link von der Produktkarten-Übersicht (?farbe=NAME): Farbe direkt
   // vorauswählen, damit Bild/EAN/Größen sofort zur gewählten Variante passen.
   const farbeParam = new URLSearchParams(window.location.search).get('farbe')
   if (farbeParam) {
     const treffer = Array.from(select.options).find((o) => o.value === farbeParam)
-    if (treffer) {
-      select.value = farbeParam
-      wendeFarbeAn()
-    }
+    if (treffer) wendeFarbeAn(farbeParam)
   }
+}
+
+// Setzt die gewählte Farbe im Dropdown + aktualisiert EAN/Größen. Wird von
+// zwei Stellen aufgerufen: (1) manuelle Auswahl im Dropdown selbst -- dort
+// muss zusätzlich die Galerie springen; (2) Klick auf ein Farb-Foto in der
+// Galerie -- dort ist das Hauptbild schon gesetzt, nur das Dropdown muss
+// nachziehen. `bildSchonAktuell` verhindert in Fall (2) ein doppeltes/zirkuläres
+// Springen der Galerie.
+function wendeFarbeAn (farbeName, { bildSchonAktuell = false } = {}) {
+  const select = document.getElementById('farbe-select')
+  if (!select) return
+  select.value = farbeName
+  selectedFarbe = select.value || null
+  const opt = select.options[select.selectedIndex]
+  if (!bildSchonAktuell) {
+    const bildUrl = opt?.dataset.bildUrl
+    if (bildUrl) aktualisiereGalerie(bildUrl)
+  }
+  const eanEl = document.getElementById('ean-value')
+  if (eanEl) eanEl.textContent = (opt?.dataset.ean) || '000000000'
+  if (hatFarbGroessen) aktualisiereGroesseFuerFarbe()
 }
 
 // Füllt das Größen-Dropdown mit den zur gewählten Farbe passenden Größen
@@ -405,12 +413,21 @@ function initGroessen () {
   })
 }
 
-// Thumbnail-Klick tauscht das Hauptbild
+// Thumbnail-Klick tauscht das Hauptbild -- gehört das Foto zu einer
+// Farbvariante, springt zusätzlich das "Farbe"-Dropdown auf diese Farbe.
 function initGallery () {
   const thumbs = document.querySelectorAll('.pdp-gallery__grid-img[data-url]')
   thumbs.forEach((thumb) => {
     thumb.addEventListener('click', () => {
-      aktualisiereGalerie(thumb.dataset.url)
+      const url = thumb.dataset.url
+      aktualisiereGalerie(url)
+      const select = document.getElementById('farbe-select')
+      if (select) {
+        const treffer = Array.from(select.options).find((o) => o.dataset.bildUrl === url)
+        if (treffer && treffer.value !== selectedFarbe) {
+          wendeFarbeAn(treffer.value, { bildSchonAktuell: true })
+        }
+      }
     })
   })
 }
