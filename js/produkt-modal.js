@@ -12,6 +12,7 @@ let bildUrls = []
 let featuresList = []
 let aktuelleVarianten = []
 let aktuelleFarben = []
+let detailsBilder = []
 const MAX_FEATURES = 5
 
 // ── Modal-HTML einmalig in den DOM injizieren ──
@@ -129,16 +130,15 @@ export function initProduktModal () {
             <button type="button" class="pmodal-add-btn" id="pmodal-add-feature">+ Feature hinzufügen</button>
           </div>
 
-          <!-- Details-Bild -->
+          <!-- Details-Bilder -->
           <div class="pmodal-field">
-            <label class="pmodal-label">Details-Bild <span class="pmodal-hint-inline">(wird neben den Features angezeigt)</span></label>
-            <div class="pmodal-details-bild-preview" id="pmodal-details-bild-preview"></div>
+            <label class="pmodal-label">Details-Bilder <span class="pmodal-hint-inline">(werden neben den Features angezeigt; bei mehreren als Slider)</span></label>
+            <div class="pmodal-thumbs" id="pmodal-details-thumbs"></div>
             <label class="pmodal-upload-area pmodal-upload-area--sm">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span>Bild hochladen</span>
-              <input type="file" id="pmodal-details-bild-input" accept="image/*" style="display:none">
+              <span>Bilder hochladen</span>
+              <input type="file" id="pmodal-details-bild-input" accept="image/*" multiple style="display:none">
             </label>
-            <button type="button" class="pmodal-details-bild-remove" id="pmodal-details-bild-remove" hidden>Bild entfernen</button>
             <span class="pmodal-upload-hint" id="pmodal-details-bild-status"></span>
           </div>
 
@@ -202,9 +202,6 @@ export function initProduktModal () {
   document.getElementById('pmodal-cancel').addEventListener('click', schliesseProduktModal)
   document.getElementById('pmodal-file-input').addEventListener('change', handleDateiUpload)
   document.getElementById('pmodal-details-bild-input').addEventListener('change', handleDetailsBildUpload)
-  document.getElementById('pmodal-details-bild-remove').addEventListener('click', () => {
-    setzeDetailsBildPreview(null)
-  })
   document.getElementById('pmodal-angebot-remove').addEventListener('click', () => {
     document.getElementById('pmodal-angebotspreis').value = ''
     document.getElementById('pmodal-angebot-von').value = ''
@@ -532,41 +529,51 @@ function escAttr (v) {
   return String(v ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-// ── Details-Bild ──
-function setzeDetailsBildPreview (url) {
-  const preview = document.getElementById('pmodal-details-bild-preview')
-  const removeBtn = document.getElementById('pmodal-details-bild-remove')
-  if (!preview) return
-  if (url) {
-    preview.innerHTML = `<img src="${escAttr(url)}" alt="Details-Bild" style="max-height:120px;border-radius:6px;object-fit:cover;">`
-    preview.dataset.url = url
-    if (removeBtn) removeBtn.hidden = false
-  } else {
-    preview.innerHTML = ''
-    preview.dataset.url = ''
-    if (removeBtn) removeBtn.hidden = true
-  }
+// ── Details-Bilder ──
+function renderDetailsThumbs () {
+  const container = document.getElementById('pmodal-details-thumbs')
+  if (!container) return
+  container.innerHTML = detailsBilder.map((url, i) => `
+    <div class="pmodal-thumb">
+      <img src="${escAttr(url)}" alt="Details-Bild ${i + 1}">
+      <button type="button" class="pmodal-thumb-del" data-idx="${i}" title="Entfernen">&#x2715;</button>
+    </div>`).join('')
+
+  container.querySelectorAll('.pmodal-thumb-del').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      detailsBilder.splice(parseInt(btn.dataset.idx), 1)
+      renderDetailsThumbs()
+    })
+  })
 }
 
 async function handleDetailsBildUpload (e) {
-  const datei = e.target.files[0]
-  if (!datei) return
+  const dateien = Array.from(e.target.files)
+  if (!dateien.length) return
   const status = document.getElementById('pmodal-details-bild-status')
-  status.textContent = 'Lädt hoch…'
-  try {
-    const ext = datei.name.split('.').pop().toLowerCase()
-    const pfad = `details-bild/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { data, error } = await supabase.storage
-      .from('produkt-bilder')
-      .upload(pfad, datei, { cacheControl: '3600', upsert: false })
-    if (error) throw error
-    const { data: { publicUrl } } = supabase.storage.from('produkt-bilder').getPublicUrl(data.path)
-    setzeDetailsBildPreview(publicUrl)
-    status.textContent = 'Hochgeladen.'
-  } catch (err) {
-    console.error('Details-Bild-Upload fehlgeschlagen:', err)
-    status.textContent = 'Upload fehlgeschlagen.'
+  status.textContent = `Lädt hoch (0/${dateien.length})…`
+
+  let ok = 0
+  for (const datei of dateien) {
+    try {
+      const ext = datei.name.split('.').pop().toLowerCase()
+      const pfad = `details-bild/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { data, error } = await supabase.storage
+        .from('produkt-bilder')
+        .upload(pfad, datei, { cacheControl: '3600', upsert: false })
+      if (error) throw error
+      const { data: { publicUrl } } = supabase.storage.from('produkt-bilder').getPublicUrl(data.path)
+      detailsBilder.push(publicUrl)
+      ok++
+      status.textContent = `Lädt hoch (${ok}/${dateien.length})…`
+      renderDetailsThumbs()
+    } catch (err) {
+      console.error('Details-Bild-Upload fehlgeschlagen:', err)
+    }
   }
+  status.textContent = ok === dateien.length
+    ? `${ok} Bild${ok === 1 ? '' : 'er'} hochgeladen.`
+    : `${ok} von ${dateien.length} erfolgreich.`
   e.target.value = ''
 }
 
@@ -670,7 +677,8 @@ async function handleSpeichern (e) {
     angebotspreis: angebotpreisRaw ? parseFloat(angebotpreisRaw) : null,
     angebot_von: angebotVon,
     angebot_bis: angebotBis,
-    details_bild_url: document.getElementById('pmodal-details-bild-preview')?.dataset.url || null
+    details_bilder: detailsBilder.length ? detailsBilder : null,
+    details_bild_url: detailsBilder[0] || null
   }
   if (gewaehlteShopId) daten.shop_id = gewaehlteShopId
 
@@ -749,6 +757,9 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
   bildUrls = Array.isArray(produkt?.bilder)
     ? produkt.bilder.filter(Boolean).filter((u) => !farbUrls.has(u))
     : []
+  detailsBilder = (Array.isArray(produkt?.details_bilder) && produkt.details_bilder.length)
+    ? produkt.details_bilder.filter(Boolean)
+    : (produkt?.details_bild_url ? [produkt.details_bild_url] : [])
 
   const shopGroup = document.getElementById('pmodal-shop-group')
   const shopSelect = document.getElementById('pmodal-shop')
@@ -790,7 +801,7 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
   renderFeatures()
   renderGroessenGrid()
   renderFarben()
-  setzeDetailsBildPreview(produkt?.details_bild_url || null)
+  renderDetailsThumbs()
   modal.hidden = false
   document.body.style.overflow = 'hidden'
   setTimeout(() => document.getElementById('pmodal-titel').focus(), 50)
@@ -804,5 +815,6 @@ export function schliesseProduktModal () {
   bildUrls = []
   featuresList = []
   aktuelleFarben = []
+  detailsBilder = []
   onSaveCallback = null
 }
