@@ -566,19 +566,21 @@ function renderDetails (produkt) {
     bildHtml = `<div class="pdp-details__bild"><img src="${esc(bilder[0])}" alt="${esc(produkt.titel)}"></div>`
   } else if (bilder.length > 1) {
     bildHtml = `
-      <div class="pdp-details__slider" id="pdp-details-slider">
-        <div class="pdp-details__slider-track">
-          ${bilder.map((url, i) => `<img class="pdp-details__slide" src="${esc(url)}" alt="${esc(produkt.titel)} ${i + 1}" loading="${i === 0 ? 'eager' : 'lazy'}">`).join('')}
-        </div>
+      <div class="pdp-details__slider-wrap">
         <button type="button" class="pdp-details__arrow pdp-details__arrow--prev" data-slider-prev aria-label="Voriges Bild">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
+        <div class="pdp-details__slider" id="pdp-details-slider">
+          <div class="pdp-details__slider-track">
+            ${bilder.map((url, i) => `<img class="pdp-details__slide" src="${esc(url)}" alt="${esc(produkt.titel)} ${i + 1}" loading="${i === 0 ? 'eager' : 'lazy'}">`).join('')}
+          </div>
+          <div class="pdp-details__dots">
+            ${bilder.map((_, i) => `<button type="button" class="pdp-details__dot${i === 0 ? ' is-active' : ''}" data-slider-dot="${i}" aria-label="Bild ${i + 1}"></button>`).join('')}
+          </div>
+        </div>
         <button type="button" class="pdp-details__arrow pdp-details__arrow--next" data-slider-next aria-label="Nächstes Bild">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
-        <div class="pdp-details__dots">
-          ${bilder.map((_, i) => `<button type="button" class="pdp-details__dot${i === 0 ? ' is-active' : ''}" data-slider-dot="${i}" aria-label="Bild ${i + 1}"></button>`).join('')}
-        </div>
       </div>`
   }
 
@@ -603,23 +605,43 @@ function renderDetails (produkt) {
   if (bilder.length > 1) initDetailsSlider()
 }
 
-// Details-Bilder-Slider: Pfeile + Punkte, keine Auto-Rotation.
+// Details-Bilder-Slider: Pfeile + Punkte, keine Auto-Rotation. Die Höhe des
+// Rahmens wird bei jedem Wechsel auf das jeweils sichtbare Bild angepasst
+// (statt auf das größte aller Bilder), damit kein Rand entsteht, egal welches
+// Format die einzelnen Fotos haben.
 function initDetailsSlider () {
   const slider = document.getElementById('pdp-details-slider')
   if (!slider) return
   const track = slider.querySelector('.pdp-details__slider-track')
-  const slides = slider.querySelectorAll('.pdp-details__slide')
+  const slides = Array.from(slider.querySelectorAll('.pdp-details__slide'))
   const dots = slider.querySelectorAll('.pdp-details__dot')
   let index = 0
+
+  function setzeHoehe () {
+    const img = slides[index]
+    if (!img || !img.naturalWidth) return
+    const breite = slider.clientWidth
+    slider.style.height = `${(breite * img.naturalHeight / img.naturalWidth)}px`
+  }
 
   function zeige (i) {
     index = (i + slides.length) % slides.length
     track.style.transform = `translateX(-${index * 100}%)`
     dots.forEach((d, di) => d.classList.toggle('is-active', di === index))
+    setzeHoehe()
   }
 
-  slider.querySelector('[data-slider-prev]')?.addEventListener('click', () => zeige(index - 1))
-  slider.querySelector('[data-slider-next]')?.addEventListener('click', () => zeige(index + 1))
+  let geladen = 0
+  slides.forEach((img) => {
+    const fertig = () => { geladen++; if (geladen === slides.length) setzeHoehe() }
+    if (img.complete && img.naturalWidth) fertig()
+    else img.addEventListener('load', fertig)
+  })
+
+  window.addEventListener('resize', setzeHoehe)
+
+  slider.parentElement.querySelector('[data-slider-prev]')?.addEventListener('click', () => zeige(index - 1))
+  slider.parentElement.querySelector('[data-slider-next]')?.addEventListener('click', () => zeige(index + 1))
   dots.forEach((d) => d.addEventListener('click', () => zeige(Number(d.dataset.sliderDot))))
 }
 
