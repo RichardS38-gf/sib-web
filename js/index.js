@@ -3,7 +3,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=3'
+import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=4'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -69,9 +69,9 @@ async function ladeKategorien () {
 }
 
 // "Neu"-Badge und Karte werden jetzt von product-card.js geliefert
-function produktKarte (p, ratings, wunschlisteIds) {
+function produktKarte (p, ratings, wunschlisteIds, farbe = null) {
   const rating = ratings?.[p.id] || null
-  return renderProductCard(p, p.shops?.name || 'Lokaler Händler', rating, wunschlisteIds?.has(p.id))
+  return renderProductCard(p, p.shops?.name || 'Lokaler Händler', rating, wunschlisteIds?.has(p.id), farbe)
 }
 
 // ── 4. Produkte: Neue und Beliebte als zwei separate Sektionen ──
@@ -101,35 +101,40 @@ async function ladeProdukte () {
     }
 
     const produktIds = alle.map(p => p.id)
-    const [ratings, wunschlisteIds] = await Promise.all([
+    const [ratings, wunschlisteIds, farbenByProdukt] = await Promise.all([
       fetchProductRatings(supabase, produktIds),
-      fetchWunschlisteIds(supabase)
+      fetchWunschlisteIds(supabase),
+      fetchFarbenByProdukt(supabase, produktIds)
     ])
 
+    // Jede Farbvariante wird zu einem eigenen Karten-Eintrag (Produkte ohne
+    // Farbvarianten bleiben ein einzelner Eintrag).
+    const eintraege = expandiereFarbvarianten(alle, farbenByProdukt)
+
     // Neu: neueste zuerst (freigegeben_am wenn vorhanden, sonst erstellt_am), Top 5
-    const neu = [...alle]
-      .sort((a, b) => new Date(b.freigegeben_am || b.erstellt_am || 0) - new Date(a.freigegeben_am || a.erstellt_am || 0))
+    const neu = [...eintraege]
+      .sort((a, b) => new Date(b.produkt.freigegeben_am || b.produkt.erstellt_am || 0) - new Date(a.produkt.freigegeben_am || a.produkt.erstellt_am || 0))
       .slice(0, 5)
 
     // Beliebt: nach Produkt-Bewertung sortiert, Top 5
-    const beliebt = [...alle]
-      .map((p) => {
-        const r = ratings[p.id]
-        return { p, avg: r && r.anzahl > 0 ? r.summe / r.anzahl : null }
+    const beliebt = [...eintraege]
+      .map((e) => {
+        const r = ratings[e.produkt.id]
+        return { e, avg: r && r.anzahl > 0 ? r.summe / r.anzahl : null }
       })
       .sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1))
       .slice(0, 5)
-      .map((x) => x.p)
+      .map((x) => x.e)
 
     if (neueContainer) {
       neueContainer.innerHTML = neu.length > 0
-        ? neu.map((p) => produktKarte(p, ratings, wunschlisteIds)).join('')
+        ? neu.map((e) => produktKarte(e.produkt, ratings, wunschlisteIds, e.farbe)).join('')
         : '<p class="empty-state">Noch keine neuen Produkte.</p>'
     }
 
     if (beliebtContainer) {
       beliebtContainer.innerHTML = beliebt.length > 0
-        ? beliebt.map((p) => produktKarte(p, ratings, wunschlisteIds)).join('')
+        ? beliebt.map((e) => produktKarte(e.produkt, ratings, wunschlisteIds, e.farbe)).join('')
         : '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
     }
 

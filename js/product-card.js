@@ -56,16 +56,68 @@ export async function fetchProductRatings (supabase, produktIds) {
 }
 
 /**
+ * Lädt die Farbvarianten (produkt_farben) für eine Liste von produkt_ids und
+ * gruppiert sie nach produkt_id. Produkte ohne Farbvarianten tauchen im
+ * Ergebnis nicht auf.
+ * @param {object} supabase
+ * @param {string[]} produktIds
+ * @returns {Promise<object>} { [produkt_id]: Array<farbe-Zeile> }
+ */
+export async function fetchFarbenByProdukt (supabase, produktIds) {
+  const map = {}
+  if (!produktIds?.length) return map
+  try {
+    const { data } = await supabase
+      .from('produkt_farben')
+      .select('*')
+      .in('produkt_id', produktIds)
+      .order('erstellt_am', { ascending: true })
+    ;(data || []).forEach((f) => {
+      if (!map[f.produkt_id]) map[f.produkt_id] = []
+      map[f.produkt_id].push(f)
+    })
+  } catch (e) { console.error('Farbvarianten laden:', e) }
+  return map
+}
+
+/**
+ * Klappt eine Produktliste anhand ihrer Farbvarianten auf: Produkte mit
+ * Farbvarianten werden zu einem Eintrag PRO FARBE, Produkte ohne bleiben ein
+ * einzelner Eintrag. So zeigt die Übersicht jede Farbe als eigenen Artikel.
+ * @param {object[]} produkte
+ * @param {object} farbenByProdukt - Ergebnis von fetchFarbenByProdukt()
+ * @returns {Array<{produkt: object, farbe: object|null}>}
+ */
+export function expandiereFarbvarianten (produkte, farbenByProdukt) {
+  const result = []
+  produkte.forEach((p) => {
+    const farben = farbenByProdukt?.[p.id]
+    if (farben && farben.length > 0) {
+      farben.forEach((f) => result.push({ produkt: p, farbe: f }))
+    } else {
+      result.push({ produkt: p, farbe: null })
+    }
+  })
+  return result
+}
+
+/**
  * @param {object} p           - Produkt-Objekt aus Supabase
  * @param {string} shopName    - Anzeigename des Shops
  * @param {object|null} rating - Optional: { summe, anzahl } vom Shop
  * @param {boolean} wunschliste - Optional: ob das Produkt aktuell auf der Wunschliste des Kunden ist (zeigt Herz)
+ * @param {object|null} farbe  - Optional: eine einzelne Farbvariante (Zeile aus produkt_farben).
+ *                               Ist sie gesetzt, zeigt die Karte das Farb-Foto + Farbname und
+ *                               verlinkt mit ?farbe=... auf die Produktseite (dort vorausgewählt).
  */
-export function renderProductCard (p, shopName, rating = null, wunschliste = false) {
+export function renderProductCard (p, shopName, rating = null, wunschliste = false, farbe = null) {
   const id = encodeURIComponent(p.id)
   const bilder = Array.isArray(p.bilder) ? p.bilder.filter(Boolean) : []
-  const bild = bilder[0]
-    ? `<img class="product-card__image" src="${esc(bilder[0])}" alt="${esc(p.titel)}" loading="lazy">`
+  const farbBild = farbe?.bild_url || null
+  const link = farbe ? `produkt.html?id=${id}&farbe=${encodeURIComponent(farbe.farbe)}` : `produkt.html?id=${id}`
+  const titel = farbe ? `${p.titel} — ${farbe.farbe}` : p.titel
+  const bild = (farbBild || bilder[0])
+    ? `<img class="product-card__image" src="${esc(farbBild || bilder[0])}" alt="${esc(titel)}" loading="lazy">`
     : '<div class="product-card__image" style="background:var(--color-bg-soft);width:100%;height:100%"></div>'
   const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : ''
   const sale = isSaleAktiv(p)
@@ -95,7 +147,7 @@ export function renderProductCard (p, shopName, rating = null, wunschliste = fal
 
   return `
     <div class="product-card">
-      <a class="product-card__img-link" href="produkt.html?id=${id}">
+      <a class="product-card__img-link" href="${link}">
         <div class="product-card__img-wrap">
           ${neuBadge(p)}
           ${herzBtn}
@@ -103,9 +155,9 @@ export function renderProductCard (p, shopName, rating = null, wunschliste = fal
         </div>
       </a>
       <div class="product-card__body">
-        <a class="product-card__content" href="produkt.html?id=${id}">
+        <a class="product-card__content" href="${link}">
           <span class="product-card__shop">${esc(shop)}</span>
-          <span class="product-card__title">${esc(p.titel)}</span>
+          <span class="product-card__title">${esc(titel)}</span>
           ${ratingHtml}
         </a>
         <div class="product-card__prices">${preisHtml}</div>

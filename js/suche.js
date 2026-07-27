@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=3'
+import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=4'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -81,25 +81,27 @@ function renderHaendler (shops) {
   }).join('')
 }
 
-// ── Produkt-Karten rendern ──
-async function renderProdukte (produkte, q) {
+// ── Produkt-Karten rendern ── `eintraege` ist bereits nach Farbvarianten
+// aufgeklappt: {produkt, farbe} -- eine Zeile pro Farbe.
+async function renderProdukte (eintraege, q) {
   const container = document.getElementById('ergebnisse')
 
-  if (produkte.length === 0) {
+  if (eintraege.length === 0) {
     container.innerHTML = `<p class="suche-empty">Keine Produkte für „${esc(q)}" gefunden.</p>`
     return
   }
 
-  const produktIds = produkte.map(p => p.id)
+  const produktIds = [...new Set(eintraege.map((e) => e.produkt.id))]
   const [ratings, wunschlisteIds] = await Promise.all([
     fetchProductRatings(supabase, produktIds),
     fetchWunschlisteIds(supabase)
   ])
-  container.innerHTML = produkte.map((p) => renderProductCard(
+  container.innerHTML = eintraege.map(({ produkt: p, farbe }) => renderProductCard(
     p,
     p.shops?.name || 'Lokaler Händler',
     ratings[p.id] || null,
-    wunschlisteIds.has(p.id)
+    wunschlisteIds.has(p.id),
+    farbe
   )).join('')
   initWunschlisteButtons(supabase, container)
 }
@@ -167,19 +169,21 @@ async function init () {
     )
 
     const shops = shopRes?.data || []
-    const total = produkte.length + shops.length
+    const farbenByProdukt = await fetchFarbenByProdukt(supabase, produkte.map((p) => p.id))
+    const eintraege = expandiereFarbvarianten(produkte, farbenByProdukt)
+    const total = eintraege.length + shops.length
     anzahlEl.textContent = `${total} ${total === 1 ? 'Treffer' : 'Treffer'}`
 
     // Händler rendern (zeigt/versteckt Sektion automatisch)
     renderHaendler(shops)
 
     // Produkte rendern
-    if (produkte.length === 0 && shops.length > 0) {
+    if (eintraege.length === 0 && shops.length > 0) {
       // Nur Händler gefunden — Produkte-Sektion leer lassen
       container.innerHTML = ''
       document.getElementById('produkte-section-title').hidden = true
     } else {
-      renderProdukte(produkte, q)
+      renderProdukte(eintraege, q)
     }
 
   } catch (err) {

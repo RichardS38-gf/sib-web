@@ -351,7 +351,8 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
 function initFarben () {
   const select = document.getElementById('farbe-select')
   if (!select) return
-  select.addEventListener('change', () => {
+
+  const wendeFarbeAn = () => {
     selectedFarbe = select.value || null
     const opt = select.options[select.selectedIndex]
     const bildUrl = opt?.dataset.bildUrl
@@ -359,7 +360,20 @@ function initFarben () {
     const eanEl = document.getElementById('ean-value')
     if (eanEl) eanEl.textContent = (opt?.dataset.ean) || '000000000'
     if (hatFarbGroessen) aktualisiereGroesseFuerFarbe()
-  })
+  }
+
+  select.addEventListener('change', wendeFarbeAn)
+
+  // Deep-Link von der Produktkarten-Übersicht (?farbe=NAME): Farbe direkt
+  // vorauswählen, damit Bild/EAN/Größen sofort zur gewählten Variante passen.
+  const farbeParam = new URLSearchParams(window.location.search).get('farbe')
+  if (farbeParam) {
+    const treffer = Array.from(select.options).find((o) => o.value === farbeParam)
+    if (treffer) {
+      select.value = farbeParam
+      wendeFarbeAn()
+    }
+  }
 }
 
 // Füllt das Größen-Dropdown mit den zur gewählten Farbe passenden Größen

@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=3'
+import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=4'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -423,19 +423,20 @@ function renderAbout (shop) {
 // ─────────────────────────────────────────
 const PAGE_SIZE = 10
 let alleProdukte = []
+let alleEintraege = []
 let gezeigte = 0
 let produktRatings = {}  // produkt_id -> { summe, anzahl }
 let wunschlisteIds = new Set()
 
 function renderProduktBatch (shop) {
   const container = document.getElementById('shop-produkte')
-  const batch = alleProdukte.slice(0, gezeigte + PAGE_SIZE)
+  const batch = alleEintraege.slice(0, gezeigte + PAGE_SIZE)
   gezeigte = batch.length
 
-  container.innerHTML = batch.map((p) => renderProductCard(p, shop.name, produktRatings[p.id] || null, wunschlisteIds.has(p.id))).join('')
+  container.innerHTML = batch.map(({ produkt: p, farbe }) => renderProductCard(p, shop.name, produktRatings[p.id] || null, wunschlisteIds.has(p.id), farbe)).join('')
   initWunschlisteButtons(supabase, container)
 
-  document.getElementById('shop-mehr-wrap').hidden = gezeigte >= alleProdukte.length
+  document.getElementById('shop-mehr-wrap').hidden = gezeigte >= alleEintraege.length
 }
 
 async function ladeProdukte (shop) {
@@ -454,19 +455,29 @@ async function ladeProdukte (shop) {
     if (error) throw error
     alleProdukte = data || []
     gezeigte = 0
-    titel.textContent = `Artikel (${alleProdukte.length})`
 
     if (alleProdukte.length === 0) {
+      titel.textContent = 'Artikel (0)'
       container.innerHTML = '<p class="shop-empty">Dieses Geschäft hat aktuell keine Artikel.</p>'
       return 0
     }
 
-    produktRatings = await fetchProductRatings(supabase, alleProdukte.map(p => p.id))
-    wunschlisteIds = await fetchWunschlisteIds(supabase)
+    const produktIds = alleProdukte.map(p => p.id)
+    const [ratings, wunschliste, farbenByProdukt] = await Promise.all([
+      fetchProductRatings(supabase, produktIds),
+      fetchWunschlisteIds(supabase),
+      fetchFarbenByProdukt(supabase, produktIds)
+    ])
+    produktRatings = ratings
+    wunschlisteIds = wunschliste
+
+    // Jede Farbvariante wird zu einem eigenen Karten-Eintrag
+    alleEintraege = expandiereFarbvarianten(alleProdukte, farbenByProdukt)
+    titel.textContent = `Artikel (${alleEintraege.length})`
 
     renderProduktBatch(shop)
     document.getElementById('shop-mehr-btn').addEventListener('click', () => renderProduktBatch(shop))
-    return alleProdukte.length
+    return alleEintraege.length
   } catch (err) {
     console.error(err)
     container.innerHTML = '<p class="shop-empty">Artikel konnten nicht geladen werden.</p>'

@@ -3,7 +3,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=3'
+import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=4'
 import { UNTERKATEGORIEN, MODE_KATEGORIE_NAME, unterkategorieLabel } from './groessen-config.js?v=3'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
@@ -49,6 +49,7 @@ let aktiverSlug = null
 let haendlerById = {}
 let shopRatings = {}
 let wunschlisteIds = new Set()
+let farbenByProdukt = {}
 
 const state = {
   min: null,
@@ -129,20 +130,23 @@ function gefilterteListe () {
   return list
 }
 
-// Rendern ohne Pagination — alles auf einmal
-function renderProdukte (produkte) {
+// Rendern ohne Pagination -- alles auf einmal. `eintraege` sind bereits nach
+// Farbvarianten aufgeklappt: {produkt, farbe} -- eine Zeile pro Farbe, oder
+// ein einzelner Eintrag ohne Farbe.
+function renderProdukte (eintraege) {
   const container = document.getElementById('produkte')
 
-  if (produkte.length === 0) {
+  if (eintraege.length === 0) {
     container.innerHTML = '<p class="kategorie-empty">Keine Produkte für diese Auswahl gefunden.</p>'
     return
   }
 
-  container.innerHTML = produkte.map((p) => renderProductCard(
+  container.innerHTML = eintraege.map(({ produkt: p, farbe }) => renderProductCard(
     p,
     p.shops?.name || 'Lokaler Händler',
     shopRatings[p.id] || null,
-    wunschlisteIds.has(p.id)
+    wunschlisteIds.has(p.id),
+    farbe
   )).join('')
   initWunschlisteButtons(supabase, container)
 }
@@ -199,9 +203,10 @@ function updateURL () {
 
 function anwenden () {
   const liste = gefilterteListe()
+  const eintraege = expandiereFarbvarianten(liste, farbenByProdukt)
   document.getElementById('kategorie-anzahl').textContent =
-    `${liste.length} ${liste.length === 1 ? 'Produkt' : 'Produkte'}`
-  renderProdukte(liste)
+    `${eintraege.length} ${eintraege.length === 1 ? 'Produkt' : 'Produkte'}`
+  renderProdukte(eintraege)
   renderTags()
   updateURL()
 }
@@ -348,9 +353,10 @@ async function init () {
     alleProdukte = data || []
 
     const produktIds = alleProdukte.map(p => p.id)
-    ;[shopRatings, wunschlisteIds] = await Promise.all([
+    ;[shopRatings, wunschlisteIds, farbenByProdukt] = await Promise.all([
       fetchProductRatings(supabase, produktIds),
-      fetchWunschlisteIds(supabase)
+      fetchWunschlisteIds(supabase),
+      fetchFarbenByProdukt(supabase, produktIds)
     ])
 
     fuelleHaendler()
