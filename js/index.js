@@ -75,32 +75,49 @@ function produktKarte (p, ratings, wunschlisteIds, farbe = null) {
 }
 
 // ── 4. Produkte: Neue und Beliebte als zwei separate Sektionen ──
+// "Beliebt" = tatsächlich am meisten aufgerufene Artikel (siehe aufrufe-Spalte
+// + produkt.js, das bei jedem Seitenaufruf hochzählt) -- dafür eigene Abfrage,
+// nicht nur unter den neuesten 12 Produkten ausgewählt.
 async function ladeProdukte () {
   const neueContainer    = document.getElementById('neue-produkte')
   const beliebtContainer = document.getElementById('beliebte-produkte')
   if (!neueContainer && !beliebtContainer) return
 
   try {
-    const { data, error } = await supabase
-      .from('produkte')
-      .select('*, shops(name, slug)')
-      .eq('verfuegbar', true)
-      .eq('freigegeben', true)
-      .order('erstellt_am', { ascending: false })
-      .limit(12)
+    const [{ data: neuData, error: neuErr }, { data: beliebtData, error: beliebtErr }] = await Promise.all([
+      supabase
+        .from('produkte')
+        .select('*, shops(name, slug)')
+        .eq('verfuegbar', true)
+        .eq('freigegeben', true)
+        .order('erstellt_am', { ascending: false })
+        .limit(5),
+      supabase
+        .from('produkte')
+        .select('*, shops(name, slug)')
+        .eq('verfuegbar', true)
+        .eq('freigegeben', true)
+        .gt('aufrufe', 0)
+        .order('aufrufe', { ascending: false })
+        .limit(5)
+    ])
 
-    if (error) throw error
+    if (neuErr) throw neuErr
+    if (beliebtErr) throw beliebtErr
 
-    const alle = data || []
+    const neuProdukte = neuData || []
+    const beliebtProdukte = beliebtData || []
 
-    if (alle.length === 0) {
+    if (neuProdukte.length === 0 && beliebtProdukte.length === 0) {
       const msg = '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
       if (neueContainer)    neueContainer.innerHTML    = msg
       if (beliebtContainer) beliebtContainer.innerHTML = msg
       return
     }
 
-    const produktIds = alle.map(p => p.id)
+    // Farbvarianten + Bewertungen + Wunschliste für beide Listen zusammen laden
+    const alleFuerMeta = [...neuProdukte, ...beliebtProdukte]
+    const produktIds = [...new Set(alleFuerMeta.map(p => p.id))]
     const [ratings, wunschlisteIds, farbenByProdukt] = await Promise.all([
       fetchProductRatings(supabase, produktIds),
       fetchWunschlisteIds(supabase),
@@ -109,22 +126,8 @@ async function ladeProdukte () {
 
     // Jede Farbvariante wird zu einem eigenen Karten-Eintrag (Produkte ohne
     // Farbvarianten bleiben ein einzelner Eintrag).
-    const eintraege = expandiereFarbvarianten(alle, farbenByProdukt)
-
-    // Neu: neueste zuerst (freigegeben_am wenn vorhanden, sonst erstellt_am), Top 5
-    const neu = [...eintraege]
-      .sort((a, b) => new Date(b.produkt.freigegeben_am || b.produkt.erstellt_am || 0) - new Date(a.produkt.freigegeben_am || a.produkt.erstellt_am || 0))
-      .slice(0, 5)
-
-    // Beliebt: nach Produkt-Bewertung sortiert, Top 5
-    const beliebt = [...eintraege]
-      .map((e) => {
-        const r = ratings[e.produkt.id]
-        return { e, avg: r && r.anzahl > 0 ? r.summe / r.anzahl : null }
-      })
-      .sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1))
-      .slice(0, 5)
-      .map((x) => x.e)
+    const neu = expandiereFarbvarianten(neuProdukte, farbenByProdukt).slice(0, 5)
+    const beliebt = expandiereFarbvarianten(beliebtProdukte, farbenByProdukt).slice(0, 5)
 
     if (neueContainer) {
       neueContainer.innerHTML = neu.length > 0
@@ -135,7 +138,7 @@ async function ladeProdukte () {
     if (beliebtContainer) {
       beliebtContainer.innerHTML = beliebt.length > 0
         ? beliebt.map((e) => produktKarte(e.produkt, ratings, wunschlisteIds, e.farbe)).join('')
-        : '<p class="empty-state">Noch keine Produkte verfügbar.</p>'
+        : '<p class="empty-state">Noch keine Aufrufe gesammelt.</p>'
     }
 
     initWunschlisteButtons(supabase)

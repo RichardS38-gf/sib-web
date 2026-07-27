@@ -919,6 +919,12 @@ async function init () {
     initBewertungForm(data)
     ladeWeitere(data)
     ladeAehnliche(data)
+
+    // Aufruf zählen (fuer "Braunschweigs Favoriten" auf der Startseite) --
+    // nicht blockierend, Fehler hier sollen die Seite nie beeintraechtigen.
+    supabase.rpc('increment_produkt_aufrufe', { pid: data.id }).then(({ error }) => {
+      if (error) console.error('Aufruf konnte nicht gezählt werden:', error)
+    })
   } catch (err) {
     console.error('Produkt konnte nicht geladen werden:', err)
     notFound('Das Produkt konnte gerade nicht geladen werden.')
