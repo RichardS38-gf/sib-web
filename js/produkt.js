@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, isSaleAktiv, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=3'
+import { renderProductCard, fetchProductRatings, isSaleAktiv, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=5'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -20,6 +20,7 @@ let hatFarbGroessen = false
 let aktuelleBilder = []
 let aktuellerBildTitel = ''
 let aktuellesHeroBild = null // welche URL gerade als Hauptbild gezeigt wird
+let aktuelleFarbenListe = [] // alle Farbvarianten des Produkts (fuer Bild->Farbe-Zuordnung)
 
 // Feste Größen-Reihenfolge für das Dropdown
 const GROESSEN_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Einheitsgröße']
@@ -192,6 +193,7 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
   aktuelleBilder = bilder
   aktuellerBildTitel = produkt.titel || ''
   aktuellesHeroBild = bilder[0] || null
+  aktuelleFarbenListe = farben
 
   // Galerie
   const { mainHtml: mainImg, thumbsHtml } = baueGalerieHtml()
@@ -229,7 +231,8 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
           <option value="">Bitte wählen…</option>
           ${farben.map((f) => {
             const ausverkauft = !(f.stueckzahl > 0)
-            return `<option value="${esc(f.farbe)}" data-bild-url="${esc(f.bild_url || '')}" data-ean="${esc(f.ean || '')}"${ausverkauft ? ' disabled' : ''}>${esc(f.farbe)}${ausverkauft ? ' (Nicht verfügbar)' : ''}</option>`
+            const erstesBild = (f.bild_urls && f.bild_urls[0]) || f.bild_url || ''
+            return `<option value="${esc(f.farbe)}" data-bild-url="${esc(erstesBild)}" data-ean="${esc(f.ean || '')}"${ausverkauft ? ' disabled' : ''}>${esc(f.farbe)}${ausverkauft ? ' (Nicht verfügbar)' : ''}</option>`
           }).join('')}
         </select>
       </div>`
@@ -414,19 +417,20 @@ function initGroessen () {
 }
 
 // Thumbnail-Klick tauscht das Hauptbild -- gehört das Foto zu einer
-// Farbvariante, springt zusätzlich das "Farbe"-Dropdown auf diese Farbe.
+// Farbvariante (irgendeines ihrer Fotos, nicht nur das erste), springt
+// zusätzlich das "Farbe"-Dropdown auf diese Farbe.
 function initGallery () {
   const thumbs = document.querySelectorAll('.pdp-gallery__grid-img[data-url]')
   thumbs.forEach((thumb) => {
     thumb.addEventListener('click', () => {
       const url = thumb.dataset.url
       aktualisiereGalerie(url)
-      const select = document.getElementById('farbe-select')
-      if (select) {
-        const treffer = Array.from(select.options).find((o) => o.dataset.bildUrl === url)
-        if (treffer && treffer.value !== selectedFarbe) {
-          wendeFarbeAn(treffer.value, { bildSchonAktuell: true })
-        }
+      const treffer = aktuelleFarbenListe.find((f) => {
+        const urls = (f.bild_urls && f.bild_urls.length) ? f.bild_urls : (f.bild_url ? [f.bild_url] : [])
+        return urls.includes(url)
+      })
+      if (treffer && treffer.farbe !== selectedFarbe) {
+        wendeFarbeAn(treffer.farbe, { bildSchonAktuell: true })
       }
     })
   })

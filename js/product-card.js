@@ -113,7 +113,7 @@ export function expandiereFarbvarianten (produkte, farbenByProdukt) {
 export function renderProductCard (p, shopName, rating = null, wunschliste = false, farbe = null) {
   const id = encodeURIComponent(p.id)
   const bilder = Array.isArray(p.bilder) ? p.bilder.filter(Boolean) : []
-  const farbBild = farbe?.bild_url || null
+  const farbBild = (farbe?.bild_urls && farbe.bild_urls[0]) || farbe?.bild_url || null
   const link = farbe ? `produkt.html?id=${id}&farbe=${encodeURIComponent(farbe.farbe)}` : `produkt.html?id=${id}`
   const titel = farbe ? `${p.titel} — ${farbe.farbe}` : p.titel
   const bild = (farbBild || bilder[0])

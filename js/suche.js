@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=4'
+import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=5'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 

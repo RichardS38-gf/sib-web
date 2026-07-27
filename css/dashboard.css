@@ -1330,7 +1330,7 @@ textarea.form-input {
 
 .pmodal-farbe-header {
   display: grid;
-  grid-template-columns: 1fr 1.2fr 1fr auto;
+  grid-template-columns: 1.5fr 1fr auto;
   gap: 0.4rem;
   padding: 0 0.6rem 0.25rem;
   font-size: var(--text-xs);
@@ -1350,7 +1350,7 @@ textarea.form-input {
 
 .pmodal-farbe-row {
   display: grid;
-  grid-template-columns: 1fr 1.2fr 1fr auto;
+  grid-template-columns: 1.5fr 1fr auto;
   gap: 0.4rem;
   align-items: center;
 }
@@ -1361,32 +1361,70 @@ textarea.form-input {
   font-size: var(--text-sm);
 }
 
-.pmodal-farbe-foto {
+.pmodal-farbe-fotos-wrap {
+  margin-top: 0.5rem;
+}
+
+.pmodal-farbe-fotos-label {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin-bottom: 0.35rem;
+}
+
+.pmodal-farbe-fotos {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.pmodal-farbe-foto-img {
-  width: 36px;
-  height: 36px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
+.pmodal-farbe-foto-thumb {
+  position: relative;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
 }
 
-.pmodal-farbe-foto-platzhalter {
-  font-size: var(--text-xs);
-  color: var(--color-muted);
+.pmodal-farbe-foto-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  display: block;
 }
 
-.pmodal-farbe-foto-upload {
-  font-size: var(--text-xs);
-  color: var(--color-ink);
-  text-decoration: underline;
+.pmodal-farbe-foto-del {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-ink);
+  color: #fff;
+  border: none;
+  font-size: 0.6rem;
+  line-height: 1;
   cursor: pointer;
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.pmodal-farbe-foto-add {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border: 1.5px dashed var(--color-line);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.pmodal-farbe-foto-add:hover { border-color: var(--color-ink); color: var(--color-ink); }
 
 .pmodal-farbe-del {
   background: none;

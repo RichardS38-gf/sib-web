@@ -146,13 +146,13 @@ export function initProduktModal () {
           <div class="pmodal-field">
             <label class="pmodal-check">
               <input type="checkbox" id="pmodal-hat-farbvarianten">
-              <span>Dieses Produkt hat mehrere Farbvarianten (mit eigenem Foto und eigenen Größen je Farbe)</span>
+              <span>Dieses Produkt hat mehrere Farbvarianten (mit eigenen Fotos und eigenen Größen je Farbe)</span>
             </label>
             <div id="pmodal-farben-wrap" hidden>
-              <div class="pmodal-farbe-header"><span>Farbe</span><span>Foto</span><span>EAN</span><span></span></div>
+              <div class="pmodal-farbe-header"><span>Farbe</span><span>EAN</span><span></span></div>
               <div class="pmodal-farben" id="pmodal-farben-list"></div>
               <button type="button" class="pmodal-add-btn" id="pmodal-add-farbe">+ Farbvariante hinzufügen</button>
-              <p class="pmodal-hint">Die Fotos oben werden in der Galerie zuerst gezeigt, die Farb-Fotos danach. Wählt jemand auf der Produktseite eine Farbe, springt die Galerie automatisch zum passenden Foto. Größen &amp; Stück werden pro Farbe einzeln gepflegt.</p>
+              <p class="pmodal-hint">Die Fotos oben werden in der Galerie zuerst gezeigt, die Farb-Fotos danach (je Farbe in der hier hinterlegten Reihenfolge). Wählt jemand auf der Produktseite eine Farbe, springt die Galerie automatisch zum ersten Foto dieser Farbe. Größen &amp; Stück werden pro Farbe einzeln gepflegt.</p>
             </div>
           </div>
 
@@ -219,7 +219,7 @@ export function initProduktModal () {
     inputs[inputs.length - 1]?.focus()
   })
   document.getElementById('pmodal-add-farbe').addEventListener('click', () => {
-    aktuelleFarben.push({ farbe: '', bild_url: null, ean: '', groessen: [] })
+    aktuelleFarben.push({ farbe: '', bild_urls: [], ean: '', groessen: [] })
     renderFarben()
     const inputs = document.querySelectorAll('.pmodal-farbe-name')
     inputs[inputs.length - 1]?.focus()
@@ -236,7 +236,7 @@ export function initProduktModal () {
       farbeInput.value = ''
       eanInput.value = ''
       if (aktuelleFarben.length === 0) {
-        aktuelleFarben.push({ farbe: '', bild_url: null, ean: '', groessen: [] })
+        aktuelleFarben.push({ farbe: '', bild_urls: [], ean: '', groessen: [] })
       }
       renderFarben()
     }
@@ -361,27 +361,35 @@ function renderFarben () {
   if (!container) return
   const groessenSet = aktuellesGroessenSet()
 
-  container.innerHTML = aktuelleFarben.map((f, i) => `
+  container.innerHTML = aktuelleFarben.map((f, i) => {
+    const fotos = f.bild_urls || []
+    return `
     <div class="pmodal-farbe-block" data-fidx="${i}">
       <div class="pmodal-farbe-row">
         <input class="form-input pmodal-farbe-name" type="text" value="${escAttr(f.farbe || '')}" data-fidx="${i}" placeholder="z.B. Blau">
-        <div class="pmodal-farbe-foto">
-          ${f.bild_url
-            ? `<img class="pmodal-farbe-foto-img" src="${escAttr(f.bild_url)}" alt="">`
-            : '<span class="pmodal-farbe-foto-platzhalter">Kein Foto</span>'}
-          <label class="pmodal-farbe-foto-upload">
-            ${f.bild_url ? 'Ändern' : 'Foto wählen'}
-            <input type="file" accept="image/*" class="pmodal-farbe-file" data-fidx="${i}" style="display:none">
-          </label>
-        </div>
         <input class="form-input pmodal-farbe-ean" type="text" inputmode="numeric" value="${escAttr(f.ean || '')}" data-fidx="${i}" placeholder="EAN">
         <button type="button" class="pmodal-farbe-del" data-fidx="${i}" title="Entfernen">&#x2715;</button>
+      </div>
+      <div class="pmodal-farbe-fotos-wrap">
+        <p class="pmodal-farbe-fotos-label">Fotos für diese Farbe <span class="pmodal-hint-inline">(werden nacheinander gezeigt, das erste ist das Sprungziel)</span></p>
+        <div class="pmodal-farbe-fotos">
+          ${fotos.map((url, bi) => `
+            <div class="pmodal-farbe-foto-thumb">
+              <img src="${escAttr(url)}" alt="Foto ${bi + 1}">
+              <button type="button" class="pmodal-farbe-foto-del" data-fidx="${i}" data-bidx="${bi}" title="Entfernen">&#x2715;</button>
+            </div>`).join('')}
+          <label class="pmodal-farbe-foto-add">
+            +
+            <input type="file" accept="image/*" multiple class="pmodal-farbe-file" data-fidx="${i}" style="display:none">
+          </label>
+        </div>
       </div>
       <div class="pmodal-farbe-groessen">
         <p class="pmodal-farbe-groessen-label">Größen &amp; Stück für diese Farbe</p>
         <div class="dash-groessen">${groessenZeilenHtml(groessenSet, f.groessen || [])}</div>
       </div>
-    </div>`).join('')
+    </div>`
+  }).join('')
 
   container.querySelectorAll('.pmodal-farbe-name').forEach((inp) => {
     inp.addEventListener('input', () => { aktuelleFarben[parseInt(inp.dataset.fidx)].farbe = inp.value })
@@ -398,6 +406,14 @@ function renderFarben () {
   container.querySelectorAll('.pmodal-farbe-file').forEach((input) => {
     input.addEventListener('change', (e) => handleFarbeFotoUpload(e, parseInt(input.dataset.fidx)))
   })
+  container.querySelectorAll('.pmodal-farbe-foto-del').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const fidx = parseInt(btn.dataset.fidx, 10)
+      const bidx = parseInt(btn.dataset.bidx, 10)
+      aktuelleFarben[fidx].bild_urls.splice(bidx, 1)
+      renderFarben()
+    })
+  })
   container.querySelectorAll('.pmodal-farbe-block').forEach((block) => {
     const idx = parseInt(block.dataset.fidx, 10)
     bindGroessenZeilen(block, (groesse, checked, stueckzahl) => syncFarbeGroesse(idx, groesse, checked, stueckzahl))
@@ -405,20 +421,23 @@ function renderFarben () {
 }
 
 async function handleFarbeFotoUpload (e, idx) {
-  const datei = e.target.files[0]
-  if (!datei) return
-  try {
-    const ext = datei.name.split('.').pop().toLowerCase()
-    const pfad = `farbvariante/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { data, error } = await supabase.storage
-      .from('produkt-bilder')
-      .upload(pfad, datei, { cacheControl: '3600', upsert: false })
-    if (error) throw error
-    const { data: { publicUrl } } = supabase.storage.from('produkt-bilder').getPublicUrl(data.path)
-    aktuelleFarben[idx].bild_url = publicUrl
-    renderFarben()
-  } catch (err) {
-    console.error('Farb-Foto-Upload fehlgeschlagen:', err)
+  const dateien = Array.from(e.target.files)
+  if (!dateien.length) return
+  if (!aktuelleFarben[idx].bild_urls) aktuelleFarben[idx].bild_urls = []
+  for (const datei of dateien) {
+    try {
+      const ext = datei.name.split('.').pop().toLowerCase()
+      const pfad = `farbvariante/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { data, error } = await supabase.storage
+        .from('produkt-bilder')
+        .upload(pfad, datei, { cacheControl: '3600', upsert: false })
+      if (error) throw error
+      const { data: { publicUrl } } = supabase.storage.from('produkt-bilder').getPublicUrl(data.path)
+      aktuelleFarben[idx].bild_urls.push(publicUrl)
+      renderFarben()
+    } catch (err) {
+      console.error('Farb-Foto-Upload fehlgeschlagen:', err)
+    }
   }
   e.target.value = ''
 }
@@ -441,7 +460,7 @@ async function speichereGroessenUndFarben (produktId) {
       if (!farbe) return
       const groessen = (f.groessen || []).filter((g) => g && g.groesse)
       const gesamtStk = groessen.reduce((summe, g) => summe + (Number(g.stueckzahl) || 0), 0)
-      farbenNeu.push({ produkt_id: produktId, farbe, bild_url: f.bild_url || null, ean: (f.ean || '').trim() || null, stueckzahl: gesamtStk })
+      farbenNeu.push({ produkt_id: produktId, farbe, bild_urls: f.bild_urls || [], ean: (f.ean || '').trim() || null, stueckzahl: gesamtStk })
       groessen.forEach((g) => {
         variantenNeu.push({ produkt_id: produktId, groesse: g.groesse, farbe, stueckzahl: Number(g.stueckzahl) || 0 })
       })
@@ -633,7 +652,7 @@ async function handleSpeichern (e) {
   // Reihenfolge in der Galerie "allgemeine Fotos zuerst, dann Farb-Fotos" ist.
   const hatFarbvariantenChecked = document.getElementById('pmodal-hat-farbvarianten').checked
   const farbBilder = hatFarbvariantenChecked
-    ? aktuelleFarben.map((f) => f.bild_url).filter(Boolean)
+    ? aktuelleFarben.flatMap((f) => f.bild_urls || [])
     : []
 
   const daten = {
@@ -717,6 +736,7 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
     aktuelleVarianten = alleVarianten.filter((v) => !v.farbe)
     aktuelleFarben = (fData || []).map((f) => ({
       ...f,
+      bild_urls: (f.bild_urls && f.bild_urls.length) ? f.bild_urls : (f.bild_url ? [f.bild_url] : []),
       groessen: alleVarianten
         .filter((v) => v.farbe === f.farbe)
         .map((v) => ({ groesse: v.groesse, stueckzahl: v.stueckzahl }))
@@ -725,7 +745,7 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
   // Fotos, die bereits einer Farbvariante zugeordnet sind, gehoeren NICHT in
   // die allgemeine Fotos-Liste -- sonst wuerden sie doppelt auftauchen (einmal
   // im Fotos-Bereich, einmal in der Farbvariante).
-  const farbUrls = new Set(aktuelleFarben.map((f) => f.bild_url).filter(Boolean))
+  const farbUrls = new Set(aktuelleFarben.flatMap((f) => f.bild_urls || []))
   bildUrls = Array.isArray(produkt?.bilder)
     ? produkt.bilder.filter(Boolean).filter((u) => !farbUrls.has(u))
     : []
