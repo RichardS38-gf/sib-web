@@ -244,6 +244,10 @@
   overflow: hidden;
   margin-right: calc(50% - 50vw);
   padding: 2.5rem 0;
+  /* Links sanft ausfaden statt hart abzuschneiden -- rechts bleibt hart,
+     weil die Reihe dort bewusst über den Bildschirmrand hinauslaufen soll. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 110px, black 100%);
+  mask-image: linear-gradient(to right, transparent 0, black 110px, black 100%);
 }
 
 .pdp-details__collage-track {
