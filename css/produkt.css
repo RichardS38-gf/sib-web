@@ -184,7 +184,7 @@
   display: grid;
   grid-template-columns: 1fr 380px;
   gap: var(--space-6);
-  align-items: start;
+  align-items: center;
 }
 
 @media (max-width: 768px) {
@@ -243,7 +243,7 @@
 .pdp-details__collage-bleed {
   overflow: hidden;
   margin-right: calc(50% - 50vw);
-  padding: 0.5rem 0;
+  padding: 2.5rem 0;
 }
 
 .pdp-details__collage-track {
