@@ -189,7 +189,7 @@
 
 @media (max-width: 768px) {
   .pdp-details__layout { grid-template-columns: 1fr; }
-  .pdp-details__bild, .pdp-details__slider-wrap { order: -1; }
+  .pdp-details__bild, .pdp-details__collage-bleed { order: -1; }
 }
 
 .pdp-details__headline {
@@ -236,73 +236,58 @@
   object-fit: contain;
 }
 
-/* Details-Bilder-Slider (mehrere Bilder) */
-.pdp-details__slider-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
+/* Bewegte Details-Collage (mehrere Bilder) -- laeuft endlos durch und rechts
+   bis zum Bildschirmrand hinaus. Die Bilderreihe ist im JS verdoppelt, damit
+   der Loop bei -50% Verschiebung nahtlos ist. margin-right zieht nur die
+   rechte Kante bis zum Viewport-Rand, unabhaengig von der Container-Breite. */
+.pdp-details__collage-bleed {
+  overflow: hidden;
+  margin-right: calc(50% - 50vw);
+  padding: 0.5rem 0;
 }
 
-.pdp-details__slider {
-  position: relative;
+.pdp-details__collage-track {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  width: max-content;
+  animation: pdp-collage-scroll 28s linear infinite;
+}
+
+.pdp-details__collage-bleed:hover .pdp-details__collage-track {
+  animation-play-state: paused;
+}
+
+.pdp-details__collage-item {
+  flex: 0 0 auto;
+  width: 190px;
+  aspect-ratio: 4 / 5;
   border-radius: var(--radius-md);
   overflow: hidden;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.14);
   background: var(--color-bg-soft);
-  flex: 1;
-  min-width: 0;
-  transition: height 0.3s ease;
+  transform: rotate(var(--r, 0deg)) translateY(var(--y, 0px));
 }
 
-.pdp-details__slider-track {
-  display: flex;
-  height: 100%;
-  transition: transform 0.3s ease;
-}
-
-.pdp-details__slide {
+.pdp-details__collage-item img {
   width: 100%;
   height: 100%;
-  flex: 0 0 100%;
-  display: block;
   object-fit: cover;
+  display: block;
 }
 
-.pdp-details__arrow {
-  position: static;
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid var(--color-line);
-  background: var(--color-bg);
-  color: var(--color-ink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-.pdp-details__arrow:hover { border-color: var(--color-ink); }
-
-.pdp-details__dots {
-  position: absolute;
-  bottom: 0.6rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0.4rem;
+@keyframes pdp-collage-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 
-.pdp-details__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255,255,255,0.6);
-  cursor: pointer;
-  padding: 0;
+@media (max-width: 768px) {
+  .pdp-details__collage-item { width: 140px; }
 }
-.pdp-details__dot.is-active { background: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pdp-details__collage-track { animation: none; }
+}
 
 /* Not found */
 .product-notfound {

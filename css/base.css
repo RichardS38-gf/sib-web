@@ -24,6 +24,11 @@ body {
   color: var(--color-ink);
   background-color: var(--color-bg);
   line-height: 1.6;
+  /* Noetig fuer Full-Bleed-Elemente (z.B. die Details-Collage auf der
+     Produktseite), die bewusst bis zum Bildschirmrand reichen -- ohne das
+     koennte das je nach Browser/Scrollbar-Breite einen minimalen horizontalen
+     Scrollbalken auf der ganzen Seite ausloesen. */
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
