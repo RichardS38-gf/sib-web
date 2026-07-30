@@ -188,8 +188,9 @@
 
 .shop-infobar__whatsapp {
   display: inline-flex;
+  margin-left: 0.5rem;
   vertical-align: -3px;
-  color: #25D366;
+  color: var(--color-ink);
 }
 
 .shop-infobar__dot {
