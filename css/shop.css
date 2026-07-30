@@ -282,7 +282,11 @@
 }
 
 @media (max-width: 640px) {
-  .shop-about__inner-card { padding: var(--space-4) var(--space-3); }
+  .shop-about__inner-card {
+    width: 100%;
+    margin-left: 0;
+    padding: var(--space-4) 0;
+  }
 }
 
 .shop-about__inner-card > * {
