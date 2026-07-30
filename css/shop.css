@@ -219,7 +219,10 @@
     align-items: flex-start;
   }
   .shop-infobar__actions { width: 100%; }
-  .shop-infobar__msg { width: 100%; justify-content: center; }
+  .shop-infobar__msg { width: 100%; justify-content: center; padding: 0.9rem 1.5rem; }
+  /* Der 300px-Logo-Platzhalter ist auf schmalen Screens viel zu dominant */
+  .shop-infobar__logo,
+  .shop-infobar__logo--placeholder { width: 90px; height: 90px; border-radius: 18px; font-size: 1.5rem; }
 }
 
 /* ─────────────────────────────────────────
@@ -231,6 +234,10 @@
   background: #f5f5f3;
   border-radius: 20px;
   padding: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .shop-about__inner-card { padding: var(--space-4) var(--space-3); }
 }
 
 .shop-about__inner-card > * {
@@ -519,6 +526,10 @@
   font-size: 2.5rem;
   letter-spacing: -0.02em;
   margin-bottom: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .shop-info-tabelle__title { font-size: 1.65rem; margin-bottom: var(--space-3); }
 }
 
 .shop-info-row {

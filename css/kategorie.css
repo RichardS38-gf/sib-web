@@ -19,6 +19,11 @@
   color: var(--color-muted);
 }
 
+@media (max-width: 640px) {
+  .page-head__title { font-size: 2rem; }
+  .page-head__subtext { font-size: var(--text-base); }
+}
+
 /* ── Layout: Sidebar + Grid ── */
 .kategorie-layout {
   display: grid;

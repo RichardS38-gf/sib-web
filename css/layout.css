@@ -27,6 +27,11 @@
 .section--dark { background-color: var(--color-dark); color: var(--color-on-dark); }
 .section--soft { background-color: var(--color-bg-soft); }
 
+/* Mobil: einheitlich kleinerer Sektions-Abstand statt der vollen Desktop-Luft */
+@media (max-width: 640px) {
+  .section { padding-top: var(--space-4); padding-bottom: var(--space-4); }
+}
+
 /* Grid-Systeme */
 .grid-2 { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
 .grid-3 { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
@@ -55,6 +60,11 @@
 }
 
 .section-header h2 { font-size: 2.5rem; }
+
+@media (max-width: 640px) {
+  .section-header { margin-bottom: var(--space-3); }
+  .section-header h2 { font-size: 1.65rem; }
+}
 
 .section-link {
   font-size: var(--text-sm);

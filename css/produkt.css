@@ -200,6 +200,10 @@
   margin-bottom: var(--space-4);
 }
 
+@media (max-width: 640px) {
+  .pdp-details__headline { font-size: 1.65rem; margin-bottom: var(--space-3); }
+}
+
 .pdp-details__sub {
   font-family: var(--font-sans);
   font-weight: 700;

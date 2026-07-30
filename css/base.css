@@ -44,6 +44,17 @@ h2 { font-size: 2.5rem; }
 h3 { font-size: 1.75rem; }
 h4 { font-size: var(--text-xl); }
 
+/* Mobil: Headlines sind im Verhältnis zur schmalen Textspalte sonst deutlich
+   zu groß -- einheitlich verkleinert. Seiten-/Komponenten-eigene Klassen mit
+   explizitem font-size (höhere Spezifität) haben weiterhin Vorrang und
+   bekommen ihre eigene mobile Anpassung dort, wo nötig. */
+@media (max-width: 640px) {
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.65rem; }
+  h3 { font-size: 1.35rem; }
+  h4 { font-size: 1.1rem; }
+}
+
 p {
   font-family: var(--font-sans);
   font-weight: 300;
