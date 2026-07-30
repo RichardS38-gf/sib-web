@@ -140,11 +140,11 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
     const plzMatch = shop.adresse.match(/(\d{5}\s*.+)$/)
     if (plzMatch) {
       const idx = shop.adresse.indexOf(plzMatch[1])
-      const strasse = shop.adresse.slice(0, idx).trim().replace(/[.,]\s*$/, '')
+      const strasse = shop.adresse.slice(0, idx).trim().replace(/[.,\u00B7\u2022\-]+\s*$/, '').trim()
       return { strassenZeile: strasse, ortZeile: plzMatch[1].trim() }
     }
     // Fallback: am Komma splitten
-    const teile = shop.adresse.split(',').map((t) => t.trim().replace(/\.\s*$/, '')).filter(Boolean)
+    const teile = shop.adresse.split(',').map((t) => t.trim().replace(/[.\u00B7\u2022\-]+\s*$/, '').trim()).filter(Boolean)
     if (teile.length > 1) return { strassenZeile: teile[0], ortZeile: teile.slice(1).join(', ') }
     return { strassenZeile: shop.adresse, ortZeile: '' }
   })()
