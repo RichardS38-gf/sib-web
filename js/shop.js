@@ -417,22 +417,34 @@ function renderAbout (shop) {
   const bildUrl = shop.bild_url || (
     Array.isArray(shop.galerie) && shop.galerie.length > 1 ? shop.galerie[1] : null
   )
-  const bildHtml = bildUrl
-    ? `<div class="shop-about__bild-wrap">
-         <img class="shop-about__bild" src="${esc(bildUrl)}" alt="${esc(shop.name)}" loading="lazy">
-       </div>`
-    : ''
 
   const beschreibung = shop.beschreibung
     ? shop.beschreibung.split('\n').filter(Boolean).map(p => `<p>${esc(p)}</p>`).join('')
     : ''
 
-  inner.innerHTML = `
-    <div class="shop-about__inner-card">
-      <h2 class="shop-about__headline">${esc(shop.about_headline || `Willkommen bei ${shop.name} ✨`)}</h2>
-      ${bildHtml}
-      ${beschreibung ? `<div class="shop-about__text">${beschreibung}</div>` : ''}
-    </div>`
+  const headlineHtml = `<h2 class="shop-about__headline">${esc(shop.about_headline || `Willkommen bei ${shop.name} ✨`)}</h2>`
+  const textHtml = beschreibung ? `<div class="shop-about__text">${beschreibung}</div>` : ''
+
+  // Bild vorhanden: Bild links (1:1), Headline + Fließtext rechts daneben.
+  // Kein Bild: Fallback auf einspaltigen, zentrierten Textblock wie zuvor.
+  inner.innerHTML = bildUrl
+    ? `
+      <div class="shop-about__inner-card">
+        <div class="shop-about__grid">
+          <div class="shop-about__media">
+            <img class="shop-about__bild" src="${esc(bildUrl)}" alt="${esc(shop.name)}" loading="lazy">
+          </div>
+          <div class="shop-about__body">
+            ${headlineHtml}
+            ${textHtml}
+          </div>
+        </div>
+      </div>`
+    : `
+      <div class="shop-about__inner-card">
+        ${headlineHtml}
+        ${textHtml}
+      </div>`
 }
 
 // ─────────────────────────────────────────
