@@ -31,8 +31,8 @@
 ───────────────────────────────────────── */
 .shop-galerie {
   flex: 1;
-  min-height: 520px;
-  height: 65vh;
+  min-height: 600px;
+  height: 78vh;
   width: calc(100% - 3rem);
   margin: 0.5rem auto 0;
   overflow: hidden;
