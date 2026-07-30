@@ -494,7 +494,18 @@
 }
 
 @media (min-width: 900px) {
-  .site-footer__inner { grid-template-columns: 1.5fr repeat(3, 1fr); }
+  .site-footer__inner { grid-template-columns: 1.5fr auto; }
+}
+
+.site-footer__links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+@media (min-width: 900px) {
+  .site-footer__links { gap: var(--space-4); justify-content: end; }
+  .site-footer__links .site-footer__col { min-width: 9rem; }
 }
 
 .site-footer__logo-col {
