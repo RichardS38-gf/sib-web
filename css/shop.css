@@ -157,6 +157,10 @@
   margin-bottom: 0.5rem;
 }
 
+.shop-infobar__ort--plain {
+  padding-left: 18px;
+}
+
 .shop-infobar__stats {
   display: flex;
   align-items: center;
@@ -247,8 +251,7 @@
     border-radius: 22px;
     font-size: 2rem;
   }
-  .shop-infobar__ort,
-  .shop-infobar__stats {
+  .shop-infobar__ort {
     order: 3;
     flex: 1 1 100%;
     width: 100%;

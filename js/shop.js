@@ -133,8 +133,26 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
     ? `<img class="shop-infobar__logo" src="${esc(shop.logo_url)}" alt="${esc(shop.name)}">`
     : `<div class="shop-infobar__logo shop-infobar__logo--placeholder">${esc((shop.name || '?').slice(0, 1).toUpperCase())}</div>`
 
-  const ort = shop.adresse
-    ? `<span class="shop-infobar__ort"><svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:4px;vertical-align:-2px;flex-shrink:0;color:#0D0D0D" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(shop.adresse)}</span>`
+  const strassenZeile = (() => {
+    if (!shop.adresse) return ''
+    const teile = shop.adresse.split(',').map((t) => t.trim()).filter(Boolean)
+    if (teile.length > 1) return teile[0]
+    return shop.adresse
+  })()
+
+  const ortZeile = (() => {
+    if (!shop.adresse) return ''
+    const teile = shop.adresse.split(',').map((t) => t.trim()).filter(Boolean)
+    if (teile.length > 1) return teile.slice(1).join(', ')
+    return ''
+  })()
+
+  const strasseHtml = strassenZeile
+    ? `<span class="shop-infobar__ort shop-infobar__ort--plain">${esc(strassenZeile)}</span>`
+    : ''
+
+  const ort = ortZeile
+    ? `<span class="shop-infobar__ort"><svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:4px;vertical-align:-2px;flex-shrink:0;color:#0D0D0D" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg>${esc(ortZeile)}</span>`
     : ''
 
   const whatsappHref = shop.whatsapp_aktiv && shop.telefon ? whatsappLink(shop.telefon) : null
@@ -150,16 +168,13 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
     : ''
 
   const ratingStr = bewertungAnzahl > 0
-    ? `<span class="shop-infobar__stat">
-         <span class="shop-infobar__star">★</span>
-         ${bewertungSchnitt.toFixed(1)} <span class="shop-infobar__stat-sub">(${bewertungAnzahl})</span>
-       </span>`
-    : `<span class="shop-infobar__stat shop-infobar__stat--muted"><span class="shop-infobar__star">★</span>&nbsp;Noch keine Bewertungen (0)</span>`
+    ? `<span class="shop-infobar__ort"><span class="shop-infobar__star" style="margin-right:4px">★</span>${bewertungSchnitt.toFixed(1)} <span class="shop-infobar__stat-sub">(${bewertungAnzahl})</span></span>`
+    : `<span class="shop-infobar__ort"><span class="shop-infobar__star" style="margin-right:4px">★</span>Noch keine Bewertungen (0)</span>`
 
-  const artikelStr = `<span class="shop-infobar__stat">${produktAnzahl} Artikel</span>`
+  const artikelStr = `<span class="shop-infobar__ort"><svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:4px;vertical-align:-2px;flex-shrink:0;color:#0D0D0D" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>${produktAnzahl} Artikel</span>`
 
   const beigetreten = shop.erstellt_am
-    ? `<span class="shop-infobar__stat shop-infobar__stat--muted">${formatDatum(shop.erstellt_am, { month: '2-digit', year: 'numeric' }).replace(/\./g, '/')} beigetreten</span>`
+    ? `<span class="shop-infobar__ort"><svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:4px;vertical-align:-2px;flex-shrink:0;color:#0D0D0D" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${formatDatum(shop.erstellt_am, { month: '2-digit', year: 'numeric' }).replace(/\./g, '/')} beigetreten</span>`
     : ''
 
   const kontaktHref = shop.email
@@ -181,16 +196,13 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
       ${logo}
       <div class="shop-infobar__text">
         <h1 class="shop-infobar__name">${esc(shop.name)}</h1>
+        ${strasseHtml}
         ${ort}
         ${telefonZeile}
         ${emailZeile}
-        <div class="shop-infobar__stats">
-          ${ratingStr}
-          <span class="shop-infobar__dot" aria-hidden="true">·</span>
-          ${artikelStr}
-          <span class="shop-infobar__dot" aria-hidden="true">·</span>
-          ${beigetreten}
-        </div>
+        ${ratingStr}
+        ${artikelStr}
+        ${beigetreten}
       </div>
     </div>
     <div class="shop-infobar__actions">
