@@ -494,18 +494,21 @@
 }
 
 @media (min-width: 900px) {
-  .site-footer__inner { grid-template-columns: 1.5fr auto; }
+  .site-footer__inner { grid-template-columns: 1.5fr repeat(3, 1fr); }
 }
 
+/* Mobil/Tablet: die drei Dropdown-Spalten stehen enger untereinander als der
+   Rest des Footers. Ab Desktop-Grid (900px) wird der Wrapper transparent
+   (display:contents), damit dort wieder die urspruengliche 4-Spalten-Grid-
+   Aufteilung greift -- unveraendert wie vorher. */
 .site-footer__links {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 @media (min-width: 900px) {
-  .site-footer__links { gap: var(--space-4); justify-content: end; }
-  .site-footer__links .site-footer__col { min-width: 9rem; }
+  .site-footer__links { display: contents; }
 }
 
 .site-footer__logo-col {
