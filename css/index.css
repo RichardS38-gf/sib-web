@@ -282,13 +282,6 @@
 
 @media (max-width: 640px) {
   .cta-banner { padding-top: var(--space-2); padding-bottom: var(--space-2); }
-  .cta-banner__card { padding: var(--space-2) var(--space-3); }
-  .cta-banner__break { display: block; }
-  .cta-banner__headline {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-  }
-  .cta-banner__subtext { font-size: var(--text-sm); margin-bottom: var(--space-2); }
 }
 
 .cta-banner__card {
@@ -316,6 +309,24 @@
   font-weight: 300;
   max-width: 30rem;
   margin: 0 auto var(--space-4);
+}
+
+/* Diese Overrides muessen NACH den Basis-Regeln oben stehen, sonst gewinnen
+   bei gleicher Spezifitaet die unconditional-Regeln und die Karte schrumpft
+   auf Mobile nicht wirklich (nur die Section drumherum). */
+@media (max-width: 640px) {
+  .cta-banner__card {
+    padding: 1rem var(--space-3);
+  }
+  .cta-banner__break { display: block; }
+  .cta-banner__headline {
+    font-size: 1.4rem;
+    margin-bottom: 0.4rem;
+  }
+  .cta-banner__subtext {
+    font-size: var(--text-sm);
+    margin-bottom: 0.75rem;
+  }
 }
 
 /* ── 7. Footer: Brand links, Spalten rechts (wie Entwurf) ── */
