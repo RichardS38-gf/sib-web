@@ -3,7 +3,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=5'
+import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds, isSaleAktiv } from './product-card.js?v=5'
 import { UNTERKATEGORIEN, MODE_KATEGORIE_NAME, unterkategorieLabel } from './groessen-config.js?v=3'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
@@ -116,7 +116,7 @@ function gefilterteListe () {
 
   if (aktiverSlug === 'neu') list = list.filter(istNeu)
   if (state.nurVerfuegbar) list = list.filter((p) => p.verfuegbar !== false)
-  if (state.nurSale) list = list.filter((p) => p.angebot_preis != null && Number(p.angebot_preis) > 0)
+  if (state.nurSale) list = list.filter(isSaleAktiv)
   if (state.haendler) list = list.filter((p) => p.shop_id === state.haendler)
   if (state.geschlechter.size) list = list.filter((p) => state.geschlechter.has(p.geschlecht || 'ohne'))
   if (state.unterkategorie) list = list.filter((p) => p.unterkategorie === state.unterkategorie)
