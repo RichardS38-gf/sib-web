@@ -94,6 +94,10 @@
   background: var(--color-bg);
 }
 
+@media (min-width: 641px) {
+  .shop-infobar-wrap { margin-top: var(--space-4); }
+}
+
 .shop-infobar {
   display: flex;
   align-items: center;
