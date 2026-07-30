@@ -354,6 +354,10 @@
   margin-bottom: var(--space-4);
 }
 
+@media (max-width: 640px) {
+  .shop-about__headline { font-size: 1.2rem; }
+}
+
 .shop-about__bild {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -604,7 +608,7 @@
 }
 
 @media (max-width: 640px) {
-  .shop-info-tabelle__title { font-size: 1.65rem; margin-bottom: var(--space-3); }
+  .shop-info-tabelle__title { font-size: 1.2rem; margin-bottom: var(--space-3); }
 }
 
 .shop-info-row {
