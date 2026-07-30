@@ -314,6 +314,8 @@
     gap: var(--space-6);
     align-items: center;
   }
+  .shop-about__media { order: 2; }
+  .shop-about__body { order: 1; }
 }
 
 .shop-about__media {
@@ -326,6 +328,13 @@
   max-width: none;
   margin-left: 0;
   margin-right: 0;
+}
+
+.shop-about__body .shop-about__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
 }
 
 .shop-about__text p {
