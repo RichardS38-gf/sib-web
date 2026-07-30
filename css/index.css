@@ -258,6 +258,15 @@
   font-weight: 600;
 }
 
+/* Mobil (2 Spalten): 5. Karte ausblenden, damit die letzte Reihe nicht mit
+   nur einer Karte asymmetrisch wirkt — ab Tablet (3/5 Spalten) wieder alle zeigen */
+@media (max-width: 639px) {
+  #neue-produkte > :nth-child(5),
+  #beliebte-produkte > :nth-child(5) {
+    display: none;
+  }
+}
+
 /* ── 5. Händler-CTA: Banner mit Frosted-Card (wie Entwurf) ── */
 .cta-banner {
   position: relative;
