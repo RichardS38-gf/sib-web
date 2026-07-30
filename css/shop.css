@@ -79,11 +79,12 @@
   .shop-hero { height: auto; }
   .shop-galerie {
     flex: none;
+    min-height: 0;
     width: calc(100% - 2rem);
-    height: 280px;
+    height: 220px;
   }
   .shop-galerie[data-count] { height: 220px; }
-  .shop-galerie[data-count="4"] { grid-template-columns: repeat(2, 1fr); height: 300px; }
+  .shop-galerie[data-count="4"] { grid-template-columns: repeat(2, 1fr); height: 240px; }
 }
 
 /* ─────────────────────────────────────────
