@@ -232,6 +232,33 @@
 
 .hero-newsletter__btn { white-space: nowrap; flex-shrink: 0; }
 
+/* Button-Text: kurze Variante auf Mobile, lange ab Tablet */
+.hero-newsletter__btn-long { display: none; }
+.hero-newsletter__btn-short { display: inline; }
+
+@media (min-width: 640px) {
+  .hero-newsletter__btn-long { display: inline; }
+  .hero-newsletter__btn-short { display: none; }
+}
+
+/* ── Hero Mobile: Reihenfolge Text → Bild → Newsletter-Feld ── */
+@media (max-width: 1023px) {
+  .hero__grid {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+  .hero__content { display: contents; }
+  .hero__eyebrow { order: 1; align-self: flex-start; }
+  .hero__headline { order: 2; }
+  .hero__subtext { order: 3; margin-bottom: 0; }
+  .hero__collage { order: 4; margin: var(--space-4) 0; }
+  .hero-newsletter { order: 5; margin-top: 0; max-width: none; }
+  .hero-newsletter__row { flex-wrap: nowrap; }
+  .hero-newsletter__input { min-width: 0; }
+}
+
 /* Asymmetrische, abgerundete Bild-Collage (wie Entwurf) */
 .hero__collage {
   display: flex;
