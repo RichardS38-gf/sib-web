@@ -81,10 +81,10 @@
     flex: none;
     min-height: 0;
     width: calc(100% - 2rem);
-    height: 220px;
+    height: 160px;
   }
-  .shop-galerie[data-count] { height: 220px; }
-  .shop-galerie[data-count="4"] { grid-template-columns: repeat(2, 1fr); height: 240px; }
+  .shop-galerie[data-count] { height: 160px; }
+  .shop-galerie[data-count="4"] { grid-template-columns: repeat(2, 1fr); height: 180px; }
 }
 
 /* ─────────────────────────────────────────
