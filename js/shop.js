@@ -133,22 +133,24 @@ function renderInfoBar (shop, produktAnzahl, bewertungSchnitt, bewertungAnzahl) 
     ? `<img class="shop-infobar__logo" src="${esc(shop.logo_url)}" alt="${esc(shop.name)}">`
     : `<div class="shop-infobar__logo shop-infobar__logo--placeholder">${esc((shop.name || '?').slice(0, 1).toUpperCase())}</div>`
 
-  const strassenZeile = (() => {
-    if (!shop.adresse) return ''
+  const { strassenZeile, ortZeile } = (() => {
+    if (!shop.adresse) return { strassenZeile: '', ortZeile: '' }
+    // Bevorzugt: an der PLZ (5 Ziffern) splitten, damit es auch ohne Komma
+    // in der eingegebenen Adresse zuverlässig funktioniert.
+    const plzMatch = shop.adresse.match(/(\d{5}\s*.+)$/)
+    if (plzMatch) {
+      const idx = shop.adresse.indexOf(plzMatch[1])
+      const strasse = shop.adresse.slice(0, idx).trim().replace(/,\s*$/, '')
+      return { strassenZeile: strasse, ortZeile: plzMatch[1].trim() }
+    }
+    // Fallback: am Komma splitten
     const teile = shop.adresse.split(',').map((t) => t.trim()).filter(Boolean)
-    if (teile.length > 1) return teile[0]
-    return shop.adresse
-  })()
-
-  const ortZeile = (() => {
-    if (!shop.adresse) return ''
-    const teile = shop.adresse.split(',').map((t) => t.trim()).filter(Boolean)
-    if (teile.length > 1) return teile.slice(1).join(', ')
-    return ''
+    if (teile.length > 1) return { strassenZeile: teile[0], ortZeile: teile.slice(1).join(', ') }
+    return { strassenZeile: shop.adresse, ortZeile: '' }
   })()
 
   const strasseHtml = strassenZeile
-    ? `<span class="shop-infobar__ort shop-infobar__ort--plain">${esc(strassenZeile)}</span>`
+    ? `<span class="shop-infobar__ort"><svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:4px;vertical-align:-2px;flex-shrink:0;color:#0D0D0D" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(strassenZeile)}</span>`
     : ''
 
   const ort = ortZeile
