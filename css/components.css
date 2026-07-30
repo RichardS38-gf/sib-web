@@ -563,15 +563,15 @@
 
 .site-footer__col a:hover { color: var(--color-on-dark); opacity: 1; }
 
-/* Ab dem Desktop-Grid (900px, siehe .site-footer__inner) immer offen anzeigen,
-   kein Dropdown-Verhalten -- dort stehen die Spalten ohnehin nebeneinander. */
+/* Ab dem Desktop-Grid (900px, siehe .site-footer__inner) rein optisch kein
+   Dropdown mehr -- die Spalten sind per open-Attribut im Markup ohnehin
+   immer sichtbar (js/footer.js klappt sie nur unterhalb 900px zu). */
 @media (min-width: 900px) {
   .site-footer__col-title {
     cursor: default;
     pointer-events: none;
   }
   .site-footer__col-title::after { display: none; }
-  .site-footer__col > ul { display: flex !important; }
 }
 
 .site-footer__bottom {
