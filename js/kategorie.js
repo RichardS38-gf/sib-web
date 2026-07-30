@@ -118,7 +118,7 @@ function gefilterteListe () {
   if (state.nurVerfuegbar) list = list.filter((p) => p.verfuegbar !== false)
   if (state.nurSale) list = list.filter((p) => p.angebot_preis != null && Number(p.angebot_preis) > 0)
   if (state.haendler) list = list.filter((p) => p.shop_id === state.haendler)
-  if (state.geschlechter.size) list = list.filter((p) => state.geschlechter.has(p.geschlecht))
+  if (state.geschlechter.size) list = list.filter((p) => state.geschlechter.has(p.geschlecht || 'ohne'))
   if (state.unterkategorie) list = list.filter((p) => p.unterkategorie === state.unterkategorie)
   if (state.min !== null) list = list.filter((p) => preisOf(p) >= state.min)
   if (state.max !== null) list = list.filter((p) => preisOf(p) <= state.max)
@@ -159,7 +159,7 @@ function renderTags () {
   if (state.haendler) tags.push({ key: 'haendler', label: haendlerById[state.haendler] || 'Händler' })
   if (!state.nurVerfuegbar) tags.push({ key: 'verfuegbar', label: 'inkl. nicht verfügbare' })
   if (state.nurSale) tags.push({ key: 'sale', label: 'Sale' })
-  state.geschlechter.forEach((g) => tags.push({ key: `geschlecht:${g}`, label: g }))
+  state.geschlechter.forEach((g) => tags.push({ key: `geschlecht:${g}`, label: g === 'ohne' ? 'Ohne Geschlecht' : g }))
   if (state.unterkategorie) tags.push({ key: 'unterkat', label: unterkategorieLabel(state.unterkategorie) })
 
   el.innerHTML = tags.map((t) =>
