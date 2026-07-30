@@ -266,7 +266,7 @@
 .shop-about__inner-card {
   width: 90vw;
   margin-left: calc(50% - 45vw);
-  background: #f5f5f3;
+  background: transparent;
   border-radius: 20px;
   padding: var(--space-6);
 }
