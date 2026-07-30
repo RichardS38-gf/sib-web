@@ -159,7 +159,7 @@ function renderTags () {
   if (state.haendler) tags.push({ key: 'haendler', label: haendlerById[state.haendler] || 'Händler' })
   if (!state.nurVerfuegbar) tags.push({ key: 'verfuegbar', label: 'inkl. nicht verfügbare' })
   if (state.nurSale) tags.push({ key: 'sale', label: 'Sale' })
-  state.geschlechter.forEach((g) => tags.push({ key: `geschlecht:${g}`, label: g === 'ohne' ? 'Ohne Geschlecht' : g }))
+  state.geschlechter.forEach((g) => tags.push({ key: `geschlecht:${g}`, label: g === 'ohne' ? 'Sonstiges' : g }))
   if (state.unterkategorie) tags.push({ key: 'unterkat', label: unterkategorieLabel(state.unterkategorie) })
 
   el.innerHTML = tags.map((t) =>
