@@ -230,15 +230,31 @@
     flex-wrap: wrap;
     row-gap: var(--space-2);
   }
-  .shop-infobar__text {
+  /* Reihenfolge auf Mobile: Name → Logo → Adresse/Kontakt/Bewertung.
+     .shop-infobar__text wird transparent (display:contents), damit ihre
+     Kinder direkt als eigene Flex-Items neben dem Logo sortiert werden koennen. */
+  .shop-infobar__text { display: contents; }
+  .shop-infobar__name {
+    order: 1;
     flex: 1 1 100%;
-    min-width: 100%;
+    width: 100%;
+  }
+  .shop-infobar__logo,
+  .shop-infobar__logo--placeholder {
+    order: 2;
+    width: 120px;
+    height: 120px;
+    border-radius: 22px;
+    font-size: 2rem;
+  }
+  .shop-infobar__ort,
+  .shop-infobar__stats {
+    order: 3;
+    flex: 1 1 100%;
+    width: 100%;
   }
   .shop-infobar__actions { width: 100%; }
   .shop-infobar__msg { width: 100%; justify-content: center; padding: 0.9rem 1.5rem; }
-  /* Der 300px-Logo-Platzhalter ist auf schmalen Screens viel zu dominant */
-  .shop-infobar__logo,
-  .shop-infobar__logo--placeholder { width: 90px; height: 90px; border-radius: 18px; font-size: 1.5rem; }
 }
 
 /* ─────────────────────────────────────────
