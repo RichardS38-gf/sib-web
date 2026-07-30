@@ -281,8 +281,14 @@
 }
 
 @media (max-width: 640px) {
-  .cta-banner { padding-top: var(--space-5); padding-bottom: var(--space-5); }
-  .cta-banner__card { padding: var(--space-4) var(--space-3); }
+  .cta-banner { padding-top: var(--space-3); padding-bottom: var(--space-3); }
+  .cta-banner__card { padding: var(--space-3) var(--space-3); }
+  .cta-banner__headline {
+    font-size: clamp(1.1rem, 6vw, 1.5rem);
+    white-space: nowrap;
+    margin-bottom: var(--space-1);
+  }
+  .cta-banner__subtext { font-size: var(--text-sm); margin-bottom: var(--space-3); }
 }
 
 .cta-banner__card {
