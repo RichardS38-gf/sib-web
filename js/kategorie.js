@@ -251,13 +251,7 @@ function initFilterControls () {
   })
 
   document.getElementById('filter-reset').addEventListener('click', () => {
-    state.min = null; state.max = null; state.nurVerfuegbar = true
-    state.nurSale = false; state.haendler = ''; state.sort = 'neu'
-    state.geschlechter = new Set(); state.unterkategorie = ''
-    min.value = ''; max.value = ''; verf.checked = true
-    sale.checked = false; haendler.value = ''; sort.value = 'neu'
-    document.querySelectorAll('.filter-geschlecht').forEach((cb) => { cb.checked = false })
-    anwenden()
+    window.location.href = 'kategorie.html'
   })
 
   verf.addEventListener('change', () => { state.nurVerfuegbar = verf.checked; anwenden() })
