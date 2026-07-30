@@ -6,6 +6,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
+import { stelleHaendlerShopSicher } from './haendler-shop-setup.js'
 
 let aktiveRolle = 'kunde'
 
@@ -92,8 +93,9 @@ async function redirectIfLoggedIn () {
     return
   }
 
-  // Prüfen ob ein Shop (Händler) verknüpft ist
-  const { data: shop } = await supabase.from('shops').select('id').eq('user_id', session.user.id).maybeSingle()
+  // Shop laden -- legt ihn bei Bedarf gleich an (falls Registrierung erst
+  // jetzt per E-Mail-Bestaetigung abgeschlossen wurde).
+  const shop = await stelleHaendlerShopSicher(supabase, session.user)
   if (shop) { window.location.replace('dashboard.html'); return }
 
   window.location.replace('konto.html')
@@ -121,8 +123,12 @@ function initLogin () {
     submitBtn.textContent = 'Wird angemeldet…'
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
+
+      // Shop bei Bedarf jetzt anlegen (falls Registrierung erst per
+      // E-Mail-Bestätigung abgeschlossen wurde und noch kein Shop existiert).
+      await stelleHaendlerShopSicher(supabase, data.user)
 
       window.location.replace(getZielUrl())
     } catch (err) {

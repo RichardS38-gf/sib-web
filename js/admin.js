@@ -156,7 +156,7 @@ function initTabs () {
 async function ladeHaendler () {
   const el = document.getElementById('haendler-content')
   try {
-    const { data, error } = await supabase.from('shops').select('*').order('name')
+    const { data, error } = await supabase.from('shops').select('*').order('erstellt_am', { ascending: false })
     if (error) throw error
     const shops = data || []
 
@@ -168,9 +168,11 @@ async function ladeHaendler () {
     const rows = shops.map((s) => {
       const aktiv = s.aktiv !== false
       const toggleLabel = aktiv ? 'Deaktivieren' : 'Aktivieren'
+      const istNeu = s.erstellt_am && (Date.now() - new Date(s.erstellt_am).getTime()) < 3 * 24 * 60 * 60 * 1000
+      const neuBadge = istNeu ? ' <span class="badge">NEU</span>' : ''
       return `
         <tr>
-          <td class="is-wrap">${esc(s.name)}</td>
+          <td class="is-wrap">${esc(s.name)}${neuBadge}</td>
           <td>${esc(s.slug || '—')}</td>
           <td class="is-wrap">${esc(s.adresse || '—')}</td>
           <td>${aktiv ? '<span class="badge">aktiv</span>' : '<span class="badge badge--muted">inaktiv</span>'}</td>

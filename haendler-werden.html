@@ -172,6 +172,11 @@
               </div>
 
               <div class="form-group">
+                <label class="form-label" for="hf-passwort">Passwort</label>
+                <input class="form-input" type="password" id="hf-passwort" name="passwort" required minlength="6" autocomplete="new-password">
+              </div>
+
+              <div class="form-group">
                 <label class="form-label" for="hf-telefon">Telefonnummer</label>
                 <input class="form-input" type="tel" id="hf-telefon" name="telefon" required autocomplete="tel">
               </div>
@@ -182,8 +187,19 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="hf-adresse">Adresse des Geschäfts</label>
-                <input class="form-input" type="text" id="hf-adresse" name="adresse" required>
+                <label class="form-label" for="hf-strasse">Straße</label>
+                <input class="form-input" type="text" id="hf-strasse" name="strasse" required autocomplete="address-line1">
+              </div>
+
+              <div class="hw-form__row">
+                <div class="form-group">
+                  <label class="form-label" for="hf-hausnummer">Hausnummer</label>
+                  <input class="form-input" type="text" id="hf-hausnummer" name="hausnummer" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="hf-plz-ort">Postleitzahl / Stadt</label>
+                  <input class="form-input" type="text" id="hf-plz-ort" name="plz_ort" placeholder="z.B. 38106 Braunschweig" required autocomplete="postal-code">
+                </div>
               </div>
 
               <div class="form-group">
@@ -257,6 +273,6 @@
   </footer>
 
   <script src="js/footer.js?v=1"></script>
-  <script type="module" src="js/haendler-werden.js?v=3"></script>
+  <script type="module" src="js/haendler-werden.js?v=4"></script>
 </body>
 </html>

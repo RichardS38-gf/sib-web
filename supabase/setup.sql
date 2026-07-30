@@ -219,6 +219,16 @@ create policy "Haendler aendert eigenen Shop"
   on public.shops for update to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
+-- Selbstregistrierung: ein frisch eingeloggter Haendler-Account darf sich
+-- GENAU EINEN eigenen Shop anlegen (siehe haendler-werden.html + dashboard.js).
+drop policy if exists "Haendler legt eigenen Shop an" on public.shops;
+create policy "Haendler legt eigenen Shop an"
+  on public.shops for insert to authenticated
+  with check (
+    user_id = auth.uid()
+    and not exists (select 1 from public.shops s where s.user_id = auth.uid())
+  );
+
 -- produkte: nur Produkte des eigenen Shops anlegen/ändern/löschen
 drop policy if exists "Haendler verwaltet eigene Produkte" on public.produkte;
 create policy "Haendler verwaltet eigene Produkte"

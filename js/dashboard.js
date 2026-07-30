@@ -7,6 +7,7 @@ import { initHeaderSearch } from './header.js'
 import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=17'
 import { naechsteAusgabe, monatDatum, monatName, ausgabeNummer } from './newsletter-zeitraum.js'
 import { initProduktImport } from './produkt-import.js?v=11'
+import { stelleHaendlerShopSicher } from './haendler-shop-setup.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -999,15 +1000,10 @@ async function init () {
   const loading = document.getElementById('dashboard-loading')
   const dashboard = document.getElementById('dashboard')
 
-  // Shop des eingeloggten Händlers laden
+  // Shop des eingeloggten Händlers laden -- legt ihn bei Bedarf gleich an
+  // (falls die Registrierung erst per E-Mail-Bestätigung abgeschlossen wurde).
   try {
-    const { data, error } = await supabase
-      .from('shops')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .maybeSingle()
-
-    if (error) throw error
+    const data = await stelleHaendlerShopSicher(supabase, session.user)
 
     if (!data) {
       loading.innerHTML = `

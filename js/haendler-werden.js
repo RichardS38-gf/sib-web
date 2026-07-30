@@ -4,8 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-
-const LOGO_BUCKET = 'haendler-logos'
+import { stelleHaendlerShopSicher } from './haendler-shop-setup.js'
 
 // ── Mobile-Menü ──
 function initMobileMenu () {
@@ -126,12 +125,18 @@ function initKundeForm () {
   })
 }
 
-// ── Händler-Anfrage (wie bisher: Formular zur manuellen Prüfung) ──
+// ── Händler-Registrierung (echter Account, sofort nutzbar) ──
+// Legt bei signUp() gleich einen Supabase-Auth-Account MIT selbst gewähltem
+// Passwort an. Ist danach direkt eine Session vorhanden (keine E-Mail-
+// Bestätigung nötig), wird sofort der Shop angelegt und man landet im
+// Dashboard -- genau wie ein bestehender Händler-Account. Verlangt das
+// Supabase-Projekt eine E-Mail-Bestätigung, wird der Shop automatisch beim
+// ersten Login danach angelegt (siehe haendler-shop-setup.js).
 async function ladeLogoHoch (file) {
   if (!file) return null
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-  const path = `anfragen/${Date.now()}-${safeName}`
-  const { error } = await supabase.storage.from(LOGO_BUCKET).upload(path, file, {
+  const ext = file.name.split('.').pop().toLowerCase()
+  const path = `shop-logos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { data, error } = await supabase.storage.from('produkt-bilder').upload(path, file, {
     cacheControl: '3600',
     upsert: false
   })
@@ -139,8 +144,8 @@ async function ladeLogoHoch (file) {
     console.error('Logo-Upload fehlgeschlagen:', error)
     return null
   }
-  const { data } = supabase.storage.from(LOGO_BUCKET).getPublicUrl(path)
-  return data?.publicUrl || path
+  const { data: { publicUrl } } = supabase.storage.from('produkt-bilder').getPublicUrl(data.path)
+  return publicUrl
 }
 
 function initHaendlerForm () {
@@ -155,12 +160,15 @@ function initHaendlerForm () {
     const vorname = form.vorname.value.trim()
     const nachname = form.nachname.value.trim()
     const email = form.email.value.trim()
+    const passwort = form.passwort.value
     const telefon = form.telefon.value.trim()
     const geschaeftName = form.geschaeft_name.value.trim()
-    const adresse = form.adresse.value.trim()
+    const strasse = form.strasse.value.trim()
+    const hausnummer = form.hausnummer.value.trim()
+    const plzOrt = form.plz_ort.value.trim()
     const beschreibung = form.beschreibung.value.trim()
 
-    if (!vorname || !nachname || !email || !telefon || !geschaeftName || !adresse) {
+    if (!vorname || !nachname || !email || !passwort || !telefon || !geschaeftName || !strasse || !hausnummer || !plzOrt) {
       feedback.innerHTML = '<div class="error-msg">Bitte fülle alle Pflichtfelder aus.</div>'
       return
     }
@@ -168,56 +176,58 @@ function initHaendlerForm () {
       feedback.innerHTML = '<div class="error-msg">Bitte gib eine gültige E-Mail-Adresse ein.</div>'
       return
     }
+    if (passwort.length < 6) {
+      feedback.innerHTML = '<div class="error-msg">Das Passwort muss mindestens 6 Zeichen lang sein.</div>'
+      return
+    }
     if (!form.datenschutz.checked) {
       feedback.innerHTML = '<div class="error-msg">Bitte akzeptiere die Datenschutzerklärung.</div>'
       return
     }
 
+    const adresse = `${strasse} ${hausnummer}, ${plzOrt}`
+
     const submitBtn = form.querySelector('button[type="submit"]')
     submitBtn.disabled = true
-    submitBtn.textContent = 'Wird gesendet…'
+    submitBtn.textContent = 'Wird erstellt…'
 
     try {
-      const logoUrl = await ladeLogoHoch(form.logo.files[0])
-
-      const { data, error } = await supabase.from('haendler_anfragen').insert({
-        vorname,
-        nachname,
+      const { data, error } = await supabase.auth.signUp({
         email,
-        telefon,
-        geschaeft_name: geschaeftName,
-        adresse,
-        beschreibung: beschreibung || null,
-        logo_url: logoUrl
-      }).select('id').single()
-
+        password: passwort,
+        options: {
+          data: {
+            vorname,
+            nachname,
+            rolle: 'haendler',
+            geschaeft_name: geschaeftName,
+            adresse,
+            telefon,
+            beschreibung: beschreibung || null
+          }
+        }
+      })
       if (error) throw error
 
-      // Stripe-Checkout: falls noch nicht konfiguriert (Keys fehlen) oder die
-      // Session-Erstellung fehlschlägt, blockieren wir die Registrierung NICHT --
-      // die Anfrage ist bereits gespeichert, Zahlung kann später nachgeholt werden.
-      try {
-        submitBtn.textContent = 'Weiterleitung zur Zahlung…'
-        const res = await fetch('/api/create-checkout-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ anfrageId: data.id, email, geschaeftName })
-        })
-        const checkout = await res.json()
+      if (data.session) {
+        // Sofort eingeloggt -> Logo (falls gewählt) jetzt authentifiziert hochladen
+        // und den Shop direkt anlegen.
+        let logoUrl = null
+        const logoFile = form.logo.files[0]
+        if (logoFile) logoUrl = await ladeLogoHoch(logoFile)
 
-        if (res.ok && checkout.url) {
-          window.location.href = checkout.url
-          return
-        }
-        console.warn('Stripe-Checkout nicht verfügbar, Anfrage trotzdem gespeichert:', checkout.error)
-      } catch (stripeErr) {
-        console.warn('Stripe-Checkout nicht erreichbar, Anfrage trotzdem gespeichert:', stripeErr)
+        await stelleHaendlerShopSicher(supabase, data.user, logoUrl ? { logo_url: logoUrl } : {})
+        window.location.replace('dashboard.html')
+        return
       }
 
-      form.innerHTML = '<div class="success-msg">Vielen Dank! Wir melden uns innerhalb von 2 Werktagen bei dir, um auch die Zahlung abzuschließen.</div>'
+      form.innerHTML = '<div class="success-msg">Fast geschafft! Bitte bestätige deine E-Mail-Adresse über den Link, den wir dir gerade gesendet haben. Danach kannst du dich anmelden — dein Geschäft wird dann automatisch eingerichtet.</div>'
     } catch (err) {
-      console.error('Registrierung fehlgeschlagen:', err)
-      feedback.innerHTML = '<div class="error-msg">Die Registrierung konnte nicht gesendet werden. Bitte versuche es später erneut.</div>'
+      console.error('Händler-Registrierung fehlgeschlagen:', err)
+      const msg = err?.message?.includes('already registered') || err?.message?.includes('already exists')
+        ? 'Für diese E-Mail-Adresse existiert bereits ein Konto.'
+        : 'Die Registrierung konnte nicht abgeschlossen werden. Bitte versuche es später erneut.'
+      feedback.innerHTML = `<div class="error-msg">${msg}</div>`
       submitBtn.disabled = false
       submitBtn.textContent = 'Registrierung absenden'
     }
@@ -244,4 +254,3 @@ initHeaderSearch()
 initRollenToggle()
 initKundeForm()
 initHaendlerForm()
-initStripeRueckkehr()
