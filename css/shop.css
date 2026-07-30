@@ -186,6 +186,12 @@
   font-weight: 400;
 }
 
+.shop-infobar__whatsapp {
+  display: inline-flex;
+  vertical-align: -3px;
+  color: #25D366;
+}
+
 .shop-infobar__dot {
   color: var(--color-muted);
   font-size: 1rem;
