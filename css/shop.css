@@ -149,6 +149,10 @@
   margin-bottom: 0.3rem;
 }
 
+@media (min-width: 641px) {
+  .shop-infobar__name { margin-bottom: 1rem; }
+}
+
 .shop-infobar__ort {
   display: flex;
   align-items: center;
