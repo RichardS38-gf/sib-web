@@ -374,10 +374,13 @@
   .shop-rating-summary {
     flex-wrap: nowrap;
     white-space: nowrap;
+    position: relative;
+    z-index: 2;
   }
   #bewertungen-section .section-header > div {
     min-width: 0;
-    overflow: hidden;
+    position: relative;
+    z-index: 2;
   }
   #bewertungen-section .section-header h2 {
     white-space: nowrap;
