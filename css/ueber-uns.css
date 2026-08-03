@@ -113,6 +113,10 @@
   margin-bottom: var(--space-4);
 }
 
+@media (max-width: 640px) {
+  .ueber-problem__quote { margin-top: var(--space-3); }
+}
+
 .ueber-problem__text {
   font-size: var(--text-lg);
   font-weight: 300;
@@ -128,6 +132,23 @@
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-3);
   max-width: 100%;
+}
+
+@media (max-width: 639px) {
+  .ueber-problem__icons {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: var(--space-3);
+    padding-bottom: 0.25rem;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .ueber-problem__icons::-webkit-scrollbar { display: none; }
+  .ueber-problem__icon-card {
+    flex: 0 0 70%;
+    scroll-snap-align: start;
+  }
 }
 
 @media (min-width: 640px) {
