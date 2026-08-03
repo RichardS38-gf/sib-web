@@ -252,6 +252,7 @@
 
 @media (max-width: 640px) {
   .pdp-details__headline { font-size: 1.65rem; margin-bottom: var(--space-3); }
+  .pdp-details__list { padding-bottom: var(--space-4); }
 }
 
 .pdp-details__sub {
