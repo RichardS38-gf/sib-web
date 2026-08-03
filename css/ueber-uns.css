@@ -279,6 +279,24 @@
   50% { opacity: 0; }
 }
 
+@media (max-width: 768px) {
+  .ueber-collage {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+  .ueber-collage__tall {
+    grid-row: auto;
+    aspect-ratio: 4 / 5;
+  }
+  .ueber-collage__img { aspect-ratio: 4 / 5; }
+  .ueber-collage__text-cell,
+  .ueber-collage__sub-cell {
+    padding: var(--space-4) var(--space-3);
+  }
+  .ueber-collage__statement { font-size: 1.5rem; }
+  .ueber-collage__sub { font-size: 1rem; }
+}
+
 
 .ueber-steps__headline {
   font-family: var(--font-sans);
