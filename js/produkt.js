@@ -19,7 +19,6 @@ let farbGroessenMap = {} // farbe -> [{groesse, stueckzahl}], nur bei Farbvarian
 let hatFarbGroessen = false
 let aktuelleBilder = []
 let aktuellerBildTitel = ''
-let aktuellesHeroBild = null // welche URL gerade als Hauptbild gezeigt wird
 let aktuelleFarbenListe = [] // alle Farbvarianten des Produkts (fuer Bild->Farbe-Zuordnung)
 
 // Feste Größen-Reihenfolge für das Dropdown
@@ -114,44 +113,56 @@ function bilderOf (produkt) {
   return Array.isArray(produkt.bilder) ? produkt.bilder.filter(Boolean) : []
 }
 
-// Baut Hauptbild + Miniaturen-Grid aus aktuelleBilder + aktuellesHeroBild.
-// Das zuerst hochgeladene Foto (aktuelleBilder[0]) rutscht ans Ende der
-// Miniaturen, sobald es nicht mehr das Hauptbild ist -- es verschwindet nie,
-// sondern wechselt nur den Platz.
+// Baut den Bilder-Slider (+ Punkte/Pfeile bei mehr als 1 Bild) aus
+// aktuelleBilder. Die Reihenfolge bleibt immer wie im Produkt hinterlegt --
+// bei Farbwahl wird nicht neu gebaut, sondern nur zur passenden Folie gescrollt
+// (siehe gehZuSlide).
 function baueGalerieHtml () {
   const bilder = aktuelleBilder
   if (!bilder.length) {
-    return { mainHtml: '<div class="pdp-gallery__main" id="gallery-main" style="aspect-ratio:1/1"></div>', thumbsHtml: '' }
+    return '<div class="pdp-gallery__slider" id="gallery-slider"><div class="pdp-gallery__slide"></div></div>'
   }
-  const hero = (aktuellesHeroBild && bilder.includes(aktuellesHeroBild)) ? aktuellesHeroBild : bilder[0]
-  let rest = bilder.filter((b) => b !== hero)
-  if (bilder[0] !== hero && rest.includes(bilder[0])) {
-    rest = rest.filter((b) => b !== bilder[0]).concat([bilder[0]])
-  }
-  const mainHtml = `<img class="pdp-gallery__main" id="gallery-main" src="${esc(hero)}" alt="${esc(aktuellerBildTitel)}">`
-  const thumbsHtml = rest.length
-    ? `<div class="pdp-gallery__grid">${rest.map((b, i) =>
-        `<img class="pdp-gallery__grid-img" data-url="${esc(b)}" src="${esc(b)}" alt="${esc(aktuellerBildTitel)} ${i + 2}" loading="lazy">`
-      ).join('')}</div>`
+  const slidesHtml = bilder.map((b, i) => `
+    <div class="pdp-gallery__slide" data-index="${i}">
+      <img src="${esc(b)}" alt="${esc(aktuellerBildTitel)} ${i + 1}" loading="${i === 0 ? 'eager' : 'lazy'}">
+    </div>`).join('')
+  const navHtml = bilder.length > 1
+    ? `<div class="pdp-gallery__dots" id="gallery-dots">${bilder.map((_, i) =>
+        `<button type="button" class="pdp-gallery__dot${i === 0 ? ' is-active' : ''}" data-index="${i}" aria-label="Bild ${i + 1} anzeigen"></button>`
+      ).join('')}</div>
+      <button class="pdp-gallery__arrow pdp-gallery__arrow--prev" type="button" aria-label="Voriges Bild">&#8249;</button>
+      <button class="pdp-gallery__arrow pdp-gallery__arrow--next" type="button" aria-label="Nächstes Bild">&#8250;</button>`
     : ''
-  return { mainHtml, thumbsHtml }
+  return `<div class="pdp-gallery__slider" id="gallery-slider">${slidesHtml}</div>${navHtml}`
 }
 
-// Wechselt das Hauptbild auf die übergebene URL -- baut Hauptbild + Grid neu
-// auf, damit das bisherige Hauptbild als Miniatur erhalten bleibt statt zu
-// verschwinden.
+// Ermittelt den aktuell sichtbaren Slide-Index anhand der Scroll-Position.
+function aktiverSlideIndex (slider) {
+  const slides = Array.from(slider.querySelectorAll('.pdp-gallery__slide'))
+  let closest = 0
+  let minDist = Infinity
+  slides.forEach((s, i) => {
+    const dist = Math.abs(s.offsetLeft - slider.scrollLeft)
+    if (dist < minDist) { minDist = dist; closest = i }
+  })
+  return closest
+}
+
+// Scrollt den Slider sanft zur Folie mit dem gegebenen Index.
+function gehZuSlide (index) {
+  const slider = document.getElementById('gallery-slider')
+  const slide = slider?.querySelector(`.pdp-gallery__slide[data-index="${index}"]`)
+  if (!slider || !slide) return
+  slider.scrollTo({ left: slide.offsetLeft, behavior: 'smooth' })
+}
+
+// Springt zu der Folie, die die übergebene Bild-URL zeigt -- wird bei
+// Farbwahl aufgerufen (siehe wendeFarbeAn).
 function aktualisiereGalerie (url) {
-  if (!url || !aktuelleBilder.includes(url) || url === aktuellesHeroBild) return
-  aktuellesHeroBild = url
-  const { mainHtml, thumbsHtml } = baueGalerieHtml()
-  const gallery = document.querySelector('.pdp-gallery')
-  if (!gallery) return
-  const alterMain = document.getElementById('gallery-main')
-  const alteGrid = gallery.querySelector('.pdp-gallery__grid')
-  if (alterMain) alterMain.outerHTML = mainHtml
-  if (alteGrid) alteGrid.remove()
-  if (thumbsHtml) document.getElementById('gallery-main')?.insertAdjacentHTML('afterend', thumbsHtml)
-  initGallery()
+  if (!url) return
+  const index = aktuelleBilder.indexOf(url)
+  if (index === -1) return
+  gehZuSlide(index)
 }
 
 function notFound (text) {
@@ -192,11 +203,10 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
 
   aktuelleBilder = bilder
   aktuellerBildTitel = produkt.titel || ''
-  aktuellesHeroBild = bilder[0] || null
   aktuelleFarbenListe = farben
 
   // Galerie
-  const { mainHtml: mainImg, thumbsHtml } = baueGalerieHtml()
+  const galerieHtml = baueGalerieHtml()
 
   // Sale-Preis
   const sale = isSaleAktiv(produkt)
@@ -304,8 +314,7 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
         <button class="product-card__wish pdp-gallery__wish" type="button" data-wunschliste-produkt="${produkt.id}" aria-label="Zur Wunschliste hinzufügen" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>
         </button>
-        ${mainImg}
-        ${thumbsHtml}
+        ${galerieHtml}
       </div>
       <div class="pdp-info">
         <h1 class="pdp-info__title">${esc(produkt.titel)}</h1>
@@ -416,15 +425,28 @@ function initGroessen () {
   })
 }
 
-// Thumbnail-Klick tauscht das Hauptbild -- gehört das Foto zu einer
-// Farbvariante (irgendeines ihrer Fotos, nicht nur das erste), springt
-// zusätzlich das "Farbe"-Dropdown auf diese Farbe.
+// Slider-Steuerung: Punkte + Pfeile klickbar, aktiver Punkt folgt dem
+// Scrollen/Swipen. Landet man per Swipe auf einem Bild, das zu einer
+// Farbvariante gehört, springt zusätzlich das "Farbe"-Dropdown darauf.
 function initGallery () {
-  const thumbs = document.querySelectorAll('.pdp-gallery__grid-img[data-url]')
-  thumbs.forEach((thumb) => {
-    thumb.addEventListener('click', () => {
-      const url = thumb.dataset.url
-      aktualisiereGalerie(url)
+  const slider = document.getElementById('gallery-slider')
+  if (!slider) return
+  const dots = Array.from(document.querySelectorAll('.pdp-gallery__dot'))
+  const prevBtn = document.querySelector('.pdp-gallery__arrow--prev')
+  const nextBtn = document.querySelector('.pdp-gallery__arrow--next')
+
+  dots.forEach((dot) => dot.addEventListener('click', () => gehZuSlide(Number(dot.dataset.index))))
+  prevBtn?.addEventListener('click', () => gehZuSlide(Math.max(0, aktiverSlideIndex(slider) - 1)))
+  nextBtn?.addEventListener('click', () => gehZuSlide(Math.min(aktuelleBilder.length - 1, aktiverSlideIndex(slider) + 1)))
+
+  let scrollTimeout
+  slider.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout)
+    scrollTimeout = setTimeout(() => {
+      const index = aktiverSlideIndex(slider)
+      dots.forEach((d, i) => d.classList.toggle('is-active', i === index))
+
+      const url = aktuelleBilder[index]
       const treffer = aktuelleFarbenListe.find((f) => {
         const urls = (f.bild_urls && f.bild_urls.length) ? f.bild_urls : (f.bild_url ? [f.bild_url] : [])
         return urls.includes(url)
@@ -432,8 +454,8 @@ function initGallery () {
       if (treffer && treffer.farbe !== selectedFarbe) {
         wendeFarbeAn(treffer.farbe, { bildSchonAktuell: true })
       }
-    })
-  })
+    }, 120)
+  }, { passive: true })
 }
 
 async function sendeBestaetigungsMail (payload) {

@@ -40,32 +40,82 @@
 }
 
 .pdp-gallery__thumbs,
-.pdp-gallery__thumb { display: none; } /* nicht mehr genutzt */
+.pdp-gallery__thumb,
+.pdp-gallery__grid,
+.pdp-gallery__grid-img { display: none; } /* nicht mehr genutzt -- ersetzt durch Slider */
 
-.pdp-gallery__grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.pdp-gallery__grid-img {
-  width: 100%;
-  height: auto;
-  display: block;
+/* ─── Slider ─── */
+.pdp-gallery__slider {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  border-radius: var(--radius-md);
   background: var(--color-bg-soft);
-  border-radius: var(--radius-sm);
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.pdp-gallery__slider::-webkit-scrollbar { display: none; }
+
+.pdp-gallery__slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  aspect-ratio: 1 / 1;
+}
+
+.pdp-gallery__slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pdp-gallery__dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.pdp-gallery__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: var(--color-line);
   cursor: pointer;
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  transition: outline-color 0.15s;
+  transition: background 0.15s, transform 0.15s;
+}
+.pdp-gallery__dot.is-active {
+  background: var(--color-ink);
+  transform: scale(1.25);
 }
 
-.pdp-gallery__grid-img.is-active {
-  outline-color: var(--color-ink);
+.pdp-gallery__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink);
 }
+.pdp-gallery__arrow--prev { left: 0.75rem; }
+.pdp-gallery__arrow--next { right: 0.75rem; }
 
-/* Alle Grid-Thumbnails einheitlich quadratisch (auch das erste) */
+@media (max-width: 640px) {
+  .pdp-gallery__arrow { display: none; } /* auf Mobile reicht Swipe + Punkte */
+}
 
 /* ─── Info-Box ─── */
 .pdp-info {
