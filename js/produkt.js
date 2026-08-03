@@ -938,41 +938,81 @@ async function ladeWeitere (produkt) {
   }
 }
 
-function mischen (arr) {
-  const a = arr.slice()
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
+// ── "Das könnte dir auch gefallen": Kategorie + ähnlicher Titel (meist Marke) +
+// gleiches Geschlecht werden bepunktet, damit wirklich passende Artikel oben
+// stehen statt komplett zufällig zu sein. Fallback mit neuesten Artikeln,
+// falls es in der Kategorie zu wenige Treffer gibt -- die Sektion soll so gut
+// wie nie leer bleiben.
+function woerterVon (text) {
+  return (text || '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length >= 3)
+}
+
+function berechneAehnlichkeit (basis, kandidat, basisWoerter) {
+  let score = 0
+  if (basis.kategorie_id && kandidat.kategorie_id === basis.kategorie_id) score += 4
+  if (basis.geschlecht && kandidat.geschlecht && basis.geschlecht === kandidat.geschlecht) score += 3
+  const kandidatWoerter = new Set(woerterVon(kandidat.titel))
+  const treffer = basisWoerter.filter((w) => kandidatWoerter.has(w)).length
+  score += treffer * 2
+  return score
 }
 
 async function ladeAehnliche (produkt) {
   const section = document.getElementById('aehnliche-section')
   const container = document.getElementById('aehnliche')
-  section.hidden = false  // immer anzeigen
-
-  if (!produkt.kategorie_id) return
+  section.hidden = false // immer anzeigen
 
   try {
-    let query = supabase
-      .from('produkte')
-      .select('*, shops(name, slug)')
-      .eq('kategorie_id', produkt.kategorie_id)
-      .eq('verfuegbar', true)
-      .eq('freigegeben', true)
-      .neq('id', produkt.id)
-      .limit(24)
+    let kandidaten = []
 
-    if (produkt.shop_id) query = query.neq('shop_id', produkt.shop_id)
+    if (produkt.kategorie_id) {
+      let query = supabase
+        .from('produkte')
+        .select('*, shops(name, slug)')
+        .eq('kategorie_id', produkt.kategorie_id)
+        .eq('verfuegbar', true)
+        .eq('freigegeben', true)
+        .neq('id', produkt.id)
+        .limit(60)
+      if (produkt.shop_id) query = query.neq('shop_id', produkt.shop_id)
+      const { data, error } = await query
+      if (error) throw error
+      kandidaten = data || []
+    }
 
-    const { data, error } = await query
-    if (error) throw error
-    const kandidaten = data || []
+    // Fallback: zu wenige (oder gar keine) Treffer in der Kategorie -> mit
+    // neuesten verfügbaren Artikeln anderer Händler auffüllen, damit die
+    // Sektion nicht leer bleibt.
+    if (kandidaten.length < 4) {
+      let fallbackQuery = supabase
+        .from('produkte')
+        .select('*, shops(name, slug)')
+        .eq('verfuegbar', true)
+        .eq('freigegeben', true)
+        .neq('id', produkt.id)
+        .order('erstellt_am', { ascending: false })
+        .limit(40)
+      if (produkt.shop_id) fallbackQuery = fallbackQuery.neq('shop_id', produkt.shop_id)
+      const { data: fallbackData, error: fbErr } = await fallbackQuery
+      if (!fbErr) {
+        const vorhandeneIds = new Set(kandidaten.map((p) => p.id))
+        kandidaten = kandidaten.concat((fallbackData || []).filter((p) => !vorhandeneIds.has(p.id)))
+      }
+    }
+
     if (kandidaten.length === 0) return
 
-    const auswahl = mischen(kandidaten).slice(0, 4)
-    const shopIdsA = [...new Set(auswahl.map(p => p.shop_id).filter(Boolean))]
+    const basisWoerter = woerterVon(produkt.titel)
+    const auswahl = kandidaten
+      .map((p) => ({ p, score: berechneAehnlichkeit(produkt, p, basisWoerter) + Math.random() * 0.5 }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4)
+      .map((e) => e.p)
+
     const shopRatingA = await fetchProductRatings(supabase, auswahl.map(p => p.id))
     container.innerHTML = auswahl.map((p) => renderProductCard(p, p.shops?.name || 'Lokaler Händler', shopRatingA[p.id] || null)).join('')
     section.hidden = false
