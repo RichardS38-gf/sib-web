@@ -1004,6 +1004,25 @@ async function ladeAehnliche (produkt) {
       }
     }
 
+    // Letzte Stufe: gibt es -- z.B. weil aktuell kaum andere Händler Produkte
+    // gelistet haben -- immer noch (fast) keine Treffer, notfalls auch den
+    // eigenen Shop mit einbeziehen. Lieber ähnliche eigene Artikel zeigen als
+    // eine komplett leere Sektion.
+    if (kandidaten.length < 4) {
+      const { data: letzterFallback, error: lfErr } = await supabase
+        .from('produkte')
+        .select('*, shops(name, slug)')
+        .eq('verfuegbar', true)
+        .eq('freigegeben', true)
+        .neq('id', produkt.id)
+        .order('erstellt_am', { ascending: false })
+        .limit(40)
+      if (!lfErr) {
+        const vorhandeneIds = new Set(kandidaten.map((p) => p.id))
+        kandidaten = kandidaten.concat((letzterFallback || []).filter((p) => !vorhandeneIds.has(p.id)))
+      }
+    }
+
     if (kandidaten.length === 0) return
 
     const basisWoerter = woerterVon(produkt.titel)
