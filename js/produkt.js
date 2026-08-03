@@ -148,12 +148,30 @@ function aktiverSlideIndex (slider) {
   return closest
 }
 
+// Passt die Slider-Höhe an das Seitenverhältnis des Bildes am gegebenen
+// Index an, damit nichts abgeschnitten wird (Hoch- und Querformate passen
+// beide ohne Beschnitt hinein).
+function setzeSliderHoehe (slider, index) {
+  const img = slider.querySelector(`.pdp-gallery__slide[data-index="${index}"] img`)
+  if (!img) return
+  const anwenden = () => {
+    if (!img.naturalWidth) return
+    const ratio = img.naturalHeight / img.naturalWidth
+    const breite = slider.clientWidth
+    const hoehe = Math.max(260, Math.min(720, breite * ratio))
+    slider.style.height = `${Math.round(hoehe)}px`
+  }
+  if (img.complete) anwenden()
+  else img.addEventListener('load', anwenden, { once: true })
+}
+
 // Scrollt den Slider sanft zur Folie mit dem gegebenen Index.
 function gehZuSlide (index) {
   const slider = document.getElementById('gallery-slider')
   const slide = slider?.querySelector(`.pdp-gallery__slide[data-index="${index}"]`)
   if (!slider || !slide) return
   slider.scrollTo({ left: slide.offsetLeft, behavior: 'smooth' })
+  setzeSliderHoehe(slider, index)
 }
 
 // Springt zu der Folie, die die übergebene Bild-URL zeigt -- wird bei
@@ -439,12 +457,17 @@ function initGallery () {
   prevBtn?.addEventListener('click', () => gehZuSlide(Math.max(0, aktiverSlideIndex(slider) - 1)))
   nextBtn?.addEventListener('click', () => gehZuSlide(Math.min(aktuelleBilder.length - 1, aktiverSlideIndex(slider) + 1)))
 
+  // Höhe initial ans erste Bild anpassen (+ bei Fenster-Resize neu berechnen)
+  setzeSliderHoehe(slider, 0)
+  window.addEventListener('resize', () => setzeSliderHoehe(slider, aktiverSlideIndex(slider)))
+
   let scrollTimeout
   slider.addEventListener('scroll', () => {
     clearTimeout(scrollTimeout)
     scrollTimeout = setTimeout(() => {
       const index = aktiverSlideIndex(slider)
       dots.forEach((d, i) => d.classList.toggle('is-active', i === index))
+      setzeSliderHoehe(slider, index)
 
       const url = aktuelleBilder[index]
       const treffer = aktuelleFarbenListe.find((f) => {
