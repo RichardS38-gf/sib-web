@@ -370,6 +370,20 @@
   flex-wrap: wrap;
 }
 
+@media (max-width: 640px) {
+  .shop-rating-summary {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  #bewertungen-section .section-header > div {
+    min-width: 0;
+    overflow: hidden;
+  }
+  #bewertungen-section .section-header h2 {
+    white-space: nowrap;
+  }
+}
+
 .shop-rating-star { color: #f5a623; font-size: 1.1rem; }
 .shop-rating-zahl { font-weight: 700; font-size: 1rem; color: var(--color-ink); }
 .shop-rating-anzahl { color: var(--color-muted); font-size: var(--text-sm); }
