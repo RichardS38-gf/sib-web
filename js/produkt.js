@@ -677,7 +677,7 @@ function renderDetails (produkt) {
     const versaetze = [0, 18, -10, 10, -16, 6]
     const kartenHtml = (offset) => bilder.map((url, i) => `
       <div class="pdp-details__collage-item" style="--r:${rotationen[i % rotationen.length]}deg;--y:${versaetze[i % versaetze.length]}px">
-        <img src="${esc(url)}" alt="${esc(produkt.titel)} ${i + 1}" loading="${offset === 0 && i === 0 ? 'eager' : 'lazy'}">
+        <img src="${esc(url)}" alt="${esc(produkt.titel)} ${i + 1}" loading="eager">
       </div>`).join('')
 
     bildHtml = `

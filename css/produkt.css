@@ -309,6 +309,8 @@
   align-items: center;
   gap: 1.1rem;
   width: max-content;
+  will-change: transform;
+  backface-visibility: hidden;
   animation: pdp-collage-scroll 28s linear infinite;
 }
 
@@ -341,6 +343,12 @@
 
 @media (max-width: 768px) {
   .pdp-details__collage-item { width: 140px; }
+  .pdp-details__collage-bleed {
+    /* Auf Mobile beidseitig ausfaden statt nur links -- rechts laeuft die
+       Reihe hier nicht mehr sichtbar ueber den Rand hinaus wie auf Desktop. */
+    -webkit-mask-image: linear-gradient(to right, transparent 0, black 60px, black calc(100% - 60px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, black 60px, black calc(100% - 60px), transparent 100%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
