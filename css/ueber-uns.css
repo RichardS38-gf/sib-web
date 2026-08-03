@@ -9,6 +9,10 @@
   align-items: center;
 }
 
+@media (max-width: 640px) {
+  .ueber-hero { min-height: 50vh; }
+}
+
 .ueber-hero::before {
   content: '';
   position: absolute;
@@ -30,6 +34,13 @@
   border-radius: 0;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+@media (max-width: 640px) {
+  .ueber-hero .container {
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+  }
 }
 
 .ueber-hero__card {
