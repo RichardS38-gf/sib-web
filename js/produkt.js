@@ -19,6 +19,7 @@ let farbGroessenMap = {} // farbe -> [{groesse, stueckzahl}], nur bei Farbvarian
 let hatFarbGroessen = false
 let aktuelleBilder = []
 let aktuellerBildTitel = ''
+let aktuellesHeroBild = null // nur Desktop: welche URL gerade als Hauptbild gezeigt wird
 let aktuelleFarbenListe = [] // alle Farbvarianten des Produkts (fuer Bild->Farbe-Zuordnung)
 
 // Feste Größen-Reihenfolge für das Dropdown
@@ -113,11 +114,17 @@ function bilderOf (produkt) {
   return Array.isArray(produkt.bilder) ? produkt.bilder.filter(Boolean) : []
 }
 
-// Baut den Bilder-Slider (+ Punkte/Pfeile bei mehr als 1 Bild) aus
-// aktuelleBilder. Die Reihenfolge bleibt immer wie im Produkt hinterlegt --
-// bei Farbwahl wird nicht neu gebaut, sondern nur zur passenden Folie gescrollt
-// (siehe gehZuSlide).
+function istMobileGalerie () {
+  return window.matchMedia('(max-width: 639px)').matches
+}
+
+// Baut die Galerie -- auf Mobile ein Swipe-Slider, auf Desktop wie zuvor
+// Hauptbild + Miniaturen-Grid darunter.
 function baueGalerieHtml () {
+  return istMobileGalerie() ? baueGalerieHtmlMobile() : baueGalerieHtmlDesktop()
+}
+
+function baueGalerieHtmlMobile () {
   const bilder = aktuelleBilder
   if (!bilder.length) {
     return '<div class="pdp-gallery__slider" id="gallery-slider"><div class="pdp-gallery__slide"></div></div>'
@@ -126,17 +133,39 @@ function baueGalerieHtml () {
     <div class="pdp-gallery__slide" data-index="${i}">
       <img src="${esc(b)}" alt="${esc(aktuellerBildTitel)} ${i + 1}" loading="${i === 0 ? 'eager' : 'lazy'}">
     </div>`).join('')
-  const navHtml = bilder.length > 1
+  const dotsHtml = bilder.length > 1
     ? `<div class="pdp-gallery__dots" id="gallery-dots">${bilder.map((_, i) =>
         `<button type="button" class="pdp-gallery__dot${i === 0 ? ' is-active' : ''}" data-index="${i}" aria-label="Bild ${i + 1} anzeigen"></button>`
-      ).join('')}</div>
-      <button class="pdp-gallery__arrow pdp-gallery__arrow--prev" type="button" aria-label="Voriges Bild">&#8249;</button>
-      <button class="pdp-gallery__arrow pdp-gallery__arrow--next" type="button" aria-label="Nächstes Bild">&#8250;</button>`
+      ).join('')}</div>`
     : ''
-  return `<div class="pdp-gallery__slider" id="gallery-slider">${slidesHtml}</div>${navHtml}`
+  return `<div class="pdp-gallery__slider" id="gallery-slider">${slidesHtml}</div>${dotsHtml}`
 }
 
-// Ermittelt den aktuell sichtbaren Slide-Index anhand der Scroll-Position.
+// Desktop: Hauptbild + Miniaturen-Grid (wie vor dem Mobile-Slider). Das
+// zuerst hochgeladene Foto (aktuelleBilder[0]) rutscht ans Ende der
+// Miniaturen, sobald es nicht mehr das Hauptbild ist -- es verschwindet nie,
+// sondern wechselt nur den Platz.
+function baueGalerieHtmlDesktop () {
+  const bilder = aktuelleBilder
+  if (!bilder.length) {
+    return '<div class="pdp-gallery__main" id="gallery-main" style="aspect-ratio:1/1"></div>'
+  }
+  const hero = (aktuellesHeroBild && bilder.includes(aktuellesHeroBild)) ? aktuellesHeroBild : bilder[0]
+  let rest = bilder.filter((b) => b !== hero)
+  if (bilder[0] !== hero && rest.includes(bilder[0])) {
+    rest = rest.filter((b) => b !== bilder[0]).concat([bilder[0]])
+  }
+  const mainHtml = `<img class="pdp-gallery__main" id="gallery-main" src="${esc(hero)}" alt="${esc(aktuellerBildTitel)}">`
+  const thumbsHtml = rest.length
+    ? `<div class="pdp-gallery__grid">${rest.map((b, i) =>
+        `<img class="pdp-gallery__grid-img" data-url="${esc(b)}" src="${esc(b)}" alt="${esc(aktuellerBildTitel)} ${i + 2}" loading="lazy">`
+      ).join('')}</div>`
+    : ''
+  return `${mainHtml}${thumbsHtml}`
+}
+
+// Ermittelt den aktuell sichtbaren Slide-Index anhand der Scroll-Position
+// (nur Mobile-Slider).
 function aktiverSlideIndex (slider) {
   const slides = Array.from(slider.querySelectorAll('.pdp-gallery__slide'))
   let closest = 0
@@ -149,8 +178,7 @@ function aktiverSlideIndex (slider) {
 }
 
 // Passt die Slider-Höhe an das Seitenverhältnis des Bildes am gegebenen
-// Index an, damit nichts abgeschnitten wird (Hoch- und Querformate passen
-// beide ohne Beschnitt hinein).
+// Index an, damit nichts abgeschnitten wird (nur Mobile-Slider).
 function setzeSliderHoehe (slider, index) {
   const img = slider.querySelector(`.pdp-gallery__slide[data-index="${index}"] img`)
   if (!img) return
@@ -165,7 +193,7 @@ function setzeSliderHoehe (slider, index) {
   else img.addEventListener('load', anwenden, { once: true })
 }
 
-// Scrollt den Slider sanft zur Folie mit dem gegebenen Index.
+// Scrollt den Mobile-Slider sanft zur Folie mit dem gegebenen Index.
 function gehZuSlide (index) {
   const slider = document.getElementById('gallery-slider')
   const slide = slider?.querySelector(`.pdp-gallery__slide[data-index="${index}"]`)
@@ -174,13 +202,22 @@ function gehZuSlide (index) {
   setzeSliderHoehe(slider, index)
 }
 
-// Springt zu der Folie, die die übergebene Bild-URL zeigt -- wird bei
-// Farbwahl aufgerufen (siehe wendeFarbeAn).
+// Springt bei Farbwahl zum passenden Bild -- auf Mobile durch Scrollen im
+// Slider, auf Desktop durch Tausch des Hauptbilds (Grid wird neu gebaut).
 function aktualisiereGalerie (url) {
-  if (!url) return
-  const index = aktuelleBilder.indexOf(url)
-  if (index === -1) return
-  gehZuSlide(index)
+  if (!url || !aktuelleBilder.includes(url)) return
+
+  if (istMobileGalerie()) {
+    gehZuSlide(aktuelleBilder.indexOf(url))
+    return
+  }
+
+  if (url === aktuellesHeroBild) return
+  aktuellesHeroBild = url
+  const content = document.getElementById('gallery-content')
+  if (!content) return
+  content.innerHTML = baueGalerieHtmlDesktop()
+  initGallery()
 }
 
 function notFound (text) {
@@ -221,6 +258,7 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
 
   aktuelleBilder = bilder
   aktuellerBildTitel = produkt.titel || ''
+  aktuellesHeroBild = bilder[0] || null
   aktuelleFarbenListe = farben
 
   // Galerie
@@ -332,7 +370,7 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
         <button class="product-card__wish pdp-gallery__wish" type="button" data-wunschliste-produkt="${produkt.id}" aria-label="Zur Wunschliste hinzufügen" aria-pressed="false">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>
         </button>
-        ${galerieHtml}
+        <div class="pdp-gallery__content" id="gallery-content">${galerieHtml}</div>
       </div>
       <div class="pdp-info">
         <h1 class="pdp-info__title">${esc(produkt.titel)}</h1>
@@ -443,23 +481,20 @@ function initGroessen () {
   })
 }
 
-// Slider-Steuerung: Punkte + Pfeile klickbar, aktiver Punkt folgt dem
+// Slider-Steuerung Mobile: Punkte klickbar, aktiver Punkt folgt dem
 // Scrollen/Swipen. Landet man per Swipe auf einem Bild, das zu einer
 // Farbvariante gehört, springt zusätzlich das "Farbe"-Dropdown darauf.
-function initGallery () {
+function initGallerySlider () {
   const slider = document.getElementById('gallery-slider')
   if (!slider) return
   const dots = Array.from(document.querySelectorAll('.pdp-gallery__dot'))
-  const prevBtn = document.querySelector('.pdp-gallery__arrow--prev')
-  const nextBtn = document.querySelector('.pdp-gallery__arrow--next')
 
   dots.forEach((dot) => dot.addEventListener('click', () => gehZuSlide(Number(dot.dataset.index))))
-  prevBtn?.addEventListener('click', () => gehZuSlide(Math.max(0, aktiverSlideIndex(slider) - 1)))
-  nextBtn?.addEventListener('click', () => gehZuSlide(Math.min(aktuelleBilder.length - 1, aktiverSlideIndex(slider) + 1)))
 
-  // Höhe initial ans erste Bild anpassen (+ bei Fenster-Resize neu berechnen)
   setzeSliderHoehe(slider, 0)
-  window.addEventListener('resize', () => setzeSliderHoehe(slider, aktiverSlideIndex(slider)))
+  window.addEventListener('resize', () => {
+    if (istMobileGalerie()) setzeSliderHoehe(slider, aktiverSlideIndex(slider))
+  })
 
   let scrollTimeout
   slider.addEventListener('scroll', () => {
@@ -479,6 +514,31 @@ function initGallery () {
       }
     }, 120)
   }, { passive: true })
+}
+
+// Desktop: Thumbnail-Klick tauscht das Hauptbild -- gehört das Foto zu einer
+// Farbvariante (irgendeines ihrer Fotos, nicht nur das erste), springt
+// zusätzlich das "Farbe"-Dropdown auf diese Farbe.
+function initGalleryDesktop () {
+  const thumbs = document.querySelectorAll('.pdp-gallery__grid-img[data-url]')
+  thumbs.forEach((thumb) => {
+    thumb.addEventListener('click', () => {
+      const url = thumb.dataset.url
+      aktualisiereGalerie(url)
+      const treffer = aktuelleFarbenListe.find((f) => {
+        const urls = (f.bild_urls && f.bild_urls.length) ? f.bild_urls : (f.bild_url ? [f.bild_url] : [])
+        return urls.includes(url)
+      })
+      if (treffer && treffer.farbe !== selectedFarbe) {
+        wendeFarbeAn(treffer.farbe, { bildSchonAktuell: true })
+      }
+    })
+  })
+}
+
+function initGallery () {
+  if (istMobileGalerie()) initGallerySlider()
+  else initGalleryDesktop()
 }
 
 async function sendeBestaetigungsMail (payload) {
