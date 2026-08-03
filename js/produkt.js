@@ -706,6 +706,52 @@ function renderDetails (produkt) {
       </div>
     </div>`
   section.hidden = false
+
+  if (bilder.length > 1) {
+    const bleed = section.querySelector('.pdp-details__collage-bleed')
+    const track = section.querySelector('.pdp-details__collage-track')
+    if (bleed && track) initCollageLoop(bleed, track)
+  }
+}
+
+// Kontinuierliche Endlos-Bewegung der Details-Collage per requestAnimationFrame
+// (statt CSS-Keyframe-Loop) -- vermeidet den kleinen Sprung/Ruckler am
+// Wiederholungspunkt, den reine CSS-Animationen v.a. auf Mobile zeigen
+// koennen. Die Reihe ist im HTML verdoppelt (siehe renderDetails); wir messen
+// den exakten Pixel-Abstand zwischen erstem und zweitem Satz und rechnen
+// per Modulo, statt uns auf eine feste 50%-Marke zu verlassen.
+function initCollageLoop (bleed, track) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+  const items = Array.from(track.children)
+  const halb = items.length / 2
+  const geschwindigkeit = 34 // px pro Sekunde
+
+  const messeSatzbreite = () => (halb > 0 && halb < items.length)
+    ? items[halb].offsetLeft - items[0].offsetLeft
+    : track.scrollWidth / 2
+
+  let satzbreite = messeSatzbreite()
+  window.addEventListener('resize', () => { satzbreite = messeSatzbreite() })
+
+  let position = 0
+  let letzterZeitstempel = null
+  let laeuft = true
+
+  function tick (ts) {
+    if (letzterZeitstempel === null) letzterZeitstempel = ts
+    const delta = (ts - letzterZeitstempel) / 1000
+    letzterZeitstempel = ts
+    if (laeuft && satzbreite > 0) {
+      position = (position + delta * geschwindigkeit) % satzbreite
+      track.style.transform = `translateX(${-position}px)`
+    }
+    requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+
+  bleed.addEventListener('mouseenter', () => { laeuft = false })
+  bleed.addEventListener('mouseleave', () => { laeuft = true })
 }
 
 // ── Bewertungen (Produkt-bezogen) ──

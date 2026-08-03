@@ -311,11 +311,6 @@
   width: max-content;
   will-change: transform;
   backface-visibility: hidden;
-  animation: pdp-collage-scroll 28s linear infinite;
-}
-
-.pdp-details__collage-bleed:hover .pdp-details__collage-track {
-  animation-play-state: paused;
 }
 
 .pdp-details__collage-item {
@@ -340,6 +335,9 @@
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+/* Hinweis: die eigentliche Bewegung laeuft jetzt per JS (siehe initCollageLoop
+   in produkt.js) -- kontinuierliche Modulo-Berechnung statt CSS-Keyframe-Loop,
+   damit es am Wiederholungspunkt nicht mehr springt/ruckelt (v.a. auf Mobile). */
 
 @media (max-width: 768px) {
   .pdp-details__collage-item { width: 140px; }
@@ -352,7 +350,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pdp-details__collage-track { animation: none; }
+  .pdp-details__collage-track { transform: none !important; }
 }
 
 /* Not found */
