@@ -102,7 +102,7 @@ async function ladeProdukte (monatStr) {
 
     const produkte = (data || []).map((e) => e.produkte).filter(Boolean)
     if (produkte.length === 0) {
-      container.innerHTML = '<p class="nl-empty">Diesen Monat noch keine neuen Artikel — schau bald wieder vorbei.</p>'
+      container.innerHTML = '<p class="nl-empty">Diesen Monat noch keine neuen Artikel. Schau bald wieder vorbei.</p>'
       return
     }
 
@@ -192,7 +192,7 @@ async function ladeShops () {
     if (error) throw error
 
     if (!shops || shops.length === 0) {
-      container.innerHTML = '<p class="nl-empty">Diesen Monat keine neuen Geschäfte — schau gerne bei allen unseren Händlern vorbei.</p>'
+      container.innerHTML = '<p class="nl-empty">Diesen Monat keine neuen Geschäfte. Schau gerne bei allen unseren Händlern vorbei.</p>'
       return
     }
 

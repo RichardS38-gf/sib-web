@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=5'
+import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=6'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -117,7 +117,7 @@ async function init () {
   const container = document.getElementById('ergebnisse')
 
   titelEl.textContent = q ? `Suchergebnisse für „${q}"` : 'Suche'
-  if (q) document.title = `Suche: ${q} — Shoppen in Braunschweig`
+  if (q) document.title = `Suche: ${q} | Shoppen in Braunschweig`
 
   if (!q) {
     anzahlEl.textContent = ''
@@ -179,7 +179,7 @@ async function init () {
 
     // Produkte rendern
     if (eintraege.length === 0 && shops.length > 0) {
-      // Nur Händler gefunden — Produkte-Sektion leer lassen
+      // Nur Haendler gefunden, Produkte-Sektion leer lassen
       container.innerHTML = ''
       document.getElementById('produkte-section-title').hidden = true
     } else {

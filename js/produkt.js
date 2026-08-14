@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, isSaleAktiv, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=5'
+import { renderProductCard, fetchProductRatings, isSaleAktiv, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=6'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -308,7 +308,7 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
   // Bei Farbvarianten hat jede Farbe ihre eigene EAN -- Wert wird erst nach
   // Farbwahl per JS eingesetzt (siehe initFarben/aktualisiereGroesseFuerFarbe).
   const eanHtml = hatFarbvarianten
-    ? `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value" id="ean-value">—</span></div>`
+    ? `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value" id="ean-value">000000000</span></div>`
     : `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value">${esc(produkt.ean || '000000000')}</span></div>`
 
   // Größe -- drei Fälle: (1) Farbvarianten MIT eigenen Größen -> Dropdown
@@ -359,7 +359,7 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
 
   // Teilen
   const url = window.location.href
-  const waText = `Schau mal: ${produkt.titel} bei ${shopName} auf Shoppen in Braunschweig – ${url}`
+  const waText = `Schau mal: ${produkt.titel} bei ${shopName} auf Shoppen in Braunschweig: ${url}`
   const wa = `https://wa.me/?text=${encodeURIComponent(waText)}`
   const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
 
@@ -395,7 +395,7 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
       </div>
     </div>`
 
-  if (produkt.titel) document.title = `${produkt.titel} — Shoppen in Braunschweig`
+  if (produkt.titel) document.title = `${produkt.titel} | Shoppen in Braunschweig`
 
   initGallery()
   initCopyButtons(el)

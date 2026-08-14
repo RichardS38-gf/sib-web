@@ -3,7 +3,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds, isSaleAktiv } from './product-card.js?v=5'
+import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds, isSaleAktiv } from './product-card.js?v=6'
 import { UNTERKATEGORIEN, MODE_KATEGORIE_NAME, unterkategorieLabel } from './groessen-config.js?v=3'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
@@ -330,8 +330,8 @@ async function init () {
     titelEl.textContent = isNeu
       ? 'Neue Produkte'
       : (aktiveKat ? aktiveKat.name : (slug ? 'Kategorie' : 'Alle Produkte'))
-    if (isNeu) document.title = 'Neue Produkte — Shoppen in Braunschweig'
-    else if (slug && aktiveKat) document.title = `${aktiveKat.name} — Shoppen in Braunschweig`
+    if (isNeu) document.title = 'Neue Produkte | Shoppen in Braunschweig'
+    else if (slug && aktiveKat) document.title = `${aktiveKat.name} | Shoppen in Braunschweig`
 
     let query = supabase
       .from('produkte')

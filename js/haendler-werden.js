@@ -222,7 +222,7 @@ function initHaendlerForm () {
         return
       }
 
-      form.innerHTML = '<div class="success-msg">Fast geschafft! Bitte bestätige deine E-Mail-Adresse über den Link, den wir dir gerade gesendet haben. Danach kannst du dich anmelden — dein Geschäft wird dann automatisch eingerichtet.</div>'
+      form.innerHTML = '<div class="success-msg">Fast geschafft! Bitte bestätige deine E-Mail-Adresse über den Link, den wir dir gerade gesendet haben. Danach kannst du dich anmelden, dein Geschäft wird dabei automatisch eingerichtet.</div>'
     } catch (err) {
       console.error('Händler-Registrierung fehlgeschlagen:', err)
       const msg = err?.message?.includes('already registered') || err?.message?.includes('already exists')

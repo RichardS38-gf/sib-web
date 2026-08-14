@@ -115,7 +115,7 @@ export function renderProductCard (p, shopName, rating = null, wunschliste = fal
   const bilder = Array.isArray(p.bilder) ? p.bilder.filter(Boolean) : []
   const farbBild = (farbe?.bild_urls && farbe.bild_urls[0]) || farbe?.bild_url || null
   const link = farbe ? `produkt.html?id=${id}&farbe=${encodeURIComponent(farbe.farbe)}` : `produkt.html?id=${id}`
-  const titel = farbe ? `${p.titel} — ${farbe.farbe}` : p.titel
+  const titel = farbe ? `${p.titel}, ${farbe.farbe}` : p.titel
   const bild = (farbBild || bilder[0])
     ? `<img class="product-card__image" src="${esc(farbBild || bilder[0])}" alt="${esc(titel)}" loading="lazy">`
     : '<div class="product-card__image" style="background:var(--color-bg-soft);width:100%;height:100%"></div>'

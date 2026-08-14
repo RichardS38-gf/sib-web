@@ -37,7 +37,7 @@ function renderCard (s) {
     ? `<img class="haendler-card__banner" src="${esc(s.banner_url)}" alt="${esc(s.name)}" loading="lazy">`
     : '<div class="haendler-card__banner"></div>'
   const logo = s.logo_url
-    ? `<img class="haendler-card__logo" src="${esc(s.logo_url)}" alt="${esc(s.name)} — Logo" loading="lazy">`
+    ? `<img class="haendler-card__logo" src="${esc(s.logo_url)}" alt="Logo von ${esc(s.name)}" loading="lazy">`
     : '<div class="haendler-card__logo"></div>'
 
   return `

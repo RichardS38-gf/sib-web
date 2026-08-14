@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, initWunschlisteButtons } from './product-card.js'
+import { renderProductCard, fetchProductRatings, initWunschlisteButtons } from './product-card.js?v=6'
 
 let kunde = null
 let userId = null
@@ -18,9 +18,9 @@ function esc (value) {
 }
 
 function formatDatum (value, opts) {
-  if (!value) return '—'
+  if (!value) return 'unbekannt'
   const d = new Date(value)
-  if (isNaN(d)) return '—'
+  if (isNaN(d)) return 'unbekannt'
   return d.toLocaleDateString('de-DE', opts || { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
@@ -146,7 +146,7 @@ function statusBadge (status) {
     bestaetigt: ['badge', 'bestätigt'],
     abgelaufen: ['badge--muted', 'abgelaufen']
   }
-  const [cls, label] = map[status] || ['badge--muted', status || '—']
+  const [cls, label] = map[status] || ['badge--muted', status || 'unbekannt']
   return `<span class="badge ${cls}">${esc(label)}</span>`
 }
 
@@ -170,8 +170,8 @@ async function ladeReservierungen () {
     const rows = reservierungen.map((r) => `
       <tr>
         <td>${formatDatum(r.erstellt_am)}</td>
-        <td class="is-wrap"><a href="produkt.html?id=${esc(r.produkte?.id || '')}">${esc(r.produkte?.titel || '—')}</a></td>
-        <td>${esc(r.produkte?.shops?.name || '—')}</td>
+        <td class="is-wrap"><a href="produkt.html?id=${esc(r.produkte?.id || '')}">${esc(r.produkte?.titel || 'Unbekanntes Produkt')}</a></td>
+        <td>${esc(r.produkte?.shops?.name || 'Unbekanntes Geschäft')}</td>
         <td>${statusBadge(r.status)}</td>
       </tr>`).join('')
 

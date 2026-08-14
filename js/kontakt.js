@@ -46,7 +46,7 @@ if (form) {
     }
 
     feedback.className = 'is-success';
-    feedback.textContent = 'Nachricht gesendet — wir melden uns bald bei dir!';
+    feedback.textContent = 'Nachricht gesendet. Wir melden uns bald bei dir!';
     form.reset();
   });
 }
