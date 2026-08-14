@@ -7,6 +7,18 @@ import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
 import { stelleHaendlerShopSicher } from './haendler-shop-setup.js'
 
+// Stripe Payment Link fuer das Haendler-Abo (30 EUR / Monat).
+// Die Shop-ID wird als client_reference_id angehaengt, damit der Webhook
+// (api/stripe-webhook.js) die Zahlung dem richtigen Shop zuordnen kann.
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/28E3cu5YdgjQfRN3e7cbC02'
+
+function zurStripeZahlung (shopId, email) {
+  const url = new URL(STRIPE_PAYMENT_LINK)
+  if (shopId) url.searchParams.set('client_reference_id', shopId)
+  if (email) url.searchParams.set('prefilled_email', email)
+  window.location.href = url.toString()
+}
+
 // ── Mobile-Menü ──
 function initMobileMenu () {
   const burger = document.querySelector('.site-header__burger')
@@ -211,18 +223,19 @@ function initHaendlerForm () {
       if (error) throw error
 
       if (data.session) {
-        // Sofort eingeloggt -> Logo (falls gewählt) jetzt authentifiziert hochladen
-        // und den Shop direkt anlegen.
+        // Sofort eingeloggt -> Logo (falls gewaehlt) jetzt authentifiziert hochladen
+        // und den Shop anlegen. Danach direkt zur Stripe-Zahlung: der Shop ist
+        // erst nach erfolgreicher Zahlung freigeschaltet.
         let logoUrl = null
         const logoFile = form.logo.files[0]
         if (logoFile) logoUrl = await ladeLogoHoch(logoFile)
 
-        await stelleHaendlerShopSicher(supabase, data.user, logoUrl ? { logo_url: logoUrl } : {})
-        window.location.replace('dashboard.html')
+        const shop = await stelleHaendlerShopSicher(supabase, data.user, logoUrl ? { logo_url: logoUrl } : {})
+        zurStripeZahlung(shop?.id, email)
         return
       }
 
-      form.innerHTML = '<div class="success-msg">Fast geschafft! Bitte bestätige deine E-Mail-Adresse über den Link, den wir dir gerade gesendet haben. Danach kannst du dich anmelden, dein Geschäft wird dabei automatisch eingerichtet.</div>'
+      form.innerHTML = '<div class="success-msg">Fast geschafft! Bitte bestätige deine E-Mail-Adresse über den Link, den wir dir gerade gesendet haben. Danach meldest du dich an und schließt die Zahlung ab, dein Geschäft wird dabei automatisch eingerichtet.</div>'
     } catch (err) {
       console.error('Händler-Registrierung fehlgeschlagen:', err)
       const msg = err?.message?.includes('already registered') || err?.message?.includes('already exists')

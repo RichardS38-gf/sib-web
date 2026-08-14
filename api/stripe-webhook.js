@@ -1,14 +1,23 @@
 // api/stripe-webhook.js — Vercel Function
-// Empfängt Stripe-Webhook-Events und pflegt den Abo-Status in Supabase.
+// Empfaengt Stripe-Webhook-Events und pflegt den Abo-Status in der Tabelle
+// public.shops. Erst nach erfolgreicher Zahlung wird ein Shop freigeschaltet
+// (aktiv = true), vorher ist er weder oeffentlich sichtbar noch nutzbar.
 //
-// Benötigte Umgebungsvariablen:
-//   STRIPE_SECRET_KEY          — sk_live_... oder sk_test_...
-//   STRIPE_WEBHOOK_SECRET      — whsec_... (aus Stripe Dashboard → Webhooks)
-//   SUPABASE_URL               — https://ezruwstzpncunbjzwdfk.supabase.co
-//   SUPABASE_SERVICE_ROLE_KEY  — service_role Key (NIE im Frontend verwenden)
+// Zuordnung Zahlung -> Shop:
+//   Der Payment Link wird beim Registrieren mit ?client_reference_id=<shop_id>
+//   aufgerufen (siehe js/haendler-werden.js). Stripe reicht diesen Wert im
+//   Event checkout.session.completed als session.client_reference_id durch.
+//   Fuer spaetere Events (Kuendigung, fehlgeschlagene Zahlung) merken wir uns
+//   die subscription_id am Shop und suchen darueber.
 //
-// Wichtig in Vercel: für diese Route bodyParser deaktivieren (siehe config
-// unten), da Stripe die rohen Bytes für die Signaturprüfung braucht.
+// Benoetigte Umgebungsvariablen (Vercel -> Settings -> Environment Variables):
+//   STRIPE_SECRET_KEY          sk_live_... oder sk_test_...
+//   STRIPE_WEBHOOK_SECRET      whsec_... (Stripe Dashboard -> Webhooks)
+//   SUPABASE_URL               https://ezruwstzpncunbjzwdfk.supabase.co
+//   SUPABASE_SERVICE_ROLE_KEY  service_role Key (NIE im Frontend verwenden)
+//
+// Voraussetzung: migration-stripe-abo.sql wurde im Supabase SQL Editor
+// ausgefuehrt.
 
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -23,22 +32,30 @@ export const config = {
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 
-async function setzeAboStatus ({ anfrageId, status, customerId, subscriptionId, sessionId }) {
-  if (!anfrageId) return
+// Setzt den Abo-Status. `aktiv` steuert die oeffentliche Sichtbarkeit und wird
+// bewusst mitgefuehrt: nur ein bezahltes Abo macht den Shop sichtbar.
+async function setzeAboStatus (filter, { status, customerId, subscriptionId }) {
   const update = {
     abo_status: status,
+    aktiv: status === 'aktiv',
     abo_aktualisiert_am: new Date().toISOString()
   }
   if (customerId) update.stripe_customer_id = customerId
   if (subscriptionId) update.stripe_subscription_id = subscriptionId
-  if (sessionId) update.stripe_checkout_session_id = sessionId
 
-  const { error } = await supabase
-    .from('haendler_anfragen')
-    .update(update)
-    .eq('id', anfrageId)
+  let query = supabase.from('shops').update(update)
+  query = filter.shopId
+    ? query.eq('id', filter.shopId)
+    : query.eq('stripe_subscription_id', filter.subscriptionId)
 
-  if (error) console.error('Supabase-Update fehlgeschlagen:', error)
+  const { data, error } = await query.select('id')
+  if (error) {
+    console.error('Shop-Update fehlgeschlagen:', error)
+    return
+  }
+  if (!data || data.length === 0) {
+    console.warn('Kein Shop zu diesem Event gefunden:', filter)
+  }
 }
 
 export default async function handler (req, res) {
@@ -53,47 +70,59 @@ export default async function handler (req, res) {
     const signature = req.headers['stripe-signature']
     event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET)
   } catch (err) {
-    console.error('Webhook-Signatur ungültig:', err.message)
+    console.error('Webhook-Signatur ungueltig:', err.message)
     return res.status(400).send(`Webhook Error: ${err.message}`)
   }
 
   try {
     switch (event.type) {
+      // Zahlung erfolgreich -> Shop freischalten
       case 'checkout.session.completed': {
         const session = event.data.object
-        await setzeAboStatus({
-          anfrageId: session.metadata?.anfrage_id,
+        const shopId = session.client_reference_id
+        if (!shopId) {
+          console.warn('checkout.session.completed ohne client_reference_id:', session.id)
+          break
+        }
+        await setzeAboStatus({ shopId }, {
           status: 'aktiv',
           customerId: session.customer,
-          subscriptionId: session.subscription,
-          sessionId: session.id
+          subscriptionId: session.subscription
         })
         break
       }
+
+      // Statusaenderungen am Abo (z.B. Zahlung ueberfaellig, reaktiviert)
       case 'customer.subscription.updated': {
         const sub = event.data.object
-        await setzeAboStatus({
-          anfrageId: sub.metadata?.anfrage_id,
-          status: sub.status === 'active' ? 'aktiv' : sub.status === 'past_due' ? 'zahlung_fehlgeschlagen' : sub.status,
-          subscriptionId: sub.id
-        })
+        const status = sub.status === 'active' || sub.status === 'trialing'
+          ? 'aktiv'
+          : sub.status === 'past_due' || sub.status === 'unpaid'
+            ? 'zahlung_fehlgeschlagen'
+            : sub.status === 'canceled'
+              ? 'gekuendigt'
+              : sub.status
+        await setzeAboStatus({ subscriptionId: sub.id }, { status, subscriptionId: sub.id })
         break
       }
+
+      // Abo beendet -> Shop wieder sperren
       case 'customer.subscription.deleted': {
         const sub = event.data.object
-        await setzeAboStatus({
-          anfrageId: sub.metadata?.anfrage_id,
-          status: 'gekuendigt',
-          subscriptionId: sub.id
-        })
+        await setzeAboStatus({ subscriptionId: sub.id }, { status: 'gekuendigt', subscriptionId: sub.id })
         break
       }
+
+      // Wiederkehrende Zahlung fehlgeschlagen
       case 'invoice.payment_failed': {
         const invoice = event.data.object
-        // Bei Bedarf: anfrage_id über die Subscription nachschlagen und Status setzen.
-        console.warn('Zahlung fehlgeschlagen für Subscription:', invoice.subscription)
+        const subId = invoice.subscription
+        if (subId) {
+          await setzeAboStatus({ subscriptionId: subId }, { status: 'zahlung_fehlgeschlagen', subscriptionId: subId })
+        }
         break
       }
+
       default:
         // Andere Events ignorieren wir bewusst.
         break

@@ -48,7 +48,10 @@ export async function stelleHaendlerShopSicher (supabase, user, overrides = {}) 
       email: user.email,
       beschreibung: meta.beschreibung || null,
       logo_url: overrides.logo_url ?? meta.logo_url ?? null,
-      aktiv: true
+      // Shop startet inaktiv und wird erst durch den Stripe-Webhook nach
+      // erfolgreicher Zahlung freigeschaltet (siehe migration-stripe-abo.sql).
+      aktiv: false,
+      abo_status: 'offen'
     }).select('*').single()
 
     if (!error) return data
