@@ -270,7 +270,12 @@ input[type="file"].form-input {
 
   .hw-form__headline {
     font-size: var(--text-2xl);
-    margin-top: var(--space-2);
-    margin-bottom: var(--space-3);
+    margin-top: var(--space-5);
+    margin-bottom: var(--space-1);
+  }
+
+  /* Untertitel sitzt direkt unter der Ueberschrift und naeher am ersten Feld */
+  .hw-form-wrap .login__subtext {
+    margin-bottom: var(--space-2);
   }
 }
