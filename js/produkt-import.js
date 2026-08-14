@@ -264,9 +264,9 @@ export function initProduktImport ({ getShop, onImportiert }) {
               ${verarbeiteteProdukte.map((z) => `
                 <tr${z.ok ? '' : ' class="dash-csv-row--fehler"'}>
                   <td>${z.produktNr}</td>
-                  <td class="is-wrap">${esc(z.titel || '—')}</td>
-                  <td>${z.preis !== null ? z.preis.toFixed(2) + ' €' : '—'}</td>
-                  <td>${z.highlights.length || '—'}</td>
+                  <td class="is-wrap">${esc(z.titel || 'Ohne Namen')}</td>
+                  <td>${z.preis !== null ? z.preis.toFixed(2) + ' €' : 'fehlt'}</td>
+                  <td>${z.highlights.length || 'keine'}</td>
                   <td>${z.ok
                     ? `<span class="badge">OK</span>${z.warnungen.length ? `<div class="dash-csv-warnung">${z.warnungen.map(esc).join('<br>')}</div>` : ''}`
                     : `<span class="badge badge--outline">Fehler</span><div class="dash-csv-fehler">${z.fehler.map(esc).join('<br>')}</div>`}
@@ -317,7 +317,7 @@ export function initProduktImport ({ getShop, onImportiert }) {
       }
     }
 
-    statusEl.innerHTML = `<span class="success-msg">${importiert} von ${gueltigeProdukte.length} Produkten importiert.</span> Bitte Kategorie, EAN, Fotos, Größen und ggf. Farbvarianten jetzt über „Bearbeiten" ergänzen -- neue Produkte sind wie gewohnt erst nach Freigabe sichtbar.`
+    statusEl.innerHTML = `<span class="success-msg">${importiert} von ${gueltigeProdukte.length} Produkten importiert.</span> Bitte Kategorie, EAN, Fotos, Größen und ggf. Farbvarianten jetzt über „Bearbeiten" ergänzen. Neue Produkte sind wie gewohnt erst nach Freigabe sichtbar.`
     bestaetigenBtn.hidden = true
     bestaetigenBtn.disabled = false
     csvInput.value = ''

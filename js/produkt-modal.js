@@ -50,7 +50,7 @@ export function initProduktModal () {
           <div class="pmodal-field" id="pmodal-shop-group" hidden>
             <label class="pmodal-label" for="pmodal-shop">Händler *</label>
             <select class="form-select" id="pmodal-shop" name="shop_id">
-              <option value="">— Händler wählen —</option>
+              <option value="">Bitte Händler wählen</option>
             </select>
           </div>
 
@@ -71,13 +71,13 @@ export function initProduktModal () {
             <div class="pmodal-field">
               <label class="pmodal-label" for="pmodal-kategorie">Kategorie *</label>
               <select class="form-select" id="pmodal-kategorie" name="kategorie_id" required>
-                <option value="">— Bitte wählen —</option>
+                <option value="">Bitte wählen</option>
               </select>
             </div>
             <div class="pmodal-field">
               <label class="pmodal-label" for="pmodal-geschlecht">Geschlecht <span class="pmodal-hint-inline">(optional)</span></label>
               <select class="form-select" id="pmodal-geschlecht" name="geschlecht">
-                <option value="">— Kein Geschlecht —</option>
+                <option value="">Kein Geschlecht</option>
                 <option value="Herren">Herren</option>
                 <option value="Damen">Damen</option>
                 <option value="Unisex">Unisex</option>
@@ -89,7 +89,7 @@ export function initProduktModal () {
           <div class="pmodal-field" id="pmodal-unterkategorie-group" hidden>
             <label class="pmodal-label" for="pmodal-unterkategorie">Unterkategorie *</label>
             <select class="form-select" id="pmodal-unterkategorie" name="unterkategorie">
-              <option value="">— Bitte wählen —</option>
+              <option value="">Bitte wählen</option>
               ${UNTERKATEGORIEN.map((u) => `<option value="${u.value}">${u.label}</option>`).join('')}
             </select>
           </div>
@@ -158,13 +158,13 @@ export function initProduktModal () {
 
           <!-- Farbe -->
           <div class="pmodal-field">
-            <label class="pmodal-label" for="pmodal-farbe">Farbe <span class="pmodal-hint-inline">(optional, Freitext — nur ohne Farbvarianten)</span></label>
+            <label class="pmodal-label" for="pmodal-farbe">Farbe <span class="pmodal-hint-inline">(optional, Freitext, nur ohne Farbvarianten)</span></label>
             <input class="form-input" id="pmodal-farbe" name="farbe" type="text" autocomplete="off" placeholder="z.B. Oliv, Schwarz/Weiß">
           </div>
 
           <!-- EAN -->
           <div class="pmodal-field">
-            <label class="pmodal-label" for="pmodal-ean">EAN <span class="pmodal-hint-inline">(optional — nur ohne Farbvarianten, sonst je Farbe oben)</span></label>
+            <label class="pmodal-label" for="pmodal-ean">EAN <span class="pmodal-hint-inline">(optional, nur ohne Farbvarianten, sonst je Farbe oben)</span></label>
             <input class="form-input" id="pmodal-ean" name="ean" type="text" inputmode="numeric" autocomplete="off" placeholder="z.B. 4006381333931">
           </div>
 
@@ -502,7 +502,7 @@ function renderFeatures () {
   if (!container) return
   container.innerHTML = featuresList.map((text, i) => `
     <div class="pmodal-feature-row">
-      <input class="form-input pmodal-feature-input" type="text" value="${escAttr(text)}" data-fidx="${i}" placeholder="z.B. Weiche Baumwolle – ideal für kühle Tage">
+      <input class="form-input pmodal-feature-input" type="text" value="${escAttr(text)}" data-fidx="${i}" placeholder="z.B. Weiche Baumwolle, ideal für kühle Tage">
       <button type="button" class="pmodal-feature-del" data-fidx="${i}" title="Entfernen">&#x2715;</button>
     </div>`).join('')
 
@@ -694,7 +694,7 @@ async function handleSpeichern (e) {
         throw error
       }
       if (!upd || upd.length === 0) {
-        throw new Error('Keine Zeile aktualisiert — Produkt nicht gefunden oder keine Berechtigung.')
+        throw new Error('Keine Zeile aktualisiert. Produkt nicht gefunden oder keine Berechtigung.')
       }
       await speichereGroessenUndFarben(aktuellesProduktId)
       // Callback VOR dem Schließen sichern -- schliesseProduktModal() setzt ihn auf null
@@ -714,7 +714,7 @@ async function handleSpeichern (e) {
     const fehlendeSpalte = (msg.match(/column ["']?produkte\.?([a-z_]+)["']? does not exist/i) || [])[1]
     const spalteFehlt = err?.code === 'PGRST204' || /column/i.test(msg)
     feedback.innerHTML = `<div class="error-msg">${spalteFehlt
-      ? `Die Datenbank kennt ein Feld noch nicht${fehlendeSpalte ? ` („${fehlendeSpalte}“)` : ''} — bitte die passende Migration in supabase/ im SQL Editor ausführen (z.B. migration-geschlecht.sql oder migration-details-bild.sql).`
+      ? `Die Datenbank kennt ein Feld noch nicht${fehlendeSpalte ? ` „${fehlendeSpalte}“` : ''}. Bitte die passende Migration in supabase/ im SQL Editor ausführen (z.B. migration-geschlecht.sql oder migration-details-bild.sql).`
       : `Speichern fehlgeschlagen: ${msg || JSON.stringify(err)}`}</div>`
     feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   } finally {
@@ -765,7 +765,7 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
   const shopSelect = document.getElementById('pmodal-shop')
   if (shops && shopGroup && shopSelect) {
     shopGroup.hidden = false
-    shopSelect.innerHTML = '<option value="">— Händler wählen —</option>' +
+    shopSelect.innerHTML = '<option value="">Bitte Händler wählen</option>' +
       shops.map((s) => `<option value="${escAttr(s.id)}">${escAttr(s.name)}</option>`).join('')
     shopSelect.value = produkt?.shop_id || ''
   } else if (shopGroup) {

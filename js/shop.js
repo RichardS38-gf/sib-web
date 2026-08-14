@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=5'
+import { renderProductCard, fetchProductRatings, fetchFarbenByProdukt, expandiereFarbvarianten, initWunschlisteButtons, fetchWunschlisteIds } from './product-card.js?v=6'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -118,7 +118,7 @@ function renderGalerie (shop) {
   el.setAttribute('data-count', show.length)
   el.innerHTML = show.map((url, i) =>
     `<div class="shop-galerie__cell">
-       <img src="${esc(url)}" alt="${esc(shop.name)} — Foto ${i + 1}" loading="${i === 0 ? 'eager' : 'lazy'}">
+       <img src="${esc(url)}" alt="${esc(shop.name)}, Foto ${i + 1}" loading="${i === 0 ? 'eager' : 'lazy'}">
      </div>`
   ).join('')
 }

@@ -4,9 +4,9 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=17'
+import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=18'
 import { naechsteAusgabe, monatDatum, monatName, ausgabeNummer } from './newsletter-zeitraum.js'
-import { initProduktImport } from './produkt-import.js?v=11'
+import { initProduktImport } from './produkt-import.js?v=12'
 import { stelleHaendlerShopSicher } from './haendler-shop-setup.js'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
@@ -34,9 +34,9 @@ function esc (value) {
 }
 
 function formatDatum (value) {
-  if (!value) return '—'
+  if (!value) return 'unbekannt'
   const d = new Date(value)
-  if (isNaN(d)) return '—'
+  if (isNaN(d)) return 'unbekannt'
   return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
@@ -87,7 +87,7 @@ function statusBadge (status) {
     bestaetigt: ['badge', 'bestätigt'],
     abgelaufen: ['badge--muted', 'abgelaufen']
   }
-  const [cls, label] = map[status] || ['badge--muted', status || '—']
+  const [cls, label] = map[status] || ['badge--muted', status || 'unbekannt']
   return `<span class="badge ${cls}">${esc(label)}</span>`
 }
 
@@ -112,11 +112,11 @@ async function ladeReservierungen () {
     const rows = reservierungen.map((r) => {
       const aktion = r.status === 'offen'
         ? `<button class="btn btn--primary" data-confirm="${esc(r.id)}" style="padding:0.4rem 0.9rem;font-size:var(--text-xs)">Bestätigen</button>`
-        : '—'
+        : ''
       return `
         <tr>
           <td>${formatDatum(r.erstellt_am)}</td>
-          <td class="is-wrap">${esc(r.produkte?.titel || '—')}</td>
+          <td class="is-wrap">${esc(r.produkte?.titel || 'Unbekanntes Produkt')}</td>
           <td>${esc(r.kunde_name)}</td>
           <td>${esc(r.kunde_email)}</td>
           <td>${statusBadge(r.status)}</td>

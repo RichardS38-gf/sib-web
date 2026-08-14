@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=17'
+import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=18'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
@@ -17,9 +17,9 @@ function esc (value) {
 }
 
 function formatDatum (value) {
-  if (!value) return '—'
+  if (!value) return 'unbekannt'
   const d = new Date(value)
-  if (isNaN(d)) return '—'
+  if (isNaN(d)) return 'unbekannt'
   return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
@@ -31,7 +31,7 @@ function statusBadge (status) {
     bestaetigt: ['badge', 'bestätigt'],
     abgelaufen: ['badge--muted', 'abgelaufen']
   }
-  const [cls, label] = map[status] || ['badge--muted', status || '—']
+  const [cls, label] = map[status] || ['badge--muted', status || 'unbekannt']
   return `<span class="badge ${cls}">${esc(label)}</span>`
 }
 
@@ -173,8 +173,8 @@ async function ladeHaendler () {
       return `
         <tr>
           <td class="is-wrap">${esc(s.name)}${neuBadge}</td>
-          <td>${esc(s.slug || '—')}</td>
-          <td class="is-wrap">${esc(s.adresse || '—')}</td>
+          <td>${esc(s.slug || '')}</td>
+          <td class="is-wrap">${esc(s.adresse || '')}</td>
           <td>${aktiv ? '<span class="badge">aktiv</span>' : '<span class="badge badge--muted">inaktiv</span>'}</td>
           <td><button class="admin-link-btn" data-edit-shop="${esc(s.id)}">Bearbeiten</button> <button class="admin-link-btn" data-toggle-shop="${esc(s.id)}" data-aktiv="${aktiv}">${toggleLabel}</button> <button class="admin-link-btn admin-link-btn--danger" data-delete-shop="${esc(s.id)}" data-name="${esc(s.name)}">Löschen</button></td>
         </tr>`
@@ -498,7 +498,7 @@ async function ladeProdukte () {
     const rows = produkte.map((p) => {
       const verfuegbar = p.verfuegbar !== false
       const freigegeben = p.freigegeben === true
-      const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : '—'
+      const preis = (p.preis !== null && p.preis !== undefined) ? euro.format(p.preis) : 'kein Preis'
       const toggleLabel = verfuegbar ? 'Auf nicht verfügbar' : 'Auf verfügbar'
       const freigabeZelle = freigegeben
         ? '<span class="badge badge--muted">freigegeben</span>'
@@ -509,8 +509,8 @@ async function ladeProdukte () {
       return `
         <tr>
           <td class="is-wrap">${esc(p.titel)}</td>
-          <td>${p.ean ? esc(p.ean) : '—'}</td>
-          <td class="is-wrap">${esc(p.shops?.name || '—')}</td>
+          <td>${p.ean ? esc(p.ean) : ''}</td>
+          <td class="is-wrap">${esc(p.shops?.name || 'Kein Shop')}</td>
           <td>${esc(preis)}</td>
           <td>${jaNein(verfuegbar)}</td>
           <td>${freigabeZelle}</td>
@@ -640,8 +640,8 @@ async function ladeReservierungen () {
     const rows = reservierungen.map((r) => `
       <tr>
         <td>${formatDatum(r.erstellt_am)}</td>
-        <td class="is-wrap">${esc(r.produkte?.titel || '—')}</td>
-        <td class="is-wrap">${esc(r.produkte?.shops?.name || '—')}</td>
+        <td class="is-wrap">${esc(r.produkte?.titel || 'Unbekanntes Produkt')}</td>
+        <td class="is-wrap">${esc(r.produkte?.shops?.name || 'Unbekannter Shop')}</td>
         <td>${esc(r.kunde_name)}</td>
         <td>${esc(r.kunde_email)}</td>
         <td>${statusBadge(r.status)}</td>
@@ -743,10 +743,10 @@ async function ladeBewertungen () {
 
     const rows = bewertungen.map((b) => `
       <tr>
-        <td class="is-wrap">${esc(b.shops?.name || '—')}</td>
+        <td class="is-wrap">${esc(b.shops?.name || 'Unbekannter Shop')}</td>
         <td class="is-wrap">${esc(b.autor_name)}</td>
         <td>${sterne(b.sterne)}</td>
-        <td class="is-wrap">${esc(b.text || '—')}</td>
+        <td class="is-wrap">${esc(b.text || '')}</td>
         <td>${formatDatum(b.erstellt_am)}</td>
         <td><button class="admin-link-btn" data-delete-bewertung="${esc(b.id)}">Löschen</button></td>
       </tr>`).join('')
