@@ -27,7 +27,13 @@
 
 @media (max-width: 640px) {
   .nl-section { padding-top: var(--space-4); padding-bottom: var(--space-4); }
-  .nl-section-head { margin-bottom: var(--space-3); }
+  .nl-section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
+  }
+  .nl-section-head__title { font-size: 1.5rem; }
 }
 
 .nl-section--dark {
@@ -133,6 +139,8 @@
 
 @media (max-width: 640px) {
   .nl-hero__inner { padding-top: var(--space-5); padding-bottom: var(--space-5); }
+  .nl-hero { min-height: 50vh; }
+  .nl-hero__year { font-size: 7rem; }
 }
 
 .nl-hero__meta {
@@ -389,6 +397,11 @@
   align-items: center;
   gap: 0.5rem;
   flex-wrap: nowrap;
+}
+
+@media (max-width: 640px) {
+  .nl-sale-card__prices { flex-wrap: wrap; row-gap: 0.25rem; }
+  .nl-sale-card__img-wrap { width: 72px; }
 }
 
 .nl-sale-card__price-new {
