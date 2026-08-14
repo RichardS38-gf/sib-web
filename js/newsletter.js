@@ -39,13 +39,19 @@ if (burger && mobileMenu) {
 // daraus zurueck.
 function passeMonatGroesseAn (el) {
   if (!el || !el.textContent.trim()) return
-  const anteil = window.innerWidth <= 640 ? 0.8 : 0.55
-  const zielBreite = window.innerWidth * anteil
+  const box = el.parentElement
+  if (!box) return
+  // Verfuegbare Breite ist der Innenbereich des Hintergrund-Containers. Ab Tablet
+  // ist der per padding-left bereits um die Glas-Karte gekuerzt.
+  const stil = window.getComputedStyle(box)
+  const verfuegbar = box.clientWidth - parseFloat(stil.paddingLeft || 0) - parseFloat(stil.paddingRight || 0)
+  if (verfuegbar <= 0) return
   const referenz = 100
   el.style.fontSize = `${referenz}px`
   const gemessen = el.scrollWidth
   if (!gemessen) return
-  el.style.fontSize = `${Math.round(referenz * zielBreite / gemessen)}px`
+  const groesse = Math.round(referenz * (verfuegbar * 0.98) / gemessen)
+  el.style.fontSize = `${Math.max(48, groesse)}px`
 }
 
 // ── Hero + Meta: Monat/Ausgabe automatisch setzen ──

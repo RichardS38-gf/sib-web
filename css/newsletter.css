@@ -120,6 +120,12 @@
   overflow: hidden;
 }
 
+/* Ab Tablet steht links die Glas-Karte. Der Monatsname im Hintergrund bekommt
+   deshalb nur den Bereich rechts daneben, damit er nicht dahinter verschwindet. */
+@media (min-width: 641px) {
+  .nl-hero__bg { padding-left: 52%; }
+}
+
 .nl-hero__year {
   font-family: var(--font-sans);
   font-weight: 800;
