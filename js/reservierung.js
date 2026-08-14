@@ -15,9 +15,9 @@ function esc (value) {
 }
 
 function formatDatum (value) {
-  if (!value) return '—'
+  if (!value) return 'unbekannt'
   const d = new Date(value)
-  if (isNaN(d.getTime())) return '—'
+  if (isNaN(d.getTime())) return 'unbekannt'
   const p = (n) => String(n).padStart(2, '0')
   return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`
 }
@@ -47,7 +47,7 @@ function statusBadge (status) {
     abgelaufen: ['badge--muted', 'Abgelaufen'],
     storniert: ['badge--muted', 'Storniert']
   }
-  const [cls, label] = map[status] || ['badge--muted', status || '—']
+  const [cls, label] = map[status] || ['badge--muted', status || 'Unbekannt']
   return `<span class="badge ${cls}">${esc(label)}</span>`
 }
 

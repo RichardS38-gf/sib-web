@@ -95,3 +95,28 @@
   color: var(--color-ink);
   margin-bottom: var(--space-2);
 }
+
+@media (max-width: 640px) {
+  .reservierung__produkt {
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .reservierung__bild {
+    width: 130px;
+    max-width: 38%;
+  }
+
+  .reservierung__titel { font-size: var(--text-xl); }
+
+  .reservierung__preis { font-size: var(--text-base); }
+
+  /* Aktions-Button ueber die volle Breite, damit er gut treffbar ist */
+  .reservierung__aktion .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .reservierung-notfound { padding: var(--space-5) 0; }
+  .reservierung-notfound h1 { font-size: var(--text-2xl); }
+}
