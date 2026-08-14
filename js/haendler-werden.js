@@ -1,6 +1,7 @@
 // js/haendler-werden.js — SIB Registrieren (Käufer + Händler)
 // Käufer: echter Supabase-Auth-Account, sofort nutzbar.
-// Händler: Anfrage-Formular (wird manuell geprüft, wie bisher).
+// Händler: echter Supabase-Auth-Account, sofort nutzbar (Self-Service, keine
+// manuelle Prüfung, kein Zahlungsschritt im Formular).
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
@@ -229,24 +230,9 @@ function initHaendlerForm () {
         : 'Die Registrierung konnte nicht abgeschlossen werden. Bitte versuche es später erneut.'
       feedback.innerHTML = `<div class="error-msg">${msg}</div>`
       submitBtn.disabled = false
-      submitBtn.textContent = 'Registrierung absenden'
+      submitBtn.textContent = 'Händler-Account erstellen'
     }
   })
-}
-
-// — Stripe-Rückkehr behandeln (Erfolg / Abbruch aus dem Checkout) —
-function initStripeRueckkehr () {
-  const params = new URLSearchParams(window.location.search)
-  const zahlung = params.get('zahlung')
-  const feedback = document.getElementById('hw-feedback')
-  const haendlerBlock = document.getElementById('haendler-block')
-  if (!zahlung || !feedback || !haendlerBlock) return
-
-  if (zahlung === 'erfolg') {
-    haendlerBlock.innerHTML = '<div class="success-msg">Zahlung erfolgreich! Deine Registrierung ist eingegangen — wir melden uns innerhalb von 2 Werktagen, sobald dein Account freigeschaltet ist.</div>'
-  } else if (zahlung === 'abgebrochen') {
-    feedback.innerHTML = '<div class="error-msg">Die Zahlung wurde abgebrochen. Deine Anfrage ist gespeichert — du kannst die Registrierung jederzeit erneut abschließen, indem du das Formular nochmal absendest.</div>'
-  }
 }
 
 initMobileMenu()
