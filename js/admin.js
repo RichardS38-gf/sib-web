@@ -25,6 +25,18 @@ function formatDatum (value) {
 
 function jaNein (v) { return v ? 'ja' : 'nein' }
 
+// Abo-Status eines Shops als Badge. Der Wert kommt vom Stripe-Webhook.
+function aboBadge (status) {
+  const map = {
+    aktiv: ['badge', 'bezahlt'],
+    offen: ['badge badge--outline', 'offen'],
+    zahlung_fehlgeschlagen: ['badge badge--outline', 'Zahlung fehlt'],
+    gekuendigt: ['badge badge--muted', 'gekündigt']
+  }
+  const [cls, label] = map[status] || ['badge badge--muted', status || 'unbekannt']
+  return `<span class="${cls}">${esc(label)}</span>`
+}
+
 function statusBadge (status) {
   const map = {
     offen: ['badge--outline', 'offen'],
@@ -175,6 +187,7 @@ async function ladeHaendler () {
           <td class="is-wrap">${esc(s.name)}${neuBadge}</td>
           <td>${esc(s.slug || '')}</td>
           <td class="is-wrap">${esc(s.adresse || '')}</td>
+          <td>${aboBadge(s.abo_status)}</td>
           <td>${aktiv ? '<span class="badge">aktiv</span>' : '<span class="badge badge--muted">inaktiv</span>'}</td>
           <td><button class="admin-link-btn" data-edit-shop="${esc(s.id)}">Bearbeiten</button> <button class="admin-link-btn" data-toggle-shop="${esc(s.id)}" data-aktiv="${aktiv}">${toggleLabel}</button> <button class="admin-link-btn admin-link-btn--danger" data-delete-shop="${esc(s.id)}" data-name="${esc(s.name)}">Löschen</button></td>
         </tr>`
@@ -183,7 +196,7 @@ async function ladeHaendler () {
     el.innerHTML = `
       <div class="admin-table-wrap">
         <table class="admin-table">
-          <thead><tr><th>Name</th><th>Slug</th><th>Adresse</th><th>Aktiv</th><th>Aktion</th></tr></thead>
+          <thead><tr><th>Name</th><th>Slug</th><th>Adresse</th><th>Abo</th><th>Aktiv</th><th>Aktion</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`
