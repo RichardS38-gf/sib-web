@@ -523,6 +523,14 @@
   display: contents;
 }
 
+.site-footer__logo-link {
+  display: inline-block;
+  align-self: flex-start;
+  transition: opacity var(--transition);
+}
+
+.site-footer__logo-link:hover { opacity: 0.75; }
+
 .site-footer__logo-img {
   height: 72px;
   width: auto;
