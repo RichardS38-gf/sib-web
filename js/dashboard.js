@@ -1025,6 +1025,13 @@ async function init () {
     return
   }
 
+  // Abo-Schranke: ohne bezahltes Abo kein Dashboard. Der Status wird
+  // ausschliesslich vom Stripe-Webhook gesetzt (api/stripe-webhook.js).
+  if (shop.abo_status !== 'aktiv') {
+    zeigeAboSchranke(loading, shop)
+    return
+  }
+
   // UI vorbereiten
   // .style.display statt .hidden, da die .loading-Klasse (display:flex)
   // das [hidden]-Attribut überstimmen würde.
@@ -1059,6 +1066,73 @@ async function init () {
     badge.hidden = n === 0
     badge.textContent = n > 0 ? String(n) : ''
   }, 30000)
+}
+
+// ── Abo-Schranke ──
+// Wird angezeigt, solange shops.abo_status nicht 'aktiv' ist. Der Haendler
+// kommt so gar nicht erst ins Dashboard, sondern nur zur Zahlung.
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/28E3cu5YdgjQfRN3e7cbC02'
+
+function zeigeAboSchranke (loading, shopDaten) {
+  const zahlungsUrl = new URL(STRIPE_PAYMENT_LINK)
+  zahlungsUrl.searchParams.set('client_reference_id', shopDaten.id)
+  if (shopDaten.email) zahlungsUrl.searchParams.set('prefilled_email', shopDaten.email)
+
+  const geradeBezahlt = new URLSearchParams(window.location.search).get('zahlung') === 'erfolg'
+
+  // Direkt nach der Rueckkehr von Stripe kann der Webhook noch unterwegs sein.
+  // Statt den Haendler faelschlich zur Zahlung zu schicken, warten wir kurz
+  // und laden neu.
+  if (geradeBezahlt) {
+    loading.style.display = 'block'
+    loading.innerHTML = `
+      <div class="dash-empty" style="text-align:center">
+        <p><strong>Zahlung wird bestätigt…</strong></p>
+        <p style="margin-top:0.5rem">Das dauert nur einen Moment. Die Seite lädt gleich automatisch neu.</p>
+      </div>`
+    setTimeout(() => { window.location.replace('dashboard.html') }, 4000)
+    return
+  }
+
+  const texte = {
+    offen: {
+      titel: 'Nur noch ein Schritt',
+      text: 'Dein Konto ist angelegt. Sobald das Abo bezahlt ist, wird dein Geschäft freigeschaltet und du kannst deine Produkte einstellen.',
+      button: 'Jetzt Abo abschließen'
+    },
+    zahlung_fehlgeschlagen: {
+      titel: 'Zahlung fehlgeschlagen',
+      text: 'Die letzte Abbuchung hat nicht geklappt. Dein Geschäft ist deshalb aktuell nicht sichtbar. Bitte hinterlege eine gültige Zahlungsmethode.',
+      button: 'Zahlung erneut versuchen'
+    },
+    gekuendigt: {
+      titel: 'Abo beendet',
+      text: 'Dein Abo wurde beendet, dein Geschäft ist daher nicht mehr sichtbar. Du kannst jederzeit wieder starten.',
+      button: 'Abo erneut abschließen'
+    }
+  }
+
+  const inhalt = texte[shopDaten.abo_status] || texte.offen
+
+  loading.style.display = 'block'
+  loading.innerHTML = `
+    <div class="dash-abo-schranke">
+      <h1 class="dash-abo-schranke__title">${esc(inhalt.titel)}</h1>
+      <p class="dash-abo-schranke__text">${esc(inhalt.text)}</p>
+      <p class="dash-abo-schranke__preis"><strong>30 € im Monat</strong>, jederzeit kündbar</p>
+      <a class="btn btn--primary btn--heartbeat" href="${esc(zahlungsUrl.toString())}">${esc(inhalt.button)}</a>
+      <p class="dash-abo-schranke__hilfe">Schon bezahlt? <button type="button" class="dash-link-btn" id="abo-neu-pruefen">Status neu prüfen</button></p>
+      <p class="dash-abo-schranke__hilfe"><button type="button" class="dash-link-btn" id="abo-logout">Abmelden</button></p>
+    </div>`
+
+  document.getElementById('abo-neu-pruefen')?.addEventListener('click', () => {
+    window.location.replace('dashboard.html')
+  })
+
+  document.getElementById('abo-logout')?.addEventListener('click', async () => {
+    await supabase.auth.signOut()
+    window.location.replace('haendler-login.html')
+  })
 }
 
 init()

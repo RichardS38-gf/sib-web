@@ -1498,6 +1498,54 @@ textarea.form-input {
   color: var(--color-muted);
 }
 
+/* ── Abo-Schranke (ohne bezahltes Abo statt Dashboard) ── */
+.dash-abo-schranke {
+  max-width: 32rem;
+  margin: var(--space-6) auto;
+  text-align: center;
+  padding: var(--space-5) var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-soft, #f5f5f3);
+}
+
+.dash-abo-schranke__title {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-2);
+}
+
+.dash-abo-schranke__text {
+  font-weight: 300;
+  color: var(--color-muted);
+  line-height: 1.65;
+  margin-bottom: var(--space-3);
+}
+
+.dash-abo-schranke__preis {
+  font-size: var(--text-base);
+  margin-bottom: var(--space-4);
+}
+
+.dash-abo-schranke__hilfe {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin-top: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .dash-abo-schranke {
+    margin: var(--space-4) auto;
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .dash-abo-schranke .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* ── Mobile ── */
 @media (max-width: 640px) {
   .dash-head {
