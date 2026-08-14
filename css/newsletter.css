@@ -123,7 +123,8 @@
 .nl-hero__year {
   font-family: var(--font-sans);
   font-weight: 800;
-  font-size: clamp(10rem, 22vw, 22rem);
+  font-size: clamp(5rem, calc(88vw / var(--nl-monat-len, 4)), 22rem);
+  white-space: nowrap;
   line-height: 0.85;
   letter-spacing: -0.04em;
   user-select: none;
@@ -147,7 +148,7 @@
 @media (max-width: 640px) {
   .nl-hero__inner { padding-top: var(--space-5); padding-bottom: var(--space-5); }
   .nl-hero { min-height: 50vh; }
-  .nl-hero__year { font-size: 7rem; }
+  .nl-hero__year { font-size: min(7rem, calc(110vw / var(--nl-monat-len, 4))); }
 }
 
 .nl-hero__meta {

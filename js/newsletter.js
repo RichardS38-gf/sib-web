@@ -39,7 +39,12 @@ function setzeAusgabeMeta () {
   const nummer = String(ausgabeNummer(ausgabe)).padStart(2, '0')
 
   const bg = document.getElementById('nl-monat-bg')
-  if (bg) bg.textContent = monat
+  if (bg) {
+    bg.textContent = monat
+    // Schriftgroesse im Hintergrund richtet sich nach der Laenge des Monatsnamens,
+    // damit auch "September" oder "Dezember" noch in den sichtbaren Bereich passen.
+    bg.style.setProperty('--nl-monat-len', String(monat.length))
+  }
 
   const label = document.getElementById('nl-ausgabe')
   if (label) label.textContent = `Ausgabe ${nummer} · ${monat} ${ausgabe.jahr}`
