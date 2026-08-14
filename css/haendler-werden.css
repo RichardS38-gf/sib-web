@@ -235,13 +235,38 @@ input[type="file"].form-input {
     text-align: left;
   }
 
-  .hw-vorteil { padding: var(--space-2); }
+  /* Vorteils-Karten als Swipe-Slider: eine Karte pro Ansicht */
+  .hw-vorteile__grid {
+    display: flex;
+    grid-template-columns: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: var(--space-3);
+    padding-bottom: 0.25rem;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hw-vorteile__grid::-webkit-scrollbar { display: none; }
+
+  .hw-vorteil {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    padding: var(--space-3);
+  }
+
+  /* Der Hover-Zoom wuerde im Slider ueber den Rand laufen */
+  .hw-vorteil:hover { transform: none; }
 
   .hw-vorteil__icon {
-    width: 32px;
-    height: 32px;
-    margin-bottom: var(--space-1);
+    width: 40px;
+    height: 40px;
+    margin-bottom: var(--space-2);
   }
+
+  .hw-vorteil__title { font-size: var(--text-base); }
+
+  .hw-vorteil__text { font-size: var(--text-sm); }
 
   .hw-form__headline {
     font-size: var(--text-2xl);
