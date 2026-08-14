@@ -102,6 +102,11 @@
   gap: var(--space-3);
 }
 
+/* Pfeil-Buttons nur im Mobile-Slider sichtbar */
+.hw-vorteile { position: relative; }
+
+.hw-slider-btn { display: none; }
+
 @media (min-width: 768px) {
   .hw-vorteile__grid { grid-template-columns: repeat(4, 1fr); }
 }
@@ -235,14 +240,16 @@ input[type="file"].form-input {
     text-align: left;
   }
 
-  /* Vorteils-Karten als Swipe-Slider: eine Karte pro Ansicht */
+  /* Vorteils-Karten als Swipe-Slider: eine Karte pro Ansicht, Pfeile daneben */
   .hw-vorteile__grid {
     display: flex;
     grid-template-columns: none;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
     gap: var(--space-3);
-    padding-bottom: 0.25rem;
+    padding: 0 2.6rem 0.25rem;
+    scroll-padding-left: 2.6rem;
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
@@ -254,6 +261,35 @@ input[type="file"].form-input {
     scroll-snap-align: start;
     padding: var(--space-3);
   }
+
+  .hw-slider-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2.2rem;
+    height: 2.2rem;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: var(--color-on-dark);
+    cursor: pointer;
+    z-index: 2;
+    transition: background 0.2s, opacity 0.2s;
+  }
+
+  .hw-slider-btn:active { background: rgba(255, 255, 255, 0.28); }
+
+  .hw-slider-btn[disabled] {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .hw-slider-btn--prev { left: 0; }
+  .hw-slider-btn--next { right: 0; }
 
   /* Der Hover-Zoom wuerde im Slider ueber den Rand laufen */
   .hw-vorteil:hover { transform: none; }

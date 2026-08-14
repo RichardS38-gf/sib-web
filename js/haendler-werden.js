@@ -235,8 +235,36 @@ function initHaendlerForm () {
   })
 }
 
+// ── Vorteils-Slider (nur Mobile sichtbar) ──
+function initVorteileSlider () {
+  const spur = document.querySelector('.hw-vorteile__grid')
+  const zurueck = document.querySelector('.hw-slider-btn--prev')
+  const weiter = document.querySelector('.hw-slider-btn--next')
+  if (!spur || !zurueck || !weiter) return
+
+  function schrittweite () {
+    const karte = spur.querySelector('.hw-vorteil')
+    if (!karte) return spur.clientWidth
+    const abstand = parseFloat(window.getComputedStyle(spur).columnGap || 0) || 0
+    return karte.getBoundingClientRect().width + abstand
+  }
+
+  function aktualisiereButtons () {
+    const maximal = spur.scrollWidth - spur.clientWidth
+    zurueck.disabled = spur.scrollLeft <= 2
+    weiter.disabled = spur.scrollLeft >= maximal - 2
+  }
+
+  zurueck.addEventListener('click', () => { spur.scrollLeft -= schrittweite() })
+  weiter.addEventListener('click', () => { spur.scrollLeft += schrittweite() })
+  spur.addEventListener('scroll', aktualisiereButtons, { passive: true })
+  window.addEventListener('resize', aktualisiereButtons)
+  aktualisiereButtons()
+}
+
 initMobileMenu()
 initHeaderSearch()
 initRollenToggle()
 initKundeForm()
 initHaendlerForm()
+initVorteileSlider()
