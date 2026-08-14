@@ -24,6 +24,14 @@ function formatDatum (value, opts) {
   return d.toLocaleDateString('de-DE', opts || { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+// Nur die Uhrzeit, fuer die Zeitangabe unter jeder Chat-Nachricht.
+function formatUhrzeit (value) {
+  if (!value) return ''
+  const d = new Date(value)
+  if (isNaN(d)) return ''
+  return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+}
+
 // ── Mobile-Menü ──
 function initMobileMenu () {
   const burger = document.querySelector('.site-header__burger')
@@ -436,7 +444,7 @@ async function ladeNachrichten () {
         lastDay = day
         return `${sep}<div class="dash-chat__msg ${m.von_haendler ? 'in' : 'out'}">
           <div class="dash-chat__bubble">${esc(m.text)}</div>
-          <span class="dash-chat__time">${formatDatum(m.erstellt_am, { hour: '2-digit', minute: '2-digit' })}</span>
+          <span class="dash-chat__time">${formatUhrzeit(m.erstellt_am)}</span>
         </div>`
       }).join('')
       msgsEl.scrollTop = msgsEl.scrollHeight
