@@ -1540,4 +1540,56 @@ textarea.form-input {
     width: 100%;
     justify-content: center;
   }
+
+  /* Oeffnungszeiten: schmalere Tagesspalte, damit das Eingabefeld nutzbar bleibt */
+  .dash-oz-row {
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.5rem;
+  }
+
+  /* Datei-Uploads untereinander statt nebeneinander */
+  .dash-file-upload {
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .dash-file-preview--wide {
+    width: 100%;
+    height: 130px;
+  }
+
+  .dash-csv-import { padding: var(--space-3); }
+
+  .dash-csv-import__actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Produkt-Modal: dreispaltige Zeilen stapeln, Aktionen ueber volle Breite */
+  .pmodal-box { max-height: 92vh; }
+
+  .pmodal-body { padding: var(--space-3); }
+
+  .pmodal-header { padding: var(--space-2) var(--space-3); }
+
+  .pmodal-row,
+  .pmodal-row--3 {
+    grid-template-columns: 1fr;
+  }
+
+  .pmodal-angebot-section { padding: var(--space-3); }
+
+  .pmodal-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .pmodal-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Chat: Blasen duerfen breiter werden */
+  .dash-chat__msg,
+  .chat-bubble { max-width: 88%; }
 }
