@@ -194,3 +194,25 @@
   .faq-nav__item.is-active { border-bottom-color: var(--color-ink); }
   .faq-nav__cta { display: none; }
 }
+
+@media (max-width: 640px) {
+  .faq-hero {
+    padding: var(--space-4) 0;
+    min-height: 0;
+  }
+
+  .faq-hero__sub { font-size: var(--text-base); }
+
+  .faq-layout { gap: var(--space-3); }
+
+  .faq-nav__item {
+    font-size: var(--text-base);
+    font-weight: 500;
+    padding: 0.6rem 0.5rem;
+  }
+
+  /* Der Panel-Titel wiederholt den aktiven Tab direkt darueber. */
+  .faq-panel__title { display: none; }
+
+  .faq-question { padding: var(--space-2) 0; }
+}
