@@ -134,7 +134,10 @@
   line-height: 0.85;
   letter-spacing: -0.04em;
   user-select: none;
-  padding: 0.05em 0.15em;
+  /* Grosszuegiger vertikaler Innenabstand: der Text ist transparent und wird nur
+     ueber background-clip sichtbar. Die bemalte Flaeche endet am Rand des
+     Elements, deshalb braucht es Platz fuer Unterlaengen wie beim "g". */
+  padding: 0.3em 0.15em;
   color: transparent;
   background: rgba(255, 255, 255, 0.45);
   -webkit-background-clip: text;
