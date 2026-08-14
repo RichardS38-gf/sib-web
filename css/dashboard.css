@@ -1497,3 +1497,47 @@ textarea.form-input {
   font-weight: 400;
   color: var(--color-muted);
 }
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  .dash-head {
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .dash-head__greeting {
+    font-size: var(--text-2xl);
+    margin-top: 0;
+  }
+
+  /* Tabs nicht umbrechen, sondern horizontal scrollen. Bei fuenf bis sechs
+     Reitern entstehen sonst mehrere Zeilen. */
+  .dash-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    margin-bottom: var(--space-3);
+  }
+
+  .dash-tabs::-webkit-scrollbar { display: none; }
+
+  .dash-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: var(--space-2);
+  }
+
+  .dash-panel__heading { font-size: var(--text-xl); }
+
+  .dash-panel__toolbar {
+    align-items: flex-start;
+    margin-bottom: var(--space-3);
+  }
+
+  .dash-panel__toolbar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
