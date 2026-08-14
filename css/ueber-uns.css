@@ -328,10 +328,10 @@
   left: 0;
   top: 0;
   height: 100%;
-  width: 0%;
+  width: var(--timeline-progress, 0%);
   background: var(--color-ink);
   border-radius: 2px;
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ueber-timeline__steps {
@@ -392,6 +392,65 @@
   color: var(--color-muted);
   line-height: 1.65;
   max-width: 22ch;
+}
+
+/* Timeline auf Mobile: vertikal statt 3 Spalten */
+@media (max-width: 640px) {
+  .ueber-steps__headline { margin-bottom: var(--space-4); }
+
+  .ueber-timeline__track {
+    position: absolute;
+    left: 21px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    height: auto;
+    margin-top: 0;
+    transform: none;
+  }
+
+  .ueber-timeline__progress {
+    width: 100%;
+    height: var(--timeline-progress, 0%);
+  }
+
+  .ueber-timeline__steps {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .ueber-timeline__step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    column-gap: var(--space-3);
+    align-items: start;
+    text-align: left;
+    padding-top: 0;
+  }
+
+  .ueber-timeline__icon {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 0;
+  }
+
+  .ueber-timeline__icon svg { width: 22px; height: 22px; }
+
+  .ueber-timeline__title {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: var(--text-xl);
+    align-self: center;
+    margin-bottom: var(--space-1);
+  }
+
+  .ueber-timeline__text {
+    grid-column: 2;
+    grid-row: 2;
+    max-width: none;
+  }
 }
 
 /* -- 4. Fuer Haendler (dunkel + Bild) -- */

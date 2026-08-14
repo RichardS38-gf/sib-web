@@ -28,7 +28,7 @@ function initTimeline () {
       d.classList.toggle('is-active', i <= index)
       steps[i].classList.toggle('is-active', i <= index)
     })
-    progress.style.width = widths[index]
+    progress.style.setProperty('--timeline-progress', widths[index])
   }
 
   function runLoop () {
@@ -37,11 +37,11 @@ function initTimeline () {
     setTimeout(() => activate(2), STEP_DURATION * 2)
     setTimeout(() => {
       progress.style.transition = 'none'
-      progress.style.width = '0%'
+      progress.style.setProperty('--timeline-progress', '0%')
       dots.forEach(d => d.classList.remove('is-active'))
       steps.forEach(s => s.classList.remove('is-active'))
       setTimeout(() => {
-        progress.style.transition = 'width 0.6s cubic-bezier(0.4,0,0.2,1)'
+        progress.style.transition = 'width 0.6s cubic-bezier(0.4,0,0.2,1), height 0.6s cubic-bezier(0.4,0,0.2,1)'
         runLoop()
       }, 100)
     }, STEP_DURATION * 2 + PAUSE * 3)
