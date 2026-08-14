@@ -32,6 +32,22 @@ if (burger && mobileMenu) {
   })
 }
 
+// Der Monatsname im Hintergrund soll unabhaengig von seiner Laenge immer
+// ungefaehr gleich breit sein. Zeichenzahl allein reicht dafuer nicht, weil
+// "Juli" aus schmalen und "August" aus breiten Buchstaben besteht. Deshalb
+// messen wir die tatsaechlich gerenderte Breite und rechnen die Schriftgroesse
+// daraus zurueck.
+function passeMonatGroesseAn (el) {
+  if (!el || !el.textContent.trim()) return
+  const anteil = window.innerWidth <= 640 ? 0.8 : 0.55
+  const zielBreite = window.innerWidth * anteil
+  const referenz = 100
+  el.style.fontSize = `${referenz}px`
+  const gemessen = el.scrollWidth
+  if (!gemessen) return
+  el.style.fontSize = `${Math.round(referenz * zielBreite / gemessen)}px`
+}
+
 // ── Hero + Meta: Monat/Ausgabe automatisch setzen ──
 function setzeAusgabeMeta () {
   const ausgabe = aktuelleAusgabe()
@@ -41,9 +57,15 @@ function setzeAusgabeMeta () {
   const bg = document.getElementById('nl-monat-bg')
   if (bg) {
     bg.textContent = monat
-    // Schriftgroesse im Hintergrund richtet sich nach der Laenge des Monatsnamens,
-    // damit auch "September" oder "Dezember" noch in den sichtbaren Bereich passen.
-    bg.style.setProperty('--nl-monat-len', String(monat.length))
+    passeMonatGroesseAn(bg)
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => passeMonatGroesseAn(bg))
+    }
+    let timer
+    window.addEventListener('resize', () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => passeMonatGroesseAn(bg), 150)
+    })
   }
 
   const label = document.getElementById('nl-ausgabe')
