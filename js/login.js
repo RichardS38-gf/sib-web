@@ -140,9 +140,79 @@ function initLogin () {
   })
 }
 
+// ── Passwort vergessen ──
+// Supabase schickt eine E-Mail mit einem Link auf passwort-neu.html. Dort wird
+// die Sitzung aus der URL erkannt und das neue Passwort gesetzt.
+function initPasswortVergessen () {
+  const loginForm = document.getElementById('login-form')
+  const resetForm = document.getElementById('reset-form')
+  const oeffnen = document.getElementById('passwort-vergessen')
+  const abbrechen = document.getElementById('reset-abbrechen')
+  const registerZeile = document.getElementById('login-register-zeile')
+  const feedback = document.getElementById('reset-feedback')
+  const toggle = document.querySelector('.rollen-toggle')
+  if (!loginForm || !resetForm || !oeffnen) return
+
+  const oeffnenZeile = oeffnen.closest('.login__switch')
+
+  function zeigeReset (an) {
+    loginForm.hidden = an
+    resetForm.hidden = !an
+    if (oeffnenZeile) oeffnenZeile.hidden = an
+    if (registerZeile) registerZeile.hidden = an
+    if (toggle) toggle.hidden = an
+
+    const headline = document.getElementById('login-headline')
+    const subtext = document.getElementById('login-subtext')
+    if (an) {
+      headline.textContent = 'Passwort zurücksetzen'
+      subtext.textContent = 'Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort vergeben kannst.'
+      const login = document.getElementById('login-email')
+      const reset = document.getElementById('reset-email')
+      if (login && login.value) reset.value = login.value
+      reset.focus()
+    } else {
+      setzeRolle(aktiveRolle)
+      feedback.innerHTML = ''
+    }
+  }
+
+  oeffnen.addEventListener('click', () => zeigeReset(true))
+  if (abbrechen) abbrechen.addEventListener('click', () => zeigeReset(false))
+
+  resetForm.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    feedback.innerHTML = ''
+
+    const email = resetForm.email.value.trim()
+    if (!email) {
+      feedback.innerHTML = '<div class="error-msg">Bitte gib deine E-Mail-Adresse ein.</div>'
+      return
+    }
+
+    const btn = resetForm.querySelector('button[type="submit"]')
+    btn.disabled = true
+    btn.textContent = 'Wird gesendet…'
+
+    try {
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/passwort-neu.html`
+      })
+    } catch (err) {
+      console.error('Passwort-Reset fehlgeschlagen:', err)
+    }
+
+    // Bewusst immer dieselbe Meldung: sonst liesse sich herausfinden, welche
+    // E-Mail-Adressen bei uns registriert sind.
+    resetForm.innerHTML = '<div class="success-msg">Wenn es zu dieser Adresse ein Konto gibt, ist die E-Mail unterwegs. Schau auch im Spam-Ordner nach.</div>' +
+      '<p class="login__switch"><a href="haendler-login.html">Zurück zur Anmeldung</a></p>'
+  })
+}
+
 initMobileMenu()
 initHeaderSearch()
 initRollenToggle()
 zeigeHinweis()
 redirectIfLoggedIn()
 initLogin()
+initPasswortVergessen()
