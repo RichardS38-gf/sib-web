@@ -218,6 +218,13 @@
   margin-right: 0.25rem;
 }
 
+.pdp-info__ab {
+  font-size: 0.6em;
+  font-weight: 400;
+  color: var(--color-muted);
+  margin-right: 0.15em;
+}
+
 .pdp-info__streichpreis {
   font-size: 1rem;
   font-weight: 400;

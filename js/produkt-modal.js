@@ -308,20 +308,27 @@ function aktualisiereUnterkategorieSichtbarkeit (vorauswahl = null) {
   select.value = optionen.some((u) => u.value === bisher) ? bisher : ''
 }
 
-// Baut die Checkbox+Stück-Zeilen für ein Größenset, vorbelegt aus einer Liste
-// von {groesse, stueckzahl}. Wird sowohl für die Standalone-Größenliste als
-// auch pro Farbvariante verwendet.
+// Baut die Zeilen fuer ein Groessenset, vorbelegt aus einer Liste von
+// {groesse, stueckzahl, preis, ean}. Wird sowohl fuer die Standalone-
+// Groessenliste als auch pro Farbvariante verwendet.
+// Preis und EAN sind optional: leer lassen heisst "gilt wie am Produkt".
 function groessenZeilenHtml (set, vorhandeneListe) {
   return set.map((g) => {
     const vorhanden = (vorhandeneListe || []).find((v) => v.groesse === g)
     const checked = !!vorhanden
     const stk = vorhanden ? (vorhanden.stueckzahl ?? 0) : 1
+    const preis = vorhanden && vorhanden.preis !== null && vorhanden.preis !== undefined ? vorhanden.preis : ''
+    const ean = vorhanden ? (vorhanden.ean || '') : ''
     return `
-      <label class="dash-groesse-row">
-        <input type="checkbox" class="pmodal-groesse-check" value="${escAttr(g)}" ${checked ? 'checked' : ''}>
-        <span class="dash-groesse-name">${escAttr(g)}</span>
-        <input type="number" class="form-input pmodal-groesse-stk" min="0" value="${stk}" ${checked ? '' : 'disabled'}>
-      </label>`
+      <div class="dash-groesse-row">
+        <label class="dash-groesse-haupt">
+          <input type="checkbox" class="pmodal-groesse-check" value="${escAttr(g)}" ${checked ? 'checked' : ''}>
+          <span class="dash-groesse-name">${escAttr(g)}</span>
+        </label>
+        <input type="number" class="form-input pmodal-groesse-stk" min="0" value="${stk}" title="Stückzahl" placeholder="Stück" ${checked ? '' : 'disabled'}>
+        <input type="number" class="form-input pmodal-groesse-preis" min="0" step="0.01" value="${escAttr(preis)}" title="Eigener Preis für diese Größe (optional)" placeholder="Preis €" ${checked ? '' : 'disabled'}>
+        <input type="text" class="form-input pmodal-groesse-ean" inputmode="numeric" value="${escAttr(ean)}" title="Eigene EAN für diese Größe (optional)" placeholder="EAN" ${checked ? '' : 'disabled'}>
+      </div>`
   }).join('')
 }
 
@@ -329,14 +336,26 @@ function bindGroessenZeilen (root, onChange) {
   root.querySelectorAll('.dash-groesse-row').forEach((row) => {
     const cb = row.querySelector('.pmodal-groesse-check')
     const stk = row.querySelector('.pmodal-groesse-stk')
+    const preis = row.querySelector('.pmodal-groesse-preis')
+    const ean = row.querySelector('.pmodal-groesse-ean')
+
+    function melde () {
+      if (!onChange) return
+      onChange(cb.value, cb.checked, {
+        stueckzahl: parseInt(stk.value, 10) || 0,
+        preis: preis.value === '' ? null : parseFloat(preis.value),
+        ean: ean.value.trim() || null
+      })
+    }
+
     cb.addEventListener('change', () => {
       stk.disabled = !cb.checked
+      preis.disabled = !cb.checked
+      ean.disabled = !cb.checked
       if (cb.checked) stk.focus()
-      if (onChange) onChange(cb.value, cb.checked, parseInt(stk.value, 10) || 0)
+      melde()
     })
-    stk.addEventListener('input', () => {
-      if (onChange) onChange(cb.value, cb.checked, parseInt(stk.value, 10) || 0)
-    })
+    ;[stk, preis, ean].forEach((feld) => feld.addEventListener('input', melde))
   })
 }
 
@@ -348,14 +367,14 @@ function renderGroessenGrid () {
 }
 
 // ── Farbvarianten (inkl. eigener Größen/Stück-Matrix je Farbe) ──
-function syncFarbeGroesse (idx, groesse, checked, stueckzahl) {
+function syncFarbeGroesse (idx, groesse, checked, werte) {
   const f = aktuelleFarben[idx]
   if (!f) return
   if (!f.groessen) f.groessen = []
   const bestehend = f.groessen.find((g) => g.groesse === groesse)
   if (checked) {
-    if (bestehend) bestehend.stueckzahl = stueckzahl
-    else f.groessen.push({ groesse, stueckzahl })
+    if (bestehend) Object.assign(bestehend, werte)
+    else f.groessen.push({ groesse, ...werte })
   } else if (bestehend) {
     f.groessen = f.groessen.filter((g) => g.groesse !== groesse)
   }
@@ -421,7 +440,7 @@ function renderFarben () {
   })
   container.querySelectorAll('.pmodal-farbe-block').forEach((block) => {
     const idx = parseInt(block.dataset.fidx, 10)
-    bindGroessenZeilen(block, (groesse, checked, stueckzahl) => syncFarbeGroesse(idx, groesse, checked, stueckzahl))
+    bindGroessenZeilen(block, (groesse, checked, werte) => syncFarbeGroesse(idx, groesse, checked, werte))
   })
 }
 
@@ -467,7 +486,14 @@ async function speichereGroessenUndFarben (produktId) {
       const gesamtStk = groessen.reduce((summe, g) => summe + (Number(g.stueckzahl) || 0), 0)
       farbenNeu.push({ produkt_id: produktId, farbe, bild_urls: f.bild_urls || [], ean: (f.ean || '').trim() || null, stueckzahl: gesamtStk })
       groessen.forEach((g) => {
-        variantenNeu.push({ produkt_id: produktId, groesse: g.groesse, farbe, stueckzahl: Number(g.stueckzahl) || 0 })
+        variantenNeu.push({
+          produkt_id: produktId,
+          groesse: g.groesse,
+          farbe,
+          stueckzahl: Number(g.stueckzahl) || 0,
+          preis: (g.preis === null || g.preis === undefined || isNaN(g.preis)) ? null : Number(g.preis),
+          ean: (g.ean || '').trim() || null
+        })
       })
     })
     if (farbenNeu.length) await supabase.from('produkt_farben').insert(farbenNeu)
@@ -479,7 +505,16 @@ async function speichereGroessenUndFarben (produktId) {
       if (!cb.checked) return
       let stk = parseInt(row.querySelector('.pmodal-groesse-stk').value, 10)
       if (isNaN(stk) || stk < 0) stk = 0
-      variantenNeu.push({ produkt_id: produktId, groesse: cb.value, farbe: null, stueckzahl: stk })
+      const preisRaw = row.querySelector('.pmodal-groesse-preis').value
+      const eanRaw = row.querySelector('.pmodal-groesse-ean').value
+      variantenNeu.push({
+        produkt_id: produktId,
+        groesse: cb.value,
+        farbe: null,
+        stueckzahl: stk,
+        preis: preisRaw === '' ? null : parseFloat(preisRaw),
+        ean: eanRaw.trim() || null
+      })
     })
     if (variantenNeu.length) await supabase.from('produkt_varianten').insert(variantenNeu)
   }
@@ -755,7 +790,7 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
       bild_urls: (f.bild_urls && f.bild_urls.length) ? f.bild_urls : (f.bild_url ? [f.bild_url] : []),
       groessen: alleVarianten
         .filter((v) => v.farbe === f.farbe)
-        .map((v) => ({ groesse: v.groesse, stueckzahl: v.stueckzahl }))
+        .map((v) => ({ groesse: v.groesse, stueckzahl: v.stueckzahl, preis: v.preis, ean: v.ean }))
     }))
   }
   // Fotos, die bereits einer Farbvariante zugeordnet sind, gehoeren NICHT in

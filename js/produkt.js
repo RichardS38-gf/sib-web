@@ -22,6 +22,64 @@ let aktuellerBildTitel = ''
 let aktuellesHeroBild = null // nur Desktop: welche URL gerade als Hauptbild gezeigt wird
 let aktuelleFarbenListe = [] // alle Farbvarianten des Produkts (fuer Bild->Farbe-Zuordnung)
 
+// Preis und EAN je Groesse (siehe migration-varianten-preis-ean.sql).
+// Schluessel: `${farbe || ''}|${groesse}`. Ist kein eigener Preis hinterlegt,
+// gilt der Produktpreis.
+let variantenInfo = {}
+let basisProdukt = null
+let hatEigenePreise = false
+
+function variantenSchluessel (farbe, groesse) {
+  return `${farbe || ''}|${groesse}`
+}
+
+// Baut die Preis-Anzeige. Ein eigener Groessenpreis hat Vorrang vor dem
+// Produktpreis und vor einem laufenden Angebot, weil sich ein Angebot immer
+// auf den Produktpreis bezieht.
+function preisHtmlFuer (preisWert, produkt) {
+  const sale = isSaleAktiv(produkt)
+  if (preisWert !== null && preisWert !== undefined) {
+    return euro.format(preisWert)
+  }
+  if (sale) {
+    return `${euro.format(produkt.angebotspreis)} <span class="pdp-info__streichpreis">${euro.format(produkt.preis)}</span>`
+  }
+  return (produkt.preis !== null && produkt.preis !== undefined) ? euro.format(produkt.preis) : ''
+}
+
+// Aktualisiert Preis und EAN passend zur aktuell gewaehlten Groesse/Farbe.
+function aktualisierePreisUndEan () {
+  if (!basisProdukt) return
+  const preisEl = document.getElementById('pdp-preis')
+  const eanEl = document.getElementById('ean-value')
+
+  const info = selectedGroesse
+    ? variantenInfo[variantenSchluessel(selectedFarbe, selectedGroesse)]
+    : null
+
+  if (preisEl) {
+    if (!selectedGroesse && hatEigenePreise) {
+      // Noch keine Groesse gewaehlt: guenstigsten Preis als "ab" anzeigen.
+      const preise = Object.values(variantenInfo)
+        .map((v) => (v.preis !== null && v.preis !== undefined) ? v.preis : basisProdukt.preis)
+        .filter((p) => p !== null && p !== undefined)
+      const min = preise.length ? Math.min(...preise) : null
+      preisEl.innerHTML = min !== null
+        ? `<span class="pdp-info__ab">ab</span> ${euro.format(min)}`
+        : preisHtmlFuer(null, basisProdukt)
+    } else {
+      preisEl.innerHTML = preisHtmlFuer(info?.preis ?? null, basisProdukt)
+    }
+  }
+
+  if (eanEl) {
+    const farbEan = selectedFarbe
+      ? (aktuelleFarbenListe.find((f) => f.farbe === selectedFarbe)?.ean || null)
+      : null
+    eanEl.textContent = info?.ean || farbEan || basisProdukt.ean || '000000000'
+  }
+}
+
 // Feste Größen-Reihenfolge für das Dropdown
 const GROESSEN_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Einheitsgröße']
 
@@ -256,6 +314,17 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
   })
   hatFarbGroessen = Object.values(farbGroessenMap).some((liste) => liste.length > 0)
 
+  // Preis/EAN je Groesse einsammeln
+  basisProdukt = produkt
+  variantenInfo = {}
+  alleVarianten.forEach((v) => {
+    variantenInfo[variantenSchluessel(v.farbe, v.groesse)] = {
+      preis: (v.preis === null || v.preis === undefined) ? null : Number(v.preis),
+      ean: v.ean || null
+    }
+  })
+  hatEigenePreise = alleVarianten.some((v) => v.preis !== null && v.preis !== undefined)
+
   aktuelleBilder = bilder
   aktuellerBildTitel = produkt.titel || ''
   aktuellesHeroBild = bilder[0] || null
@@ -264,11 +333,22 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
   // Galerie
   const galerieHtml = baueGalerieHtml()
 
-  // Sale-Preis
+  // Sale-Preis. Bei eigenen Groessenpreisen zeigen wir zunaechst den
+  // guenstigsten als "ab X", sobald eine Groesse gewaehlt ist den exakten.
   const sale = isSaleAktiv(produkt)
-  const preisHtml = sale
-    ? `<p class="pdp-info__price">${euro.format(produkt.angebotspreis)} <span class="pdp-info__streichpreis">${euro.format(produkt.preis)}</span></p>`
-    : `<p class="pdp-info__price">${esc(preis)}</p>`
+  let preisInhalt
+  if (hatEigenePreise) {
+    const preise = alleVarianten
+      .map((v) => (v.preis !== null && v.preis !== undefined) ? Number(v.preis) : produkt.preis)
+      .filter((p) => p !== null && p !== undefined)
+    const min = preise.length ? Math.min(...preise) : null
+    preisInhalt = min !== null ? `<span class="pdp-info__ab">ab</span> ${euro.format(min)}` : esc(preis)
+  } else if (sale) {
+    preisInhalt = `${euro.format(produkt.angebotspreis)} <span class="pdp-info__streichpreis">${euro.format(produkt.preis)}</span>`
+  } else {
+    preisInhalt = esc(preis)
+  }
+  const preisHtml = `<p class="pdp-info__price" id="pdp-preis">${preisInhalt}</p>`
 
   // Shop-Link
   const shopLink = shop?.slug
@@ -309,7 +389,7 @@ function renderDetail (produkt, alleVarianten = [], farben = []) {
   // Farbwahl per JS eingesetzt (siehe initFarben/aktualisiereGroesseFuerFarbe).
   const eanHtml = hatFarbvarianten
     ? `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value" id="ean-value">000000000</span></div>`
-    : `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value">${esc(produkt.ean || '000000000')}</span></div>`
+    : `<div class="pdp-meta-row"><span class="pdp-meta-label">EAN</span><span class="pdp-meta-value" id="ean-value">${esc(produkt.ean || '000000000')}</span></div>`
 
   // Größe -- drei Fälle: (1) Farbvarianten MIT eigenen Größen -> Dropdown
   // wird erst nach Farbwahl befuellt, (2) Standalone-Größen ohne Farbbezug ->
@@ -450,6 +530,7 @@ function wendeFarbeAn (farbeName, { bildSchonAktuell = false } = {}) {
   const eanEl = document.getElementById('ean-value')
   if (eanEl) eanEl.textContent = (opt?.dataset.ean) || '000000000'
   if (hatFarbGroessen) aktualisiereGroesseFuerFarbe()
+  aktualisierePreisUndEan()
 }
 
 // Füllt das Größen-Dropdown mit den zur gewählten Farbe passenden Größen
@@ -478,6 +559,7 @@ function initGroessen () {
   if (!select) return
   select.addEventListener('change', () => {
     selectedGroesse = select.value || null
+    aktualisierePreisUndEan()
   })
 }
 
@@ -613,7 +695,7 @@ async function initReservierung (produkt) {
     submitBtn.disabled = true
     submitBtn.textContent = 'Wird gesendet…'
 
-    const ablauf = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    const ablauf = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
 
     try {
       const { data: { session } } = await supabase.auth.getSession()

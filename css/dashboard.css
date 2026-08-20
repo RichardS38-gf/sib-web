@@ -185,7 +185,7 @@
 
 .dash-groesse-row {
   display: grid;
-  grid-template-columns: auto 1fr 4.5rem;
+  grid-template-columns: minmax(6rem, 1fr) 4.5rem 5.5rem 8rem;
   align-items: center;
   gap: var(--space-2);
   padding: 0.3rem 0;
@@ -193,25 +193,50 @@
   font-size: var(--text-sm);
 }
 
+.dash-groesse-haupt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  min-width: 0;
+}
+
 .dash-groesse-check {
   width: 1rem;
   height: 1rem;
   cursor: pointer;
   accent-color: var(--color-ink);
+  flex-shrink: 0;
 }
 
 .dash-groesse-name { font-weight: 500; }
 
-.dash-groesse-stk {
+.dash-groesse-stk,
+.dash-groesse-preis,
+.dash-groesse-ean {
   padding: 0.35rem 0.5rem;
   font-size: var(--text-sm);
-  text-align: right;
+  min-width: 0;
 }
 
-.dash-groesse-stk:disabled {
+.dash-groesse-stk,
+.dash-groesse-preis { text-align: right; }
+
+.dash-groesse-stk:disabled,
+.dash-groesse-preis:disabled,
+.dash-groesse-ean:disabled {
   background-color: var(--color-bg-soft);
   color: var(--color-muted);
   cursor: not-allowed;
+}
+
+/* Auf schmalen Fenstern zweizeilig: Name oben, Zahlenfelder darunter */
+@media (max-width: 700px) {
+  .dash-groesse-row {
+    grid-template-columns: 4.5rem 5.5rem 1fr;
+    row-gap: 0.35rem;
+  }
+  .dash-groesse-haupt { grid-column: 1 / -1; }
 }
 
 .dash-groessen__bar {
