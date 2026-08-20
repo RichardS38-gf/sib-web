@@ -167,9 +167,9 @@ export function initProduktModal () {
             <input class="form-input" id="pmodal-ean" name="ean" type="text" inputmode="numeric" autocomplete="off" placeholder="z.B. 4006381333931">
           </div>
 
-          <!-- Größen & Stück (Standalone -- nur ohne Farbvarianten, sonst pro Farbe oben) -->
+          <!-- Groessen, Stueck, Preis, EAN (Standalone -- nur ohne Farbvarianten) -->
           <div class="pmodal-field" id="pmodal-groessen-standalone-wrap">
-            <label class="pmodal-label">Größen &amp; Stück</label>
+            <label class="pmodal-label">Größen, Stück, Preis &amp; EAN <span class="pmodal-hint-inline">(Preis und EAN nur ausfüllen, wenn sie sich je Größe unterscheiden)</span></label>
             <div class="dash-groessen" id="pmodal-groessen-list"></div>
           </div>
 
@@ -359,10 +359,21 @@ function bindGroessenZeilen (root, onChange) {
   })
 }
 
+// Kopfzeile ueber den Groessenzeilen, damit die vier Spalten erkennbar sind.
+function groessenKopfHtml () {
+  return `
+    <div class="dash-groesse-head">
+      <span>Größe</span>
+      <span>Stück</span>
+      <span>Preis €</span>
+      <span>EAN</span>
+    </div>`
+}
+
 function renderGroessenGrid () {
   const set = aktuellesGroessenSet()
   const container = document.getElementById('pmodal-groessen-list')
-  container.innerHTML = groessenZeilenHtml(set, aktuelleVarianten)
+  container.innerHTML = groessenKopfHtml() + groessenZeilenHtml(set, aktuelleVarianten)
   bindGroessenZeilen(container)
 }
 
@@ -409,8 +420,8 @@ function renderFarben () {
         </div>
       </div>
       <div class="pmodal-farbe-groessen">
-        <p class="pmodal-farbe-groessen-label">Größen &amp; Stück für diese Farbe</p>
-        <div class="dash-groessen">${groessenZeilenHtml(groessenSet, f.groessen || [])}</div>
+        <p class="pmodal-farbe-groessen-label">Größen, Stück, Preis und EAN für diese Farbe</p>
+        <div class="dash-groessen">${groessenKopfHtml()}${groessenZeilenHtml(groessenSet, f.groessen || [])}</div>
       </div>
     </div>`
   }).join('')
