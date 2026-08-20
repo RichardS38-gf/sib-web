@@ -4,7 +4,7 @@
 // Farbvarianten mit eigenem Foto und eigener Größen/Stück-Matrix pro Farbe.
 
 import { supabase } from './supabase.js'
-import { UNTERKATEGORIEN, MODE_KATEGORIE_NAME, ermittleGroessenSet } from './groessen-config.js?v=3'
+import { unterkategorienFuer, hatUnterkategorien, ermittleGroessenSet } from './groessen-config.js?v=4'
 
 let onSaveCallback = null
 let aktuellesProduktId = null
@@ -85,12 +85,11 @@ export function initProduktModal () {
             </div>
           </div>
 
-          <!-- Unterkategorie (nur bei Mode & Accessoires) -->
+          <!-- Unterkategorie (Optionen haengen von der Kategorie ab) -->
           <div class="pmodal-field" id="pmodal-unterkategorie-group" hidden>
             <label class="pmodal-label" for="pmodal-unterkategorie">Unterkategorie *</label>
             <select class="form-select" id="pmodal-unterkategorie" name="unterkategorie">
               <option value="">Bitte wählen</option>
-              ${UNTERKATEGORIEN.map((u) => `<option value="${u.value}">${u.label}</option>`).join('')}
             </select>
           </div>
 
@@ -293,11 +292,20 @@ function aktuellesGroessenSet () {
   return ermittleGroessenSet(aktuelleKategorieName(), unterkategorie)
 }
 
-function aktualisiereUnterkategorieSichtbarkeit () {
+function aktualisiereUnterkategorieSichtbarkeit (vorauswahl = null) {
   const group = document.getElementById('pmodal-unterkategorie-group')
-  const istMode = aktuelleKategorieName() === MODE_KATEGORIE_NAME
-  group.hidden = !istMode
-  if (!istMode) document.getElementById('pmodal-unterkategorie').value = ''
+  const select = document.getElementById('pmodal-unterkategorie')
+  const kategorie = aktuelleKategorieName()
+  const optionen = unterkategorienFuer(kategorie)
+
+  group.hidden = !hatUnterkategorien(kategorie)
+
+  const bisher = vorauswahl !== null ? vorauswahl : select.value
+  select.innerHTML = '<option value="">Bitte wählen</option>' +
+    optionen.map((u) => `<option value="${escAttr(u.value)}">${escAttr(u.label)}</option>`).join('')
+
+  // Auswahl nur behalten, wenn sie zur neuen Kategorie passt.
+  select.value = optionen.some((u) => u.value === bisher) ? bisher : ''
 }
 
 // Baut die Checkbox+Stück-Zeilen für ein Größenset, vorbelegt aus einer Liste
@@ -777,8 +785,7 @@ export async function oeffneProduktModal ({ produkt = null, onSave, shops = null
   document.getElementById('pmodal-preis').value = produkt?.preis ?? ''
   document.getElementById('pmodal-beschreibung').value = produkt?.beschreibung || ''
   document.getElementById('pmodal-kategorie').value = produkt?.kategorie_id || ''
-  aktualisiereUnterkategorieSichtbarkeit()
-  document.getElementById('pmodal-unterkategorie').value = produkt?.unterkategorie || ''
+  aktualisiereUnterkategorieSichtbarkeit(produkt?.unterkategorie || '')
   document.getElementById('pmodal-geschlecht').value = produkt?.geschlecht || ''
   const hatFarbvariantenInit = aktuelleFarben.length > 0
   document.getElementById('pmodal-hat-farbvarianten').checked = hatFarbvariantenInit
