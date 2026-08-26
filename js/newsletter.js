@@ -11,8 +11,11 @@ import { supabase } from './supabase.js'
 import { renderProductCard, initWunschlisteButtons, fetchWunschlisteIds, fetchProductRatings } from './product-card.js'
 import { aktuelleAusgabe, monatDatum, monatName, ausgabeNummer } from './newsletter-zeitraum.js'
 
-// Wie viele Wochen zurück ein Shop noch als "neu beigetreten" gilt.
-const NEU_SHOPS_WOCHEN = 4
+// Wie viele Wochen zurueck ein Shop noch als "neu beigetreten" gilt.
+// Neun Wochen decken zwei aufeinanderfolgende Monatsausgaben ab. Solange es
+// erst wenige Haendler gibt, bleibt die Sektion dadurch gefuellt. Sobald
+// regelmaessig neue Shops dazukommen, kann der Wert wieder auf 4 sinken.
+const NEU_SHOPS_WOCHEN = 9
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 
