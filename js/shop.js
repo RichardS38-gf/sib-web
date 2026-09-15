@@ -252,6 +252,30 @@ function initChatWidget (shop) {
   let isOpen = false
   let lastHaendlerCount = 0
 
+  // Benachrichtigung an den Haendler, gedrosselt auf hoechstens eine Mail
+  // alle 15 Minuten je Shop. Sonst gaebe es bei einem laufenden Gespraech
+  // eine Mail pro Satz.
+  const MAIL_KEY = `sib_chat_mail_${shop.id}`
+  const DROSSEL_MS = 15 * 60 * 1000
+
+  function benachrichtigeHaendler (text, erzwingen = false) {
+    if (!shop.email) return
+    try {
+      const zuletzt = Number(localStorage.getItem(MAIL_KEY) || 0)
+      if (!erzwingen && (Date.now() - zuletzt) < DROSSEL_MS) return
+      localStorage.setItem(MAIL_KEY, String(Date.now()))
+    } catch { /* Speicher gesperrt, dann eben ungedrosselt */ }
+
+    supabase.functions.invoke('send-email', {
+      body: {
+        type: 'neue_nachricht',
+        empfaenger_email: shop.email,
+        absender_name: 'Eine Kundin oder ein Kunde',
+        nachricht: text
+      }
+    }).catch((err) => console.error('Chat-Benachrichtigung fehlgeschlagen:', err))
+  }
+
   // Wenn Kunde schon gechattet hat: Bubble sofort zeigen
   if (session?.chat_id) {
     widget.hidden = false
@@ -359,6 +383,8 @@ function initChatWidget (shop) {
         widget.hidden = false   // Bubble erscheint erstmals
         await loadMessages()
         startPolling()
+        // Erste Nachricht immer melden, unabhaengig von der Drossel.
+        benachrichtigeHaendler(text, true)
         return
       }
 
@@ -382,6 +408,7 @@ function initChatWidget (shop) {
       input.value = ''
       input.style.height = 'auto'
       await loadMessages()
+      benachrichtigeHaendler(text)
 
     } catch (err) {
       console.error('Senden:', err)
@@ -636,7 +663,7 @@ async function init () {
     if (!shop) { notFound(); return }
 
     showLoading(false)
-    if (shop.name) document.title = `${shop.name} — Shoppen in Braunschweig`
+    if (shop.name) document.title = `${shop.name} | Shoppen in Braunschweig`
 
     renderGalerie(shop)
 

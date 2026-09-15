@@ -579,6 +579,28 @@ async function speichereNeuStatus (produktId, monatStr, cb, btn, feedbackEl) {
   }
 }
 
+// Benachrichtigt die Kundschaft ueber eine Antwort des Haendlers. Gedrosselt
+// auf hoechstens eine Mail alle 15 Minuten je Chat, damit ein laufendes
+// Gespraech nicht das Postfach flutet.
+const CHAT_MAIL_DROSSEL_MS = 15 * 60 * 1000
+const chatMailZuletzt = {}
+
+function benachrichtigeKunde (chat, text) {
+  if (!chat?.sender_email) return
+  const zuletzt = chatMailZuletzt[chat.id] || 0
+  if (Date.now() - zuletzt < CHAT_MAIL_DROSSEL_MS) return
+  chatMailZuletzt[chat.id] = Date.now()
+
+  supabase.functions.invoke('send-email', {
+    body: {
+      type: 'neue_nachricht',
+      empfaenger_email: chat.sender_email,
+      absender_name: shop?.name || 'dem Geschäft',
+      nachricht: text
+    }
+  }).catch((err) => console.error('Chat-Benachrichtigung fehlgeschlagen:', err))
+}
+
 // ── TAB 4: Nachrichten ──
 async function ladeNachrichten () {
   const statusEl = document.getElementById('nachrichten-content')
@@ -708,6 +730,7 @@ async function ladeNachrichten () {
         if (!msgByChat[aktiveChat.id]) msgByChat[aktiveChat.id] = []
         msgByChat[aktiveChat.id].push({ text, von_haendler: true, erstellt_am: new Date().toISOString() })
         renderMessages(msgByChat[aktiveChat.id])
+        benachrichtigeKunde(aktiveChat, text)
       } catch (err) { alert(err?.message || 'Fehler') }
       finally { sendBtn.disabled = false; input.focus() }
     }

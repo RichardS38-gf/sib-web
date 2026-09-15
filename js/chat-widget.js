@@ -35,6 +35,39 @@ function initChatWidget (shop) {
   let lastCount = 0
   let panelOpen = false
 
+  // Benachrichtigung an den Haendler. Gedrosselt: hoechstens alle 15 Minuten
+  // eine Mail pro Chat, sonst gaebe es bei einem lebhaften Gespraech eine
+  // Mail pro Satz.
+  const BENACHRICHTIGUNG_KEY = `sib_chat_mail_${shop.id}`
+  const DROSSEL_MS = 15 * 60 * 1000
+
+  function darfBenachrichtigen () {
+    try {
+      const zuletzt = Number(localStorage.getItem(BENACHRICHTIGUNG_KEY) || 0)
+      return (Date.now() - zuletzt) > DROSSEL_MS
+    } catch {
+      return true
+    }
+  }
+
+  function merkeBenachrichtigung () {
+    try { localStorage.setItem(BENACHRICHTIGUNG_KEY, String(Date.now())) } catch { /* egal */ }
+  }
+
+  function benachrichtigeHaendler (absenderName, text, erzwingen = false) {
+    if (!shop.email) return
+    if (!erzwingen && !darfBenachrichtigen()) return
+    merkeBenachrichtigung()
+    supabase.functions.invoke('send-email', {
+      body: {
+        type: 'neue_nachricht',
+        empfaenger_email: shop.email,
+        absender_name: absenderName,
+        nachricht: text
+      }
+    }).catch((err) => console.error('Chat-Benachrichtigung fehlgeschlagen:', err))
+  }
+
   // ── Panel öffnen/schließen ──
   function openPanel () {
     panelOpen = true
@@ -163,6 +196,9 @@ function initChatWidget (shop) {
       showThread()
       await loadMessages()
       startPolling()
+
+      // Beim Start eines Chats immer benachrichtigen, unabhaengig von der Drossel.
+      benachrichtigeHaendler(nameVal, textVal, true)
     } catch (err) {
       console.error('Chat starten fehlgeschlagen:', err)
       ciFeedback.innerHTML = '<div class="error-msg">Verbindung fehlgeschlagen. Bitte erneut versuchen.</div>'
@@ -193,6 +229,7 @@ function initChatWidget (shop) {
         .eq('id', session.chat_id)
 
       await loadMessages()
+      benachrichtigeHaendler(session?.name || 'Eine Kundin oder ein Kunde', text)
     } catch (err) {
       console.error('Nachricht senden fehlgeschlagen:', err)
       input.value = text // zurückschreiben
