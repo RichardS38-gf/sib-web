@@ -67,7 +67,7 @@ function formatDatumZeit (iso: unknown): string {
 }
 
 // Schlichtes Schwarz/Weiss-HTML, passend zur Seite.
-function htmlMail (absaetze: string[], cta?: { text: string; url: string }): string {
+function htmlMail (absaetze: string[], cta?: { text: string; url: string }, fusszeile?: string): string {
   const body = absaetze
     .filter(Boolean)
     .map((a) => `<p style="margin:0 0 16px 0">${a}</p>`)
@@ -75,11 +75,15 @@ function htmlMail (absaetze: string[], cta?: { text: string; url: string }): str
   const button = cta
     ? `<p style="margin:24px 0 0 0"><a href="${esc(cta.url)}" style="display:inline-block;background:#0F0F0F;color:#FAFAF8;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:600">${esc(cta.text)}</a></p>`
     : ''
+  const extra = fusszeile
+    ? `<p style="margin:12px 0 0 0;color:#777777;font-size:12px">${fusszeile}</p>`
+    : ''
   return `<!DOCTYPE html><html lang="de"><body style="margin:0;padding:24px;background:#FAFAF8">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;padding:28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#0F0F0F">
     ${body}
     ${button}
     <p style="margin:28px 0 0 0;color:#777777;font-size:13px">Shoppen in Braunschweig. Lokale Händler. Einzigartige Produkte.</p>
+    ${extra}
   </div>
 </body></html>`
 }
@@ -105,6 +109,8 @@ interface Payload {
   nachricht?: string
   betreff?: string
   sterne?: number
+  abmelde_token?: string
+  anzahl_artikel?: number
 }
 
 interface Mail { an: string; subject: string; html: string; text: string }
@@ -335,6 +341,36 @@ function baueMail (p: Payload): Mail | null {
         subject: 'Du bist dabei: Prospekt von Shoppen in Braunschweig',
         html: htmlMail(abs, { text: 'Aktuelle Ausgabe ansehen', url: `${BASIS_URL}/newsletter.html` }),
         text: `Hallo,\n\ndanke für deine Anmeldung zum Prospekt von Shoppen in Braunschweig.\n\nEinmal im Monat schicken wir dir neue Produkte, Sonderangebote und frisch dazugekommene Geschäfte.\n\n${BASIS_URL}/newsletter.html`
+      }
+    }
+
+    case 'prospekt': {
+      const monate = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+        'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
+      const jetzt = new Date()
+      const monatName = monate[jetzt.getMonth()]
+      const anzahl = typeof p.anzahl_artikel === 'number' ? p.anzahl_artikel : 0
+      const abmeldeUrl = p.abmelde_token
+        ? `${BASIS_URL}/abmelden.html?token=${encodeURIComponent(p.abmelde_token)}`
+        : ''
+
+      const abs = [
+        `<strong>Der Prospekt für ${esc(monatName)} ist da.</strong>`,
+        anzahl > 0
+          ? `Diesen Monat haben wir ${anzahl} Artikel aus Braunschweiger Geschäften für dich zusammengestellt: neu Eingetroffenes und aktuelle Sonderangebote.`
+          : 'Diesen Monat haben wir wieder Neues aus Braunschweiger Geschäften für dich zusammengestellt.',
+        'Reservieren kostet nichts, bezahlt wird erst im Laden.'
+      ]
+
+      const fusszeile = abmeldeUrl
+        ? `Du willst den Prospekt nicht mehr erhalten? <a href="${esc(abmeldeUrl)}" style="color:#777777">Hier abmelden</a>.`
+        : ''
+
+      return {
+        an: kundenMail,
+        subject: `Der Prospekt für ${monatName} ist da`,
+        html: htmlMail(abs, { text: 'Prospekt ansehen', url: `${BASIS_URL}/newsletter.html` }, fusszeile),
+        text: `Der Prospekt für ${monatName} ist da.\n\n${anzahl > 0 ? `Diesen Monat haben wir ${anzahl} Artikel aus Braunschweiger Geschäften für dich zusammengestellt.` : 'Diesen Monat haben wir wieder Neues für dich zusammengestellt.'}\n\n${BASIS_URL}/newsletter.html\n\nAbmelden: ${abmeldeUrl}`
       }
     }
 
