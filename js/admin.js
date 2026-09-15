@@ -4,7 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { initHeaderSearch } from './header.js'
-import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=20'
+import { initProduktModal, oeffneProduktModal } from './produkt-modal.js?v=21'
 
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
 

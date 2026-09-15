@@ -666,6 +666,32 @@ async function handleDateiUpload (e) {
   e.target.value = ''
 }
 
+// Meldet ein neu angelegtes Produkt an info@shoppeninbraunschweig.de, damit es
+// zeitnah freigegeben werden kann. Neue Produkte sind bis zur Freigabe nicht
+// oeffentlich sichtbar, ohne Hinweis bliebe das leicht liegen.
+// Bewusst nur beim Anlegen, nicht beim Bearbeiten.
+async function meldeNeuesProdukt (produktId) {
+  if (!produktId) return
+  try {
+    const { data } = await supabase
+      .from('produkte')
+      .select('titel, shops(name)')
+      .eq('id', produktId)
+      .maybeSingle()
+    if (!data) return
+    await supabase.functions.invoke('send-email', {
+      body: {
+        type: 'neues_produkt',
+        produkt_titel: data.titel,
+        shop_name: data.shops?.name || 'unbekannter Händler'
+      }
+    })
+  } catch (err) {
+    // Nicht kritisch: das Produkt ist gespeichert, nur die Info-Mail fehlt.
+    console.error('Freigabe-Benachrichtigung fehlgeschlagen:', err)
+  }
+}
+
 // ── Speichern ──
 async function handleSpeichern (e) {
   e.preventDefault()
@@ -759,6 +785,7 @@ async function handleSpeichern (e) {
       const neueId = await onSaveCallback(daten)
       if (neueId) {
         await speichereGroessenUndFarben(neueId)
+        meldeNeuesProdukt(neueId)
       }
       schliesseProduktModal()
     }

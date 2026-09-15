@@ -633,6 +633,25 @@ async function sendeBestaetigungsMail (payload) {
   }
 }
 
+// Der Haendler soll von einer neuen Reservierung erfahren, ohne selbst ins
+// Dashboard schauen zu muessen. Faellt die Mail aus, ist das nicht schlimm:
+// die Reservierung steht trotzdem im Dashboard.
+async function sendeHaendlerMail (produkt, payload) {
+  const haendlerMail = produkt.shops?.email
+  if (!haendlerMail) return
+  try {
+    await supabase.functions.invoke('send-email', {
+      body: {
+        type: 'reservierung_haendler',
+        empfaenger_email: haendlerMail,
+        ...payload
+      }
+    })
+  } catch (err) {
+    console.error('Händler-Benachrichtigung konnte nicht gesendet werden:', err)
+  }
+}
+
 // ── Reservierung speichern ──
 async function initReservierung (produkt) {
   const form = document.getElementById('reservierung-form')
@@ -717,15 +736,20 @@ async function initReservierung (produkt) {
         : ''
       form.innerHTML = `<div class="success-msg">Reservierung erfolgreich! Wir benachrichtigen dich wenn der Artikel abholbereit ist.${ansehen}</div>`
 
-      sendeBestaetigungsMail({
+      const mailDaten = {
         kunde_name: name,
         kunde_email: email,
         produkt_titel: produkt.titel,
         shop_name: produkt.shops?.name || 'dem Geschäft',
         shop_adresse: produkt.shops?.adresse || '',
+        groesse: selectedGroesse || '',
+        farbe: selectedFarbe || '',
         reservierung_id: neu?.id,
         ablauf_am: ablauf
-      })
+      }
+
+      sendeBestaetigungsMail(mailDaten)
+      sendeHaendlerMail(produkt, mailDaten)
     } catch (err) {
       console.error('Reservierung fehlgeschlagen:', err)
       feedback.innerHTML = '<div class="error-msg">Die Reservierung konnte nicht gespeichert werden. Bitte versuche es später erneut.</div>'
@@ -1132,7 +1156,7 @@ async function init () {
   try {
     const { data, error } = await supabase
       .from('produkte')
-      .select('*, shops(name, slug, adresse), kategorien(name)')
+      .select('*, shops(name, slug, adresse, email), kategorien(name)')
       .eq('id', id)
       .maybeSingle()
 

@@ -1,11 +1,10 @@
-// kontakt.js — SIB v1
-// Formular-Handler: sendet Kontaktanfragen an Supabase-Tabelle `kontakt_anfragen`
+// kontakt.js — SIB
+// Formular-Handler: speichert Kontaktanfragen in der Supabase-Tabelle
+// `kontakt_anfragen` UND schickt eine Benachrichtigung an
+// info@shoppeninbraunschweig.de, damit die Anfrage nicht unbemerkt in der
+// Datenbank liegen bleibt.
 
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-const SUPABASE_URL = 'https://ezruwstzpncunbjzwdfk.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6cnV3c3R6cG5jdW5ianp3ZGZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIzOTIwODUsImV4cCI6MjA1Nzk2ODA4NX0.pHrrGet83bm-R3PkHyYZPm-TtpwWLFkRQhFymqIb0UE';
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+import { supabase } from './supabase.js';
 
 const form = document.getElementById('kontakt-form');
 const feedback = document.getElementById('kontakt-feedback');
@@ -48,6 +47,22 @@ if (form) {
     feedback.className = 'is-success';
     feedback.textContent = 'Nachricht gesendet. Wir melden uns bald bei dir!';
     form.reset();
+
+    // Benachrichtigung an uns. Schlaegt sie fehl, ist die Anfrage trotzdem
+    // gespeichert, deshalb kein Fehler fuer die absendende Person.
+    try {
+      await supabase.functions.invoke('send-email', {
+        body: {
+          type: 'kontakt',
+          absender_name: name,
+          absender_email: email,
+          betreff,
+          nachricht
+        }
+      });
+    } catch (mailErr) {
+      console.error('Kontakt-Benachrichtigung fehlgeschlagen:', mailErr);
+    }
   });
 }
 
