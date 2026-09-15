@@ -991,6 +991,9 @@ async function initBewertungForm (produkt) {
     const submitBtn = form.querySelector('button[type="submit"]')
     submitBtn.disabled = true; submitBtn.textContent = 'Wird gesendet…'
 
+    // Wert sichern, bevor er weiter unten zurueckgesetzt wird.
+    const sterneWert = gewaehlteSterne
+
     try {
       const { error } = await supabase.from('bewertungen').insert({
         produkt_id: produkt.id, autor_name: nameVal, autor_email: emailVal,
@@ -1002,6 +1005,20 @@ async function initBewertungForm (produkt) {
       gewaehlteSterne = 0; zeichneSterne(0)
       alleBewertungen = []; gezeigteB = 0
       ladeBewertungen(produkt)
+
+      // Haendler ueber die neue Bewertung informieren.
+      const haendlerMail = produkt.shops?.email
+      if (haendlerMail) {
+        supabase.functions.invoke('send-email', {
+          body: {
+            type: 'neue_bewertung',
+            empfaenger_email: haendlerMail,
+            produkt_titel: produkt.titel,
+            sterne: sterneWert,
+            nachricht: textVal || ''
+          }
+        }).catch((mailErr) => console.error('Bewertungs-Benachrichtigung fehlgeschlagen:', mailErr))
+      }
     } catch (err) {
       console.error('Bewertung speichern fehlgeschlagen:', err)
       feedback.innerHTML = '<div class="error-msg">Konnte nicht gespeichert werden.</div>'

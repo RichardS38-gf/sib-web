@@ -146,6 +146,25 @@ async function storniere (r) {
     render(aktuelleReservierung)
     document.querySelector('.reservierung__aktion').insertAdjacentHTML('afterbegin',
       '<div class="success-msg" style="margin-bottom:1rem">Deine Reservierung wurde storniert.</div>')
+
+    // Haendler informieren, damit die Ware nicht unnoetig zurueckgelegt bleibt.
+    const haendlerMail = r.produkte?.shops?.email
+    if (haendlerMail) {
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            type: 'reservierung_storniert',
+            empfaenger_email: haendlerMail,
+            kunde_name: r.kunde_name || '',
+            produkt_titel: r.produkte?.titel || 'ein Artikel',
+            groesse: r.groesse || '',
+            farbe: r.farbe || ''
+          }
+        })
+      } catch (mailErr) {
+        console.error('Storno-Benachrichtigung fehlgeschlagen:', mailErr)
+      }
+    }
   } catch (err) {
     console.error('Stornierung fehlgeschlagen:', err)
     feedback.innerHTML = '<div class="error-msg">Die Reservierung konnte nicht storniert werden. Bitte versuche es später erneut.</div>'
@@ -168,7 +187,7 @@ async function init () {
   try {
     const { data, error } = await supabase
       .from('reservierungen')
-      .select('*, produkte(id, titel, preis, bilder, shops(name, slug, adresse))')
+      .select('*, produkte(id, titel, preis, bilder, shops(name, slug, adresse, email))')
       .eq('id', id)
       .maybeSingle()
 
