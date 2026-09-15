@@ -32,6 +32,53 @@ export const config = {
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 
+// Interne Benachrichtigung, wenn ein Haendler bezahlt hat. Laeuft hier auf
+// Vercel, nutzt daher die dortige Variable SIB_Mail (Resend API-Key).
+const RESEND_API_KEY = process.env.SIB_Mail || process.env.RESEND_API_KEY
+const MAIL_FROM = 'Shoppen in Braunschweig <info@shoppeninbraunschweig.de>'
+const ADMIN_EMAIL = 'info@shoppeninbraunschweig.de'
+
+async function meldeNeuenHaendler (shopId) {
+  if (!RESEND_API_KEY || !shopId) return
+  try {
+    const { data: shop } = await supabase
+      .from('shops')
+      .select('name, email, adresse')
+      .eq('id', shopId)
+      .maybeSingle()
+    if (!shop) return
+
+    const html = `<!DOCTYPE html><html lang="de"><body style="margin:0;padding:24px;background:#FAFAF8">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:14px;padding:28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#0F0F0F">
+    <p style="margin:0 0 16px 0"><strong>Neuer Händler hat bezahlt</strong></p>
+    <p style="margin:0 0 16px 0">Geschäft: ${shop.name || ''}</p>
+    <p style="margin:0 0 16px 0">E-Mail: ${shop.email || ''}</p>
+    <p style="margin:0 0 16px 0">Adresse: ${shop.adresse || ''}</p>
+    <p style="margin:0 0 16px 0">Das Abo ist aktiv, der Shop ist damit öffentlich sichtbar.</p>
+    <p style="margin:24px 0 0 0"><a href="https://www.shoppeninbraunschweig.de/admin.html" style="display:inline-block;background:#0F0F0F;color:#FAFAF8;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:600">Zum Admin-Bereich</a></p>
+  </div>
+</body></html>`
+
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: MAIL_FROM,
+        to: [ADMIN_EMAIL],
+        subject: `Neuer Händler: ${shop.name || 'unbekannt'}`,
+        text: `Neuer Händler hat bezahlt.\n\nGeschäft: ${shop.name || ''}\nE-Mail: ${shop.email || ''}\nAdresse: ${shop.adresse || ''}`,
+        html
+      })
+    })
+  } catch (err) {
+    // Eine fehlgeschlagene Benachrichtigung darf den Webhook nie scheitern lassen.
+    console.error('Haendler-Benachrichtigung fehlgeschlagen:', err)
+  }
+}
+
 // Setzt den Abo-Status. `aktiv` steuert die oeffentliche Sichtbarkeit und wird
 // bewusst mitgefuehrt: nur ein bezahltes Abo macht den Shop sichtbar.
 async function setzeAboStatus (filter, { status, customerId, subscriptionId }) {
@@ -89,6 +136,7 @@ export default async function handler (req, res) {
           customerId: session.customer,
           subscriptionId: session.subscription
         })
+        await meldeNeuenHaendler(shopId)
         break
       }
 

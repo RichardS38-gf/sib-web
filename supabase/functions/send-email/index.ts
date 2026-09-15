@@ -1,28 +1,41 @@
 // supabase/functions/send-email/index.ts
 // SIB — E-Mail-Benachrichtigungen via Resend.com
 //
-// Zwei Typen:
-//   type: "reservierung"  -> Reservierungsbestätigung an Kunden
-//   type: "abholbereit"   -> Abholbereit-Benachrichtigung an Kunden
+// Ein Endpunkt, viele Anlaesse. Der Typ steckt im Feld "type".
 //
-// Aufruf aus dem Frontend via supabase.functions.invoke('send-email', { body: {...} })
+// An Kundinnen und Kunden:
+//   reservierung             Bestaetigung direkt nach dem Reservieren
+//   abholbereit              Haendler hat die Reservierung bestaetigt
+//   reservierung_abgelaufen  48 Stunden verstrichen, Reservierung verfallen
 //
-// Umgebungsvariablen (in Supabase als Secrets setzen):
-//   RESEND_API_KEY  (Pflicht)  — API-Key von resend.com
-//   RESEND_FROM     (optional) — Absender, z. B.
-//                                "Shoppen in Braunschweig <noreply@shoppeninbraunschweig.de>"
-//                                Default: "Shoppen in Braunschweig <onboarding@resend.dev>"
+// An Haendler:
+//   reservierung_haendler    Neue Reservierung im eigenen Shop
+//   reservierung_storniert   Kunde hat storniert
+//   neue_bewertung           Neue Bewertung zu einem Produkt
+//   neue_nachricht           Neue Nachricht im Chat
+//
+// An uns (info@shoppeninbraunschweig.de):
+//   kontakt                  Neue Nachricht ueber das Kontaktformular
+//   neues_produkt            Produkt eingepflegt, Freigabe noetig
+//   neuer_haendler           Haendler hat bezahlt und ist jetzt aktiv
+//
+// SICHERHEIT: Bei allen Typen, die an uns gehen, wird der Empfaenger im Code
+// festgelegt und NICHT aus dem Request uebernommen. Sonst waere die Function
+// ein offener Mail-Versender.
+//
+// Secrets (Supabase -> Edge Functions -> send-email -> Secrets):
+//   RESEND_API_KEY   Pflicht
+//   RESEND_FROM      optional, Default siehe unten
+//   ADMIN_EMAIL      optional, Default info@shoppeninbraunschweig.de
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-// Vorübergehend Resends Test-Absender: funktioniert ohne Domain-Verifizierung,
-// darf aber NUR an die eigene Resend-Account-E-Mail senden (siehe unten).
-// Sobald die Domain verifiziert ist: RESEND_FROM-Secret setzen.
-const FROM = Deno.env.get('RESEND_FROM') || 'onboarding@resend.dev'
+const FROM = Deno.env.get('RESEND_FROM') ||
+  'Shoppen in Braunschweig <info@shoppeninbraunschweig.de>'
+const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL') || 'info@shoppeninbraunschweig.de'
 
-// Resend erlaubt im Test-Modus (ohne verifizierte Domain) nur den Versand an
-// die eigene Account-Adresse. An andere Empfänger wird trotzdem versucht zu
-// senden — etwaige Fehler werden nur still geloggt, nicht als Fehler gemeldet.
-const TEST_EMPFAENGER = 'richardschilling@maneri.de'
+// Wie lange eine Reservierung gilt. Muss zum Cron-Job in
+// migration-reservierung-ablauf.sql passen.
+const GUELTIGKEIT_TEXT = '48 Stunden'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,7 +50,6 @@ function jsonResponse (body: unknown, status = 200): Response {
   })
 }
 
-// HTML-Escaping für Werte aus Nutzereingaben
 function esc (value: unknown): string {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -46,89 +58,231 @@ function esc (value: unknown): string {
     .replace(/"/g, '&quot;')
 }
 
-// Datum -> DD.MM.YYYY
-function formatDatum (iso: unknown): string {
+function formatDatumZeit (iso: unknown): string {
   if (!iso) return ''
   const d = new Date(String(iso))
   if (isNaN(d.getTime())) return ''
   const p = (n: number) => String(n).padStart(2, '0')
-  return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`
+  return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()} um ${p(d.getHours())}:${p(d.getMinutes())} Uhr`
 }
 
-// Schlichtes Schwarz/Weiß-HTML aus Text-Absätzen
-function htmlMail (absaetze: string[]): string {
+// Schlichtes Schwarz/Weiss-HTML, passend zur Seite.
+function htmlMail (absaetze: string[], cta?: { text: string; url: string }): string {
   const body = absaetze
+    .filter(Boolean)
     .map((a) => `<p style="margin:0 0 16px 0">${a}</p>`)
     .join('')
-  return `<!DOCTYPE html><html lang="de"><body style="margin:0;padding:24px;background:#ffffff">
-  <div style="max-width:520px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#0F0F0F">
+  const button = cta
+    ? `<p style="margin:24px 0 0 0"><a href="${esc(cta.url)}" style="display:inline-block;background:#0F0F0F;color:#FAFAF8;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:600">${esc(cta.text)}</a></p>`
+    : ''
+  return `<!DOCTYPE html><html lang="de"><body style="margin:0;padding:24px;background:#FAFAF8">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;padding:28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#0F0F0F">
     ${body}
-    <p style="margin:24px 0 0 0;color:#777777;font-size:13px">Shoppen in Braunschweig — Lokale Händler. Einzigartige Produkte.</p>
+    ${button}
+    <p style="margin:28px 0 0 0;color:#777777;font-size:13px">Shoppen in Braunschweig. Lokale Händler. Einzigartige Produkte.</p>
   </div>
 </body></html>`
 }
 
+const BASIS_URL = 'https://www.shoppeninbraunschweig.de'
+
 interface Payload {
   type?: string
-  kunde_name?: string
+  // Empfaenger bei Kunden- und Haendlermails
+  empfaenger_email?: string
   kunde_email?: string
+  // Inhalte
+  kunde_name?: string
   produkt_titel?: string
   shop_name?: string
   shop_adresse?: string
+  groesse?: string
+  farbe?: string
   reservierung_id?: string
   ablauf_am?: string
+  absender_name?: string
+  absender_email?: string
+  nachricht?: string
+  betreff?: string
+  sterne?: number
 }
 
-function baueMail (p: Payload): { subject: string; text: string; html: string } | null {
+interface Mail { an: string; subject: string; html: string; text: string }
+
+function baueMail (p: Payload): Mail | null {
   const name = p.kunde_name || 'zusammen'
   const titel = p.produkt_titel || 'dein Artikel'
   const shop = p.shop_name || 'dem Geschäft'
   const adresse = p.shop_adresse || ''
+  const variante = [p.farbe, p.groesse].filter(Boolean).join(', ')
+  const kundenMail = p.empfaenger_email || p.kunde_email || ''
 
-  if (p.type === 'reservierung') {
-    const ablauf = formatDatum(p.ablauf_am)
-    const subject = `Deine Reservierung bei ${shop}`
-    const text = [
-      `Hallo ${name},`,
-      `du hast "${titel}" bei ${shop} reserviert.`,
-      adresse ? `Adresse: ${adresse}` : '',
-      `Deine Reservierung ist 7 Tage gültig${ablauf ? ` – bis ${ablauf}` : ''}.`,
-      'Wir benachrichtigen dich per E-Mail, sobald der Artikel abholbereit ist.',
-      'Viele Grüße\nShoppen in Braunschweig'
-    ].filter(Boolean).join('\n\n')
-    const html = htmlMail([
-      `Hallo ${esc(name)},`,
-      `du hast <strong>${esc(titel)}</strong> bei <strong>${esc(shop)}</strong> reserviert.`,
-      adresse ? `Adresse: ${esc(adresse)}` : '',
-      `Deine Reservierung ist 7 Tage gültig${ablauf ? ` – bis <strong>${esc(ablauf)}</strong>` : ''}.`,
-      'Wir benachrichtigen dich per E-Mail, sobald der Artikel abholbereit ist.'
-    ].filter(Boolean))
-    return { subject, text, html }
+  const reservierungLink = p.reservierung_id
+    ? `${BASIS_URL}/reservierung.html?id=${encodeURIComponent(p.reservierung_id)}`
+    : ''
+
+  switch (p.type) {
+    // ── An Kundinnen und Kunden ──────────────────────────────────────────
+    case 'reservierung': {
+      const ablauf = formatDatumZeit(p.ablauf_am)
+      const abs = [
+        `Hallo ${esc(name)},`,
+        `du hast <strong>${esc(titel)}</strong>${variante ? ` (${esc(variante)})` : ''} bei <strong>${esc(shop)}</strong> reserviert.`,
+        adresse ? `Abholadresse: ${esc(adresse)}` : '',
+        `Deine Reservierung gilt ${GUELTIGKEIT_TEXT}${ablauf ? `, also bis zum ${esc(ablauf)}` : ''}.`,
+        'Wir melden uns, sobald der Artikel abholbereit ist.'
+      ]
+      return {
+        an: kundenMail,
+        subject: `Deine Reservierung bei ${shop}`,
+        html: htmlMail(abs, reservierungLink ? { text: 'Reservierung ansehen', url: reservierungLink } : undefined),
+        text: `Hallo ${name},\n\ndu hast "${titel}"${variante ? ` (${variante})` : ''} bei ${shop} reserviert.\n${adresse ? `Abholadresse: ${adresse}\n` : ''}Deine Reservierung gilt ${GUELTIGKEIT_TEXT}${ablauf ? `, also bis zum ${ablauf}` : ''}.\n${reservierungLink ? `\n${reservierungLink}\n` : ''}\nViele Grüße\nShoppen in Braunschweig`
+      }
+    }
+
+    case 'abholbereit': {
+      const abs = [
+        `Hallo ${esc(name)},`,
+        `<strong>${esc(titel)}</strong>${variante ? ` (${esc(variante)})` : ''} liegt für dich bereit.`,
+        `Abholen bei:<br><strong>${esc(shop)}</strong>${adresse ? `<br>${esc(adresse)}` : ''}`,
+        `Bitte hole den Artikel innerhalb von ${GUELTIGKEIT_TEXT} ab.`
+      ]
+      return {
+        an: kundenMail,
+        subject: `Abholbereit: ${titel}`,
+        html: htmlMail(abs, reservierungLink ? { text: 'Reservierung ansehen', url: reservierungLink } : undefined),
+        text: `Hallo ${name},\n\n"${titel}"${variante ? ` (${variante})` : ''} liegt für dich bereit.\n\nAbholen bei:\n${shop}${adresse ? `\n${adresse}` : ''}\n\nBitte hole den Artikel innerhalb von ${GUELTIGKEIT_TEXT} ab.\n\nViele Grüße\nShoppen in Braunschweig`
+      }
+    }
+
+    case 'reservierung_abgelaufen': {
+      const abs = [
+        `Hallo ${esc(name)},`,
+        `deine Reservierung für <strong>${esc(titel)}</strong> bei <strong>${esc(shop)}</strong> ist abgelaufen.`,
+        `Reservierungen gelten ${GUELTIGKEIT_TEXT}. Der Artikel steht jetzt wieder für andere bereit.`,
+        'Falls du ihn trotzdem noch möchtest, schau gern nach, ob er noch verfügbar ist.'
+      ]
+      return {
+        an: kundenMail,
+        subject: `Reservierung abgelaufen: ${titel}`,
+        html: htmlMail(abs, { text: 'Zu den Produkten', url: `${BASIS_URL}/kategorie.html` }),
+        text: `Hallo ${name},\n\ndeine Reservierung für "${titel}" bei ${shop} ist abgelaufen.\nReservierungen gelten ${GUELTIGKEIT_TEXT}.\n\nViele Grüße\nShoppen in Braunschweig`
+      }
+    }
+
+    // ── An Händler ───────────────────────────────────────────────────────
+    case 'reservierung_haendler': {
+      const abs = [
+        'Hallo,',
+        `es gibt eine neue Reservierung für <strong>${esc(titel)}</strong>${variante ? ` (${esc(variante)})` : ''}.`,
+        `Kundin oder Kunde: ${esc(name)}${p.kunde_email ? `, ${esc(p.kunde_email)}` : ''}`,
+        `Bitte bestätige im Dashboard, sobald der Artikel bereitliegt. Die Reservierung verfällt nach ${GUELTIGKEIT_TEXT} automatisch.`
+      ]
+      return {
+        an: kundenMail,
+        subject: `Neue Reservierung: ${titel}`,
+        html: htmlMail(abs, { text: 'Zum Dashboard', url: `${BASIS_URL}/dashboard.html` }),
+        text: `Hallo,\n\nneue Reservierung für "${titel}"${variante ? ` (${variante})` : ''}.\nKundin oder Kunde: ${name}${p.kunde_email ? `, ${p.kunde_email}` : ''}\n\nBitte im Dashboard bestätigen: ${BASIS_URL}/dashboard.html`
+      }
+    }
+
+    case 'reservierung_storniert': {
+      const abs = [
+        'Hallo,',
+        `die Reservierung für <strong>${esc(titel)}</strong>${variante ? ` (${esc(variante)})` : ''} wurde storniert.`,
+        `Storniert von: ${esc(name)}`,
+        'Der Artikel steht wieder zum Verkauf bereit.'
+      ]
+      return {
+        an: kundenMail,
+        subject: `Reservierung storniert: ${titel}`,
+        html: htmlMail(abs, { text: 'Zum Dashboard', url: `${BASIS_URL}/dashboard.html` }),
+        text: `Hallo,\n\ndie Reservierung für "${titel}" wurde von ${name} storniert.`
+      }
+    }
+
+    case 'neue_bewertung': {
+      const sterne = typeof p.sterne === 'number' ? `${p.sterne} von 5 Sternen` : ''
+      const abs = [
+        'Hallo,',
+        `es gibt eine neue Bewertung für <strong>${esc(titel)}</strong>.`,
+        sterne ? `Bewertung: ${esc(sterne)}` : '',
+        p.nachricht ? `„${esc(p.nachricht)}"` : ''
+      ]
+      return {
+        an: kundenMail,
+        subject: `Neue Bewertung: ${titel}`,
+        html: htmlMail(abs, { text: 'Zum Dashboard', url: `${BASIS_URL}/dashboard.html` }),
+        text: `Hallo,\n\nneue Bewertung für "${titel}".\n${sterne}\n${p.nachricht || ''}`
+      }
+    }
+
+    case 'neue_nachricht': {
+      const abs = [
+        'Hallo,',
+        `du hast eine neue Nachricht von <strong>${esc(p.absender_name || 'einer Kundin oder einem Kunden')}</strong>.`,
+        p.nachricht ? `„${esc(p.nachricht)}"` : ''
+      ]
+      return {
+        an: kundenMail,
+        subject: 'Neue Nachricht bei Shoppen in Braunschweig',
+        html: htmlMail(abs, { text: 'Nachricht öffnen', url: `${BASIS_URL}/dashboard.html` }),
+        text: `Hallo,\n\ndu hast eine neue Nachricht von ${p.absender_name || 'einer Kundin oder einem Kunden'}.\n\n${p.nachricht || ''}`
+      }
+    }
+
+    // ── An uns ───────────────────────────────────────────────────────────
+    case 'kontakt': {
+      const abs = [
+        '<strong>Neue Nachricht über das Kontaktformular</strong>',
+        `Von: ${esc(p.absender_name || '')} (${esc(p.absender_email || '')})`,
+        p.betreff ? `Betreff: ${esc(p.betreff)}` : '',
+        p.nachricht ? esc(p.nachricht).replace(/\n/g, '<br>') : ''
+      ]
+      return {
+        an: ADMIN_EMAIL,
+        subject: `Kontaktformular: ${p.betreff || 'Neue Nachricht'}`,
+        html: htmlMail(abs),
+        text: `Neue Nachricht über das Kontaktformular\n\nVon: ${p.absender_name} (${p.absender_email})\nBetreff: ${p.betreff || ''}\n\n${p.nachricht || ''}`
+      }
+    }
+
+    case 'neues_produkt': {
+      const abs = [
+        '<strong>Neues Produkt wartet auf Freigabe</strong>',
+        `Produkt: ${esc(titel)}`,
+        `Händler: ${esc(shop)}`,
+        'Bitte im Admin-Bereich prüfen und freigeben.'
+      ]
+      return {
+        an: ADMIN_EMAIL,
+        subject: `Freigabe nötig: ${titel}`,
+        html: htmlMail(abs, { text: 'Zum Admin-Bereich', url: `${BASIS_URL}/admin.html` }),
+        text: `Neues Produkt wartet auf Freigabe.\n\nProdukt: ${titel}\nHändler: ${shop}\n\n${BASIS_URL}/admin.html`
+      }
+    }
+
+    case 'neuer_haendler': {
+      const abs = [
+        '<strong>Neuer Händler hat bezahlt</strong>',
+        `Geschäft: ${esc(shop)}`,
+        p.absender_email ? `E-Mail: ${esc(p.absender_email)}` : '',
+        'Das Abo ist aktiv, der Shop ist damit öffentlich sichtbar.'
+      ]
+      return {
+        an: ADMIN_EMAIL,
+        subject: `Neuer Händler: ${shop}`,
+        html: htmlMail(abs, { text: 'Zum Admin-Bereich', url: `${BASIS_URL}/admin.html` }),
+        text: `Neuer Händler hat bezahlt.\n\nGeschäft: ${shop}\n${p.absender_email || ''}\n\n${BASIS_URL}/admin.html`
+      }
+    }
+
+    default:
+      return null
   }
-
-  if (p.type === 'abholbereit') {
-    const subject = `Dein Artikel ist abholbereit — ${shop}`
-    const text = [
-      `Hallo ${name},`,
-      `dein reservierter Artikel "${titel}" ist jetzt abholbereit.`,
-      `Hole ihn ab bei:\n${shop}${adresse ? `\n${adresse}` : ''}`,
-      'Bitte hole den Artikel innerhalb der nächsten 7 Tage ab.',
-      'Viele Grüße\nShoppen in Braunschweig'
-    ].join('\n\n')
-    const html = htmlMail([
-      `Hallo ${esc(name)},`,
-      `dein reservierter Artikel <strong>${esc(titel)}</strong> ist jetzt abholbereit.`,
-      `Hole ihn ab bei:<br><strong>${esc(shop)}</strong>${adresse ? `<br>${esc(adresse)}` : ''}`,
-      'Bitte hole den Artikel innerhalb der nächsten 7 Tage ab.'
-    ])
-    return { subject, text, html }
-  }
-
-  return null
 }
 
 Deno.serve(async (req: Request) => {
-  // CORS-Preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -149,13 +303,13 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: 'Ungültiger Request-Body.' }, 400)
   }
 
-  if (!payload.kunde_email) {
-    return jsonResponse({ error: 'kunde_email fehlt.' }, 400)
-  }
-
   const mail = baueMail(payload)
   if (!mail) {
-    return jsonResponse({ error: 'Unbekannter type (erwartet: reservierung | abholbereit).' }, 400)
+    return jsonResponse({ error: `Unbekannter type: ${payload.type}` }, 400)
+  }
+
+  if (!mail.an) {
+    return jsonResponse({ error: 'Kein Empfänger angegeben.' }, 400)
   }
 
   try {
@@ -167,7 +321,7 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({
         from: FROM,
-        to: [payload.kunde_email],
+        to: [mail.an],
         subject: mail.subject,
         text: mail.text,
         html: mail.html
@@ -176,14 +330,9 @@ Deno.serve(async (req: Request) => {
 
     const data = await res.json().catch(() => ({}))
     if (!res.ok) {
-      // Im Test-Modus scheitert der Versand an fremde Adressen erwartungsgemäß.
-      // Fehler nur still loggen und nicht-fatal antworten, damit der Frontend-
-      // Ablauf (Reservierung/Bestätigung) nicht gestört wird.
-      const fremderEmpfaenger = payload.kunde_email !== TEST_EMPFAENGER
-      console.error(
-        `Resend-Fehler (${res.status})${fremderEmpfaenger ? ' — Empfänger ist nicht der Test-Account, im Test-Modus erwartet' : ''}:`,
-        data
-      )
+      // Nicht-fatal antworten: eine fehlgeschlagene Mail darf den Ablauf im
+      // Frontend (Reservierung, Bewertung, Nachricht) nie abbrechen.
+      console.error(`Resend-Fehler (${res.status}) an ${mail.an}:`, data)
       return jsonResponse({ ok: false, logged: true }, 200)
     }
 
