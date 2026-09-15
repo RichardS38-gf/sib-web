@@ -277,6 +277,67 @@ function baueMail (p: Payload): Mail | null {
       }
     }
 
+    case 'neuer_kaeufer': {
+      const abs = [
+        '<strong>Neues Käufer-Konto</strong>',
+        `Name: ${esc(name)}`,
+        p.absender_email ? `E-Mail: ${esc(p.absender_email)}` : ''
+      ]
+      return {
+        an: ADMIN_EMAIL,
+        subject: 'Neues Käufer-Konto',
+        html: htmlMail(abs),
+        text: `Neues Käufer-Konto.\n\nName: ${name}\n${p.absender_email || ''}`
+      }
+    }
+
+    // ── Willkommensmails ────────────────────────────────────────
+    case 'willkommen_haendler': {
+      const abs = [
+        `Hallo ${esc(name)},`,
+        `schön, dass <strong>${esc(shop)}</strong> jetzt bei Shoppen in Braunschweig dabei ist. Deine Zahlung ist eingegangen, dein Geschäft ist freigeschaltet.`,
+        'So legst du los:',
+        '1. Shop-Profil vervollständigen: Logo, Beschreibung, Öffnungszeiten<br>2. Erste Produkte einstellen, gern mit mehreren Fotos<br>3. Wir prüfen neue Produkte kurz und geben sie frei',
+        'Fragen? Antworte einfach auf diese E-Mail.'
+      ]
+      return {
+        an: kundenMail,
+        subject: 'Willkommen bei Shoppen in Braunschweig',
+        html: htmlMail(abs, { text: 'Zum Dashboard', url: `${BASIS_URL}/dashboard.html` }),
+        text: `Hallo ${name},\n\nschön, dass ${shop} jetzt bei Shoppen in Braunschweig dabei ist. Deine Zahlung ist eingegangen, dein Geschäft ist freigeschaltet.\n\nSo legst du los:\n1. Shop-Profil vervollständigen\n2. Erste Produkte einstellen\n3. Wir prüfen neue Produkte und geben sie frei\n\n${BASIS_URL}/dashboard.html`
+      }
+    }
+
+    case 'willkommen_kaeufer': {
+      const abs = [
+        `Hallo ${esc(name)},`,
+        'willkommen bei Shoppen in Braunschweig. Dein Konto ist fertig.',
+        'Ab jetzt kannst du Produkte aus Braunschweiger Geschäften online reservieren und vor Ort abholen. Reservieren ist kostenlos, bezahlt wird erst im Laden.',
+        'In deinem Konto findest du deine Reservierungen, deine Wunschliste und deine Nachrichten an Händler.'
+      ]
+      return {
+        an: kundenMail,
+        subject: 'Willkommen bei Shoppen in Braunschweig',
+        html: htmlMail(abs, { text: 'Produkte entdecken', url: `${BASIS_URL}/kategorie.html` }),
+        text: `Hallo ${name},\n\nwillkommen bei Shoppen in Braunschweig. Dein Konto ist fertig.\n\nAb jetzt kannst du Produkte aus Braunschweiger Geschäften online reservieren und vor Ort abholen.\n\n${BASIS_URL}/kategorie.html`
+      }
+    }
+
+    case 'newsletter_anmeldung': {
+      const abs = [
+        'Hallo,',
+        'danke für deine Anmeldung zum Prospekt von Shoppen in Braunschweig.',
+        'Einmal im Monat schicken wir dir neue Produkte, Sonderangebote und frisch dazugekommene Geschäfte aus Braunschweig. Kurz und knapp, ohne Werbeflut.',
+        'Abmelden kannst du dich jederzeit über den Link am Ende jeder Ausgabe.'
+      ]
+      return {
+        an: kundenMail,
+        subject: 'Du bist dabei: Prospekt von Shoppen in Braunschweig',
+        html: htmlMail(abs, { text: 'Aktuelle Ausgabe ansehen', url: `${BASIS_URL}/newsletter.html` }),
+        text: `Hallo,\n\ndanke für deine Anmeldung zum Prospekt von Shoppen in Braunschweig.\n\nEinmal im Monat schicken wir dir neue Produkte, Sonderangebote und frisch dazugekommene Geschäfte.\n\n${BASIS_URL}/newsletter.html`
+      }
+    }
+
     default:
       return null
   }

@@ -38,6 +38,38 @@ const RESEND_API_KEY = process.env.SIB_Mail || process.env.RESEND_API_KEY
 const MAIL_FROM = 'Shoppen in Braunschweig <info@shoppeninbraunschweig.de>'
 const ADMIN_EMAIL = 'info@shoppeninbraunschweig.de'
 
+async function sendeMail (an, subject, text, html) {
+  if (!RESEND_API_KEY || !an) return
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ from: MAIL_FROM, to: [an], subject, text, html })
+    })
+  } catch (err) {
+    // Eine fehlgeschlagene Mail darf den Webhook nie scheitern lassen.
+    console.error('Mailversand fehlgeschlagen:', err)
+  }
+}
+
+function mailRahmen (absaetze, cta) {
+  const body = absaetze.filter(Boolean).map((a) => `<p style="margin:0 0 16px 0">${a}</p>`).join('')
+  const button = cta
+    ? `<p style="margin:24px 0 0 0"><a href="${cta.url}" style="display:inline-block;background:#0F0F0F;color:#FAFAF8;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:600">${cta.text}</a></p>`
+    : ''
+  return `<!DOCTYPE html><html lang="de"><body style="margin:0;padding:24px;background:#FAFAF8">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:14px;padding:28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#0F0F0F">
+    ${body}${button}
+    <p style="margin:28px 0 0 0;color:#777777;font-size:13px">Shoppen in Braunschweig. Lokale Händler. Einzigartige Produkte.</p>
+  </div>
+</body></html>`
+}
+
+// Nach erfolgreicher Zahlung: Willkommensmail an den Haendler und eine
+// interne Benachrichtigung an uns.
 async function meldeNeuenHaendler (shopId) {
   if (!RESEND_API_KEY || !shopId) return
   try {
@@ -48,33 +80,36 @@ async function meldeNeuenHaendler (shopId) {
       .maybeSingle()
     if (!shop) return
 
-    const html = `<!DOCTYPE html><html lang="de"><body style="margin:0;padding:24px;background:#FAFAF8">
-  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:14px;padding:28px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#0F0F0F">
-    <p style="margin:0 0 16px 0"><strong>Neuer Händler hat bezahlt</strong></p>
-    <p style="margin:0 0 16px 0">Geschäft: ${shop.name || ''}</p>
-    <p style="margin:0 0 16px 0">E-Mail: ${shop.email || ''}</p>
-    <p style="margin:0 0 16px 0">Adresse: ${shop.adresse || ''}</p>
-    <p style="margin:0 0 16px 0">Das Abo ist aktiv, der Shop ist damit öffentlich sichtbar.</p>
-    <p style="margin:24px 0 0 0"><a href="https://www.shoppeninbraunschweig.de/admin.html" style="display:inline-block;background:#0F0F0F;color:#FAFAF8;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:600">Zum Admin-Bereich</a></p>
-  </div>
-</body></html>`
+    const name = shop.name || 'zusammen'
 
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: MAIL_FROM,
-        to: [ADMIN_EMAIL],
-        subject: `Neuer Händler: ${shop.name || 'unbekannt'}`,
-        text: `Neuer Händler hat bezahlt.\n\nGeschäft: ${shop.name || ''}\nE-Mail: ${shop.email || ''}\nAdresse: ${shop.adresse || ''}`,
-        html
-      })
-    })
+    // 1) An uns
+    await sendeMail(
+      ADMIN_EMAIL,
+      `Neuer Händler: ${shop.name || 'unbekannt'}`,
+      `Neuer Händler hat bezahlt.\n\nGeschäft: ${shop.name || ''}\nE-Mail: ${shop.email || ''}\nAdresse: ${shop.adresse || ''}`,
+      mailRahmen([
+        '<strong>Neuer Händler hat bezahlt</strong>',
+        `Geschäft: ${shop.name || ''}`,
+        `E-Mail: ${shop.email || ''}`,
+        `Adresse: ${shop.adresse || ''}`,
+        'Das Abo ist aktiv, der Shop ist damit öffentlich sichtbar.'
+      ], { text: 'Zum Admin-Bereich', url: 'https://www.shoppeninbraunschweig.de/admin.html' })
+    )
+
+    // 2) An den Haendler
+    await sendeMail(
+      shop.email,
+      'Willkommen bei Shoppen in Braunschweig',
+      `Hallo ${name},\n\nschön, dass du dabei bist. Deine Zahlung ist eingegangen, dein Geschäft ist freigeschaltet.\n\nSo legst du los:\n1. Shop-Profil vervollständigen\n2. Erste Produkte einstellen\n3. Wir prüfen neue Produkte und geben sie frei\n\nhttps://www.shoppeninbraunschweig.de/dashboard.html`,
+      mailRahmen([
+        `Hallo ${name},`,
+        'schön, dass du dabei bist. Deine Zahlung ist eingegangen, dein Geschäft ist freigeschaltet.',
+        'So legst du los:',
+        '1. Shop-Profil vervollständigen: Logo, Beschreibung, Öffnungszeiten<br>2. Erste Produkte einstellen, gern mit mehreren Fotos<br>3. Wir prüfen neue Produkte kurz und geben sie frei',
+        'Fragen? Antworte einfach auf diese E-Mail.'
+      ], { text: 'Zum Dashboard', url: 'https://www.shoppeninbraunschweig.de/dashboard.html' })
+    )
   } catch (err) {
-    // Eine fehlgeschlagene Benachrichtigung darf den Webhook nie scheitern lassen.
     console.error('Haendler-Benachrichtigung fehlgeschlagen:', err)
   }
 }

@@ -67,6 +67,24 @@ function initRollenToggle () {
   setzeRolle(params.get('rolle') === 'haendler' ? 'haendler' : 'kunde')
 }
 
+// Willkommensmail an die neue Kundin oder den neuen Kunden, plus eine
+// interne Benachrichtigung an uns. Beides nicht blockierend: das Konto ist
+// angelegt, auch wenn der Mailversand scheitert.
+async function meldeNeuenKaeufer (name, email) {
+  try {
+    await Promise.all([
+      supabase.functions.invoke('send-email', {
+        body: { type: 'willkommen_kaeufer', empfaenger_email: email, kunde_name: name }
+      }),
+      supabase.functions.invoke('send-email', {
+        body: { type: 'neuer_kaeufer', kunde_name: name, absender_email: email }
+      })
+    ])
+  } catch (err) {
+    console.error('Willkommensmail fehlgeschlagen:', err)
+  }
+}
+
 // ── Käufer-Registrierung (echter Account) ──
 function initKundeForm () {
   const form = document.getElementById('kunde-form')
@@ -122,8 +140,10 @@ function initKundeForm () {
       }
 
       if (data.session) {
+        meldeNeuenKaeufer(`${vorname} ${nachname}`.trim(), email)
         window.location.replace('konto.html')
       } else {
+        meldeNeuenKaeufer(`${vorname} ${nachname}`.trim(), email)
         form.innerHTML = '<div class="success-msg">Fast geschafft! Bitte bestätige deine E-Mail-Adresse über den Link, den wir dir gerade gesendet haben.</div>'
       }
     } catch (err) {

@@ -43,7 +43,7 @@ async function ladeKategorien () {
 
     if (error) throw error
 
-    const kategorien = (data || []).slice(0, 5)
+    const kategorien = data || []
 
     if (kategorien.length === 0) {
       container.innerHTML = '<p class="empty-state">Noch keine Kategorien verfügbar.</p>'
@@ -187,7 +187,13 @@ async function initHeroNewsletter () {
         }
         throw error
       }
-      form.innerHTML = '<div class="success-msg">✓ Du bist dabei! Ab dem nächsten Newsletter hörst du von uns.</div>'
+      form.innerHTML = '<div class="success-msg">✓ Du bist dabei! Ab dem nächsten Prospekt hörst du von uns.</div>'
+
+      // Bestätigung an die angemeldete Adresse. Nicht blockierend: die
+      // Anmeldung steht bereits in der Datenbank.
+      supabase.functions.invoke('send-email', {
+        body: { type: 'newsletter_anmeldung', empfaenger_email: email }
+      }).catch((mailErr) => console.error('Newsletter-Bestätigung fehlgeschlagen:', mailErr))
     } catch (err) {
       console.error('Newsletter:', err)
       feedback.innerHTML = '<div class="error-msg">Anmeldung fehlgeschlagen. Bitte versuche es später erneut.</div>'
